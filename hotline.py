@@ -176,13 +176,13 @@ class HotLine(QtGui.QDialog):
                         for i, node in enumerate(nodes):
                             if seq_length:
                                 seq = str(i+1).zfill(seq_length)
-                                rename_string = rename_string.replace('#' * buffer, seq)
+                                rename_string = rename_string.replace('#' * seq_length, seq)
                             cmds.rename(node, rename_string)
 
     def enter(self):
-        self.show()
         pos = QtGui.QCursor.pos()
         self.move(pos.x(), pos.y())
+        self.show()
         self.hotfield.setFocus()
 
     def exit(self):
