@@ -114,6 +114,7 @@ class HotLine(QtGui.QDialog):
         elif self.lang == 2:
             self.lang = 3
             self.langButton.setText('REN')
+        self.hotfield.setFocus()
 
     def evalScript(self):
         input_str = self.hotfield.text()
