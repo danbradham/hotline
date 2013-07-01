@@ -21,4 +21,4 @@ Installation:
     except:
         from hotline import HotLine
         hl = HotLine()
-        hs.enter()
+        hl.enter()
