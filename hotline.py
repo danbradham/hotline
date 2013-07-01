@@ -51,12 +51,31 @@ class HotField(QtGui.QLineEdit):
                 self.setText(self.history[self.history_index])
             elif self.history_index == len(self.history):
                 self.clear()
-
-        QtGui.QLineEdit.keyPressEvent(self, event)
+        else:
+            QtGui.QLineEdit.keyPressEvent(self, event)
 
 
 class HotLine(QtGui.QDialog):
     '''HotLine, a hotbox script editor'''
+
+    style = '''QPushButton {
+                    border:0;
+                    background: none;}
+                QPushButton:pressed {
+                    border:0;
+                    color: rgb(0, 35, 55)}
+                QLineEdit {
+                    background-color: none;
+                    border: 0;
+                    border-bottom: 1px solid rgb(42, 42, 42);
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    height: 20;}
+                QLineEdit:focus {
+                    outline: none;
+                    background: none;
+                    border: 0;
+                    height: 20;}'''
 
     def __init__(self, parent=getMayaWindow()):
         #Init my main window, and pass in the maya main window as it's parent
@@ -72,13 +91,15 @@ class HotLine(QtGui.QDialog):
         self.langButton = QtGui.QPushButton('PY')
         self.langButton.clicked.connect(self.setLang)
         self.langButton.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-        self.langButton.setMaximumWidth(40)
+        self.langButton.setFixedWidth(50)
         self.layout = QtGui.QGridLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setContentsMargins(2, 2, 2, 2)
         self.layout.setSpacing(0)
         self.layout.addWidget(self.hotfield, 0, 1)
         self.layout.addWidget(self.langButton, 0, 0)
         self.setLayout(self.layout)
+
+        self.setStyleSheet(self.style)
 
     def setLang(self):
         if self.lang == 3:
@@ -116,7 +137,7 @@ class HotLine(QtGui.QDialog):
             for rename_string in rename_strings:
                 remMatch = re.search('\-', rename_string)
                 addMatch = re.search('\+', rename_string)
-                buffer = rename_string.count('#')
+                seq_length = rename_string.count('#')
 
                 #Handle subtract tokens
                 if remMatch:
@@ -128,9 +149,9 @@ class HotLine(QtGui.QDialog):
                 #Handle add tokens
                 elif addMatch:
                     for i, node in enumerate(nodes):
-                        if buffer:
-                            seq = str(i+1).zfill(buffer)
-                            rename_string = rename_string.replace('#' * buffer, seq)
+                        if seq_length:
+                            seq = str(i+1).zfill(seq_length)
+                            rename_string = rename_string.replace('#' * seq_length, seq)
                         if rename_string.endswith(r'+'):
                             node = cmds.rename(node, rename_string.replace(r'+', '') + node )
                         elif rename_string.startswith(r'+'):
@@ -141,23 +162,19 @@ class HotLine(QtGui.QDialog):
                     
                     #Handle Search Replace
                     if len(rename_strings) == 2:
-                        buffer = rename_strings[-1].count('#')
+                        seq_length = rename_strings[-1].count('#')
                         for i, node in enumerate(nodes):
-                            if buffer:
-                                seq = str(i+1).zfill(buffer)
-                                rename_strings[-1] = rename_strings[-1].replace('#' * buffer, seq)
+                            if seq_length:
+                                seq = str(i+1).zfill(seq_length)
+                                rename_strings[-1] = rename_strings[-1].replace('#' * seq_length, seq)
                             node = cmds.rename(node, node.replace(rename_strings[0], rename_strings[1]))
                         break
                     
                     #Handle Full Rename
                     elif len(rename_strings) == 1:
-                        bufferCount = re.search(r'#+', rename_string)
-                        if bufferCount:
-                            rename_string = rename_string.replace(bufferCount.group(), 
-                                                                  '{0:0>%d}' % len(bufferCount.group()))
                         for i, node in enumerate(nodes):
-                            if buffer:
-                                seq = str(i+1).zfill(buffer)
+                            if seq_length:
+                                seq = str(i+1).zfill(seq_length)
                                 rename_string = rename_string.replace('#' * buffer, seq)
                             cmds.rename(node, rename_string)
 
