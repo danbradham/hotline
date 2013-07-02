@@ -25,6 +25,7 @@ import maya.OpenMayaUI as mui
 import maya.cmds as cmds
 import maya.mel as mel
 
+
 def getMayaWindow():
     #Get the maya main window as a QMainWindow instance
     ptr = mui.MQtUtil.mainWindow()
@@ -132,7 +133,7 @@ class HotLine(QtGui.QDialog):
 
     def rename(self, r_string):
             '''string processing'''
-            nodes = cmds.ls(sl = True, long=True)
+            nodes = cmds.ls(sl=True, long=True)
             rename_strings = r_string.split()
 
             for rename_string in rename_strings:
@@ -146,7 +147,7 @@ class HotLine(QtGui.QDialog):
                     for node in nodes:
                         newName = node.replace(rename_string, '')
                         node = cmds.rename(node, newName)
-                
+
                 #Handle add tokens
                 elif addMatch:
                     for i, node in enumerate(nodes):
@@ -154,13 +155,13 @@ class HotLine(QtGui.QDialog):
                             seq = str(i+1).zfill(seq_length)
                             rename_string = rename_string.replace('#' * seq_length, seq)
                         if rename_string.endswith(r'+'):
-                            node = cmds.rename(node, rename_string.replace(r'+', '') + node )
+                            node = cmds.rename(node, rename_string.replace(r'+', '') + node)
                         elif rename_string.startswith(r'+'):
-                            node = cmds.rename(node, node + rename_string.replace(r'+', '') )
+                            node = cmds.rename(node, node + rename_string.replace(r'+', ''))
                         else:
                             print "+ symbols belong at the front or the end of a string"
                 else:
-                    
+
                     #Handle Search Replace
                     if len(rename_strings) == 2:
                         seq_length = rename_strings[-1].count('#')
@@ -170,7 +171,7 @@ class HotLine(QtGui.QDialog):
                                 rename_strings[-1] = rename_strings[-1].replace('#' * seq_length, seq)
                             node = cmds.rename(node, node.replace(rename_strings[0], rename_strings[1]))
                         break
-                    
+
                     #Handle Full Rename
                     elif len(rename_strings) == 1:
                         for i, node in enumerate(nodes):
