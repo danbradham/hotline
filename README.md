@@ -22,3 +22,8 @@ Installation:
         from hotline import HotLine
         hl = HotLine()
         hl.enter()
+
+Key Bindings:
+    
+    Up and Down keys - Hotline history
+    Tab key - change mode
