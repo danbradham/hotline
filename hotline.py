@@ -143,7 +143,9 @@ class HotLine(QtGui.QDialog):
             '''string processing'''
             nodes = cmds.ls(sl=True, long=True)
             rename_strings = r_string.split()
-
+            
+            cmds.undoInfo(openChunk=True)
+            
             for rename_string in rename_strings:
                 remMatch = re.search('\-', rename_string)
                 addMatch = re.search('\+', rename_string)
@@ -151,7 +153,7 @@ class HotLine(QtGui.QDialog):
 
                 #Handle subtract tokens
                 if remMatch:
-                    rename_string = rename_string.replace(r'-', '')
+                    rename_string = rename_string.replace('-', '')
                     for node in nodes:
                         newName = node.replace(rename_string, '')
                         node = cmds.rename(node, newName)
@@ -159,13 +161,14 @@ class HotLine(QtGui.QDialog):
                 #Handle add tokens
                 elif addMatch:
                     for i, node in enumerate(nodes):
+                        name = rename_string
                         if seq_length:
                             seq = str(i+1).zfill(seq_length)
-                            rename_string = rename_string.replace('#' * seq_length, seq)
-                        if rename_string.endswith(r'+'):
-                            node = cmds.rename(node, rename_string.replace(r'+', '') + node)
-                        elif rename_string.startswith(r'+'):
-                            node = cmds.rename(node, node + rename_string.replace(r'+', ''))
+                            name = name.replace('#' * seq_length, seq)
+                        if name.endswith('+'):
+                            node = cmds.rename(node, name.replace('+', '') + node)
+                        elif name.startswith('+'):
+                            node = cmds.rename(node, node + name.replace('+', ''))
                         else:
                             print "+ symbols belong at the front or the end of a string"
                 else:
@@ -174,19 +177,23 @@ class HotLine(QtGui.QDialog):
                     if len(rename_strings) == 2:
                         seq_length = rename_strings[-1].count('#')
                         for i, node in enumerate(nodes):
+                            name = rename_Strings[-1]
                             if seq_length:
                                 seq = str(i+1).zfill(seq_length)
-                                rename_strings[-1] = rename_strings[-1].replace('#' * seq_length, seq)
-                            node = cmds.rename(node, node.replace(rename_strings[0], rename_strings[1]))
+                                name = name.replace('#' * seq_length, seq)
+                            node = cmds.rename(node, node.replace(rename_strings[0], name))
                         break
 
                     #Handle Full Rename
                     elif len(rename_strings) == 1:
                         for i, node in enumerate(nodes):
+                            name = rename_string
                             if seq_length:
                                 seq = str(i+1).zfill(seq_length)
-                                rename_string = rename_string.replace('#' * seq_length, seq)
-                            cmds.rename(node, rename_string)
+                                name = name.replace('#' * seq_length, seq)
+                            cmds.rename(node, name)
+            
+            cmds.undoInfo(closeChunk=True)
 
     def enter(self):
         pos = QtGui.QCursor.pos()
