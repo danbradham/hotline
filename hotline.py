@@ -3,7 +3,8 @@ HotLine
 Dan Bradham 2013
 
 A convenient popup script editor.
-Use the up and down keys to shuffle through HotLine History.
+Up and down keys shuffle through HotLine History.
+Tab key changes mode.
 
 Set a hotkey to the following python script:
 
@@ -13,7 +14,7 @@ try:
 except:
     from hotline import HotLine
     hl = HotLine()
-    hs.enter()
+    hl.enter()
 '''
 import re
 
@@ -38,6 +39,13 @@ class HotField(QtGui.QLineEdit):
         super(HotField, self).__init__(parent)
         self.history = []
         self.history_index = 0
+
+    def event(self, event):
+        if event.type() == QtCore.QEvent.KeyPress\
+        and event.key() == QtCore.Qt.Key_Tab:
+            self.parent().setMode()
+            return True
+        return QtGui.QLineEdit.event(self, event)
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Up:
@@ -85,49 +93,49 @@ class HotLine(QtGui.QDialog):
         self.resize(400, 24)
         self.setObjectName('HotLine')
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.lang = 0
+        self.mode = 0
 
         self.hotfield = HotField()
         self.hotfield.returnPressed.connect(self.evalScript)
-        self.langButton = QtGui.QPushButton('PY')
-        self.langButton.clicked.connect(self.setLang)
-        self.langButton.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-        self.langButton.setFixedWidth(50)
+        self.mode_button = QtGui.QPushButton('PY')
+        self.mode_button.clicked.connect(self.setMode)
+        self.mode_button.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.mode_button.setFixedWidth(50)
         self.layout = QtGui.QGridLayout()
         self.layout.setContentsMargins(2, 2, 2, 2)
         self.layout.setSpacing(0)
         self.layout.addWidget(self.hotfield, 0, 1)
-        self.layout.addWidget(self.langButton, 0, 0)
+        self.layout.addWidget(self.mode_button, 0, 0)
         self.setLayout(self.layout)
 
         self.setStyleSheet(self.style)
 
-    def setLang(self):
-        if self.lang == 3:
-            self.lang = 0
-            self.langButton.setText('PY')
-        elif self.lang == 0:
-            self.lang = 1
-            self.langButton.setText('MEL')
-        elif self.lang == 1:
-            self.lang = 2
-            self.langButton.setText('SEL')
-        elif self.lang == 2:
-            self.lang = 3
-            self.langButton.setText('REN')
+    def setMode(self):
+        if self.mode == 3:
+            self.mode = 0
+            self.mode_button.setText('PY')
+        elif self.mode == 0:
+            self.mode = 1
+            self.mode_button.setText('MEL')
+        elif self.mode == 1:
+            self.mode = 2
+            self.mode_button.setText('SEL')
+        elif self.mode == 2:
+            self.mode = 3
+            self.mode_button.setText('REN')
         self.hotfield.setFocus()
 
     def evalScript(self):
         input_str = self.hotfield.text()
         self.hotfield.history.append(input_str)
         self.hotfield.history_index = len(self.hotfield.history)
-        if self.lang == 0:
+        if self.mode == 0:
             cmds.evalDeferred(input_str)
-        elif self.lang == 1:
+        elif self.mode == 1:
             mel.eval(input_str)
-        elif self.lang == 2:
+        elif self.mode == 2:
             cmds.select(input_str, replace=True)
-        elif self.lang == 3:
+        elif self.mode == 3:
             self.rename(str(input_str))
         self.exit()
 
