@@ -2,8 +2,7 @@ HotLine
 =======
 Dan Bradham 2013
 
-A convenient popup script editor.
-Use the up and down keys to shuffle through HotLine History.
+The popup script editor!
 
 
 Requirements:
