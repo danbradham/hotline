@@ -143,9 +143,9 @@ class HotLine(QtGui.QDialog):
             '''string processing'''
             nodes = cmds.ls(sl=True, long=True)
             rename_strings = r_string.split()
-            
+
             cmds.undoInfo(openChunk=True)
-            
+
             for rename_string in rename_strings:
                 remMatch = re.search('\-', rename_string)
                 addMatch = re.search('\+', rename_string)
@@ -177,7 +177,7 @@ class HotLine(QtGui.QDialog):
                     if len(rename_strings) == 2:
                         seq_length = rename_strings[-1].count('#')
                         for i, node in enumerate(nodes):
-                            name = rename_Strings[-1]
+                            name = rename_strings[-1]
                             if seq_length:
                                 seq = str(i+1).zfill(seq_length)
                                 name = name.replace('#' * seq_length, seq)
