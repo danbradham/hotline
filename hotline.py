@@ -131,8 +131,10 @@ class HotLine(QtGui.QDialog):
         self.hotfield.history_index = len(self.hotfield.history)
         if self.mode == 0:
             cmds.evalDeferred(input_str)
+            cmds.repeatLast(addCommand='python("{0}")'.format(input_str))
         elif self.mode == 1:
             mel.eval(input_str)
+            cmds.repeatLast(addCommand=input_str)
         elif self.mode == 2:
             cmds.select(input_str, replace=True)
         elif self.mode == 3:
