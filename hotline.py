@@ -157,20 +157,22 @@ class HotLine(QtGui.QDialog):
                 if remMatch:
                     rename_string = rename_string.replace('-', '')
                     for node in nodes:
-                        newName = node.replace(rename_string, '')
+                        node_shortname = node.split('|')[-1]
+                        newName = node_shortname.replace(rename_string, '')
                         node = cmds.rename(node, newName)
 
                 #Handle add tokens
                 elif addMatch:
                     for i, node in enumerate(nodes):
                         name = rename_string
+                        node_shortname = node.split('|')[-1]
                         if seq_length:
                             seq = str(i+1).zfill(seq_length)
                             name = name.replace('#' * seq_length, seq)
                         if name.endswith('+'):
-                            node = cmds.rename(node, name.replace('+', '') + node)
+                            node = cmds.rename(node, name.replace('+', '') + node_shortname)
                         elif name.startswith('+'):
-                            node = cmds.rename(node, node + name.replace('+', ''))
+                            node = cmds.rename(node, node_shortname + name.replace('+', ''))
                         else:
                             print "+ symbols belong at the front or the end of a string"
                 else:
@@ -179,11 +181,12 @@ class HotLine(QtGui.QDialog):
                     if len(rename_strings) == 2:
                         seq_length = rename_strings[-1].count('#')
                         for i, node in enumerate(nodes):
+                            node_shortname = node.split('|')[-1]
                             name = rename_strings[-1]
                             if seq_length:
                                 seq = str(i+1).zfill(seq_length)
                                 name = name.replace('#' * seq_length, seq)
-                            node = cmds.rename(node, node.replace(rename_strings[0], name))
+                            node = cmds.rename(node, node_shortname.replace(rename_strings[0], name))
                         break
 
                     #Handle Full Rename
