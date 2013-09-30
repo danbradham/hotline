@@ -1,28 +1,25 @@
-HotLine
-=======
-Dan Bradham 2013
-
-The popup script editor!
+#HotLine
+The popup script editor for Autodesk Maya!
 
 
-Requirements:
+##Requirements
 
-    PyQt4 installed in a location available to Maya.
+  -  PyQt4
 
-Installation:
+##Installation
+Place hotline.py in your scripts directory.
+Set a hotkey to the following python script:
+```python
+import maya.cmds as cmds
+try:
+    hl.enter()
+except:
+    from hotline import HotLine
+    hl = HotLine()
+    hl.enter()
+```
 
-    Place hotline.py in your scripts directory.
-    Set a hotkey to the following python script:
-
-    import maya.cmds as cmds
-    try:
-        hl.enter()
-    except:
-        from hotline import HotLine
-        hl = HotLine()
-        hl.enter()
-
-Key Bindings:
+##Key Bindings
     
-    Up and Down keys - Hotline history
-    Tab key - change mode
+  -  Up and Down - Shuffle through Hotline history
+  -  Tab key - Change input mode
