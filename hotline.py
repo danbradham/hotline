@@ -1,6 +1,8 @@
 '''
 HotLine
 Dan Bradham 2013
+danielbradham@gmail.com
+http://danbradham.com
 
 A convenient popup script editor.
 Up and down keys shuffle through HotLine History.
@@ -25,7 +27,8 @@ from PyQt4 import QtGui, QtCore
 import maya.OpenMayaUI as mui
 import maya.cmds as cmds
 import maya.mel as mel
-
+import inspect
+import pymel as pm
 
 def getMayaWindow():
     #Get the maya main window as a QMainWindow instance
@@ -39,21 +42,28 @@ class HotField(QtGui.QLineEdit):
         super(HotField, self).__init__(parent)
         self.history = []
         self.history_index = 0
+        self.node_types = cmds.allNodeTypes()
+        self.mel_callables = [name for name, data in inspect.getmembers(cmds, callable)]
+        self.py_callables = ['cmds.' + name for name in self.mel_callables]
 
+        self.completer_list = QtGui.QStringListModel(self.py_callables)
+        self.completer = QtGui.QCompleter(self.completer_list, self)
+        self.completer.setCompletionMode(QtGui.QCompleter.PopupCompletion)
+        self.completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self.setCompleter(self.completer)
+
+    def setup_completer(self, mode):
         #Node type completer
-        node_types = cmds.allNodeTypes()
-        self.node_types = QtCore.QStringList()
-        for node in node_types:
-            self.node_types.append(QtCore.QString(content))
-        self.node_completer = QtGui.QCompleter(self.node_types, self)
-        self.node_completer.setCompletionMode(QtGui.QCompleter.PopupCompletion)
-        self.node_completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-
-    def enable_completer(self):
-        self.setCompleter(self.node_completer)
-
-    def disbale_completer(self):
-        self.setCompleter(QtGui.QCompleter())
+        if mode == "NODE":
+            self.completer_list.setStringList(self.node_types)
+        elif mode == "MEL":
+            self.completer_list.setStringList(self.mel_callables)
+        elif mode == "PY":
+            self.completer_list.setStringList(self.py_callables)
+        elif mode == "SEL":
+            self.completer_list.setStringList(cmds.ls())
+        else:
+            self.completer_list.setStringList([])
 
     def event(self, event):
         if event.type() == QtCore.QEvent.KeyPress\
@@ -134,10 +144,7 @@ class HotLine(QtGui.QDialog):
             self.mode += 1
 
         #set hotfield completer
-        if self.mode == 3:
-            self.hotfield.enable_completer()
-        else:
-            self.hotfield.disable_completer()
+        self.hotfield.setup_completer(self.modes[self.mode])
         self.mode_button.setText(self.modes[self.mode])
         self.hotfield.setFocus()
 
@@ -164,11 +171,36 @@ class HotLine(QtGui.QDialog):
         if len(input_buffer) > 1:
             node_type, node_name = input_buffer
         else:
-            node_type = input_buffer
+            node_type = input_buffer[0]
             node_name = None
 
-        print 'Creating Node: ', node_type, ' named ', node_name
-        print cmds.getClassification(node_type).split('/')[0]
+        node_class = cmds.getClassification(node_type)
+
+        #Wrap node creation and naming in a single chunk
+        cmds.undoInfo(openChunk=True)
+
+        if node_class:
+            if "utility" in node_class[0].lower():
+                node = cmds.shadingNode(node_type, asUtility=True)
+            elif "shader" in node_class[0].lower():
+                node = cmds.shadingNode(node_type, asShader=True)
+            elif "texture" in node_class[0].lower():
+                node = cmds.shadingNode(node_type, asTexture=True)
+            elif "rendering" in node_class[0].lower():
+                node = cmds.shadingNode(node_type, asRendering=True)
+            elif "postprocess" in node_class[0].lower():
+                node = cmds.shadingNode(node_type, asPostProcess=True)
+            elif "light" in node_class[0].lower():
+                node = cmds.shadingNode(node_type, asLight=True)
+            else:
+                node = cmds.createNode(node_type)
+        else:
+            node = cmds.createNode(node_type)
+
+        if node_name:
+            cmds.rename(node, node_name.replace('\"', ''))
+
+        cmds.undoInfo(closeChunk=True)
 
     def rename(self, r_string):
             '''string processing'''
@@ -226,7 +258,7 @@ class HotLine(QtGui.QDialog):
                                 seq = str(i+1).zfill(seq_length)
                                 name = name.replace('#' * seq_length, seq)
                             cmds.rename(node, name)
-            
+
             cmds.undoInfo(closeChunk=True)
 
     def enter(self):
@@ -240,8 +272,5 @@ class HotLine(QtGui.QDialog):
         self.close()
 
 if __name__ == '__main__':
-    try:
-        hl.enter()
-    except:
-        hl = HotLine()
-        hl.enter()
+    hl = HotLine()
+    hl.enter()
