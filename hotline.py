@@ -40,6 +40,21 @@ class HotField(QtGui.QLineEdit):
         self.history = []
         self.history_index = 0
 
+        #Node type completer
+        node_types = cmds.allNodeTypes()
+        self.node_types = QtCore.QStringList()
+        for node in node_types:
+            self.node_types.append(QtCore.QString(content))
+        self.node_completer = QtGui.QCompleter(self.node_types, self)
+        self.node_completer.setCompletionMode(QtGui.QCompleter.PopupCompletion)
+        self.node_completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+
+    def enable_completer(self):
+        self.setCompleter(self.node_completer)
+
+    def disbale_completer(self):
+        self.setCompleter(QtGui.QCompleter())
+
     def event(self, event):
         if event.type() == QtCore.QEvent.KeyPress\
         and event.key() == QtCore.Qt.Key_Tab:
@@ -86,6 +101,8 @@ class HotLine(QtGui.QDialog):
                     border: 0;
                     height: 20;}'''
 
+    modes = ['PY', 'MEL', 'SEL', 'REN', 'NODE']
+
     def __init__(self, parent=getMayaWindow()):
         #Init my main window, and pass in the maya main window as it's parent
         super(HotLine, self).__init__(parent)
@@ -96,7 +113,7 @@ class HotLine(QtGui.QDialog):
         self.mode = 0
 
         self.hotfield = HotField()
-        self.hotfield.returnPressed.connect(self.evalScript)
+        self.hotfield.returnPressed.connect(self.eval_hotfield)
         self.mode_button = QtGui.QPushButton('PY')
         self.mode_button.clicked.connect(self.setMode)
         self.mode_button.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
@@ -111,21 +128,20 @@ class HotLine(QtGui.QDialog):
         self.setStyleSheet(self.style)
 
     def setMode(self):
-        if self.mode == 3:
+        if self.mode == len(self.modes) - 1:
             self.mode = 0
-            self.mode_button.setText('PY')
-        elif self.mode == 0:
-            self.mode = 1
-            self.mode_button.setText('MEL')
-        elif self.mode == 1:
-            self.mode = 2
-            self.mode_button.setText('SEL')
-        elif self.mode == 2:
-            self.mode = 3
-            self.mode_button.setText('REN')
+        else:
+            self.mode += 1
+
+        #set hotfield completer
+        if self.mode == 3:
+            self.hotfield.enable_completer()
+        else:
+            self.hotfield.disable_completer()
+        self.mode_button.setText(self.modes[self.mode])
         self.hotfield.setFocus()
 
-    def evalScript(self):
+    def eval_hotfield(self):
         input_str = self.hotfield.text()
         self.hotfield.history.append(input_str)
         self.hotfield.history_index = len(self.hotfield.history)
@@ -139,7 +155,20 @@ class HotLine(QtGui.QDialog):
             cmds.select(input_str, replace=True)
         elif self.mode == 3:
             self.rename(str(input_str))
+        elif self.mode == 4:
+            self.create_node(input_str)
         self.exit()
+
+    def create_node(self, input_str):
+        input_buffer = input_str.split()
+        if len(input_buffer) > 1:
+            node_type, node_name = input_buffer
+        else:
+            node_type = input_buffer
+            node_name = None
+
+        print 'Creating Node: ', node_type, ' named ', node_name
+        print cmds.getClassification(node_type).split('/')[0]
 
     def rename(self, r_string):
             '''string processing'''
