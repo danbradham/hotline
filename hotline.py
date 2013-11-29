@@ -1,6 +1,6 @@
 '''
 HotLine
-Dan Bradham 2013
+Dan Bradham
 danielbradham@gmail.com
 http://danbradham.com
 
@@ -37,6 +37,7 @@ def getMayaWindow():
 
 
 class HotField(QtGui.QLineEdit):
+    '''QLineEdit with history and dropdown completion.'''
 
     def __init__(self, parent=None):
         super(HotField, self).__init__(parent)
@@ -46,6 +47,7 @@ class HotField(QtGui.QLineEdit):
         self.mel_callables = [name for name, data in inspect.getmembers(cmds, callable)]
         self.py_callables = ['cmds.' + name for name in self.mel_callables]
 
+        #Dropdown Completer
         self.completer_list = QtGui.QStringListModel(self.py_callables)
         self.completer = QtGui.QCompleter(self.completer_list, self)
         self.completer.setCompletionMode(QtGui.QCompleter.PopupCompletion)
@@ -53,17 +55,15 @@ class HotField(QtGui.QLineEdit):
         self.setCompleter(self.completer)
 
     def setup_completer(self, mode):
-        #Node type completer
-        if mode == "NODE":
-            self.completer_list.setStringList(self.node_types)
-        elif mode == "MEL":
-            self.completer_list.setStringList(self.mel_callables)
-        elif mode == "PY":
-            self.completer_list.setStringList(self.py_callables)
-        elif mode == "SEL":
-            self.completer_list.setStringList(cmds.ls())
-        else:
-            self.completer_list.setStringList([])
+        '''Change completer word list.'''
+
+        completion_list = {
+        "PY": self.py_callables,
+        "MEL": self.mel_callables,
+        "SEL": cmds.ls(),
+        "REN": [],
+        "NODE": self.node_types}[mode]
+        self.completer_list.setStringList(completion_list)
 
     def event(self, event):
         if event.type() == QtCore.QEvent.KeyPress\
@@ -114,7 +114,6 @@ class HotLine(QtGui.QDialog):
     modes = ['PY', 'MEL', 'SEL', 'REN', 'NODE']
 
     def __init__(self, parent=getMayaWindow()):
-        #Init my main window, and pass in the maya main window as it's parent
         super(HotLine, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Popup|QtCore.Qt.FramelessWindowHint|QtCore.Qt.WindowStaysOnTopHint)
         self.resize(400, 24)
