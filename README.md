@@ -1,23 +1,55 @@
 #HotLine
 The popup script editor for Autodesk Maya!</br>
 
-Inspired by Nuke's popup node creator, HotLine is a popup editor with serveral
-modes:
+![hotline-header][hotline-header]  
+HotLine is like a supped up version of Nuke's node creator with plenty o' added functionality.  Best of all, it works *anywhere* in Maya. There are currently five different modes in HotLine.
 
--  **PY**thon: execute python code
--  **MEL**: execute mel code
--  **SEL**ect: select nodes using wildcards
--  **REN**ame: rename nodes using various tokens
--  **NODE**: create nodes
+| Mode       | Usage                                                      | Auto-Completes   |  
+| ---------- | ---------------------------------------------------------- | ---------------- |  
+| **PY**thon | execute python script                                      | maya.cmds module |  
+| **MEL**    | execute mel script                                         | mel commands     |  
+| **SEL**ect | select scene nodes using standard Maya selection wildcards | scene nodes      |  
+| **REN**ame | rename selected nodes using a mini token language          | N/A              |  
+| **NODE**   | create scene nodes                                         | Maya scene nodes |  
 
-Each mode has it's own dropdown autocompletion list.
+Drop-down completion is enabled by default, though, I'm considering adding a configuration file to allow users to enable/disable completion for each mode.  When HotLine is up you can use the **Tab** key to flip through modes and the **Up and Down** keys to flip through history.
 
 
+##Creating Nodes
+![hotline-node][hotline-node]  
+Node creation mode is almost exactly like Nuke's node creator.  Simply input the node you'd like to create and press return.  There is one added feature for convenience, if you input a second string, this will be the name of the newly created node.
 
-##Installation
-Requires **PyQt4**</br>
-Place hotline.py in your scripts directory.
-Set a hotkey to the following python script:
+
+##Renaming
+The rename mode requires a bit of instruction.  I created a simple token language to give users all the renaming functionality of scripts like Comet's renamer without multiple input fields.  Let's go through the various tokens available in rename mode.
+
+**selected nodes:** joint1, joint2, joint3
+
+![hotline-pound][hotline-pound]  
+>**results:** arm_01_BIND, arm_02_BIND, arm_03_BIND  
+>A single string renames the selected nodes.  "#" symbols are replaced with a sequence of numbers.  Using multiple "#" increases the padding of the digit.  
+
+![hotline-prefix][hotline-prefix]  
+>**results:** L_arm_01_BIND, L_arm_02_BIND, L_arm_03_BIND  
+>"+" adds a prefix if it comes after the input string.  
+
+![hotline-suffix][hotline-suffix]  
+>**results:** L_arm_01_BIND_JNT, L_arm_02_BIND_JNT, L_arm_03_BIND_JNT  
+>"+" adds a suffix if it comes before the input string.  
+
+![hotline-remove][hotline-remove]  
+>**results:** L_arm_01_JNT, L_arm_02_JNT, L_arm_03_JNT  
+>Removes the string following "-" from each of the selected nodes.  
+
+![hotline-replace][hotline-replace]  
+>**results:** R_arm_01_JNT, R_arm_02_JNT, R_arm_03_JNT  
+>If two strings are input, the first string is replaced by the second.  
+
+
+##Installing HotLine
+PyQt4 is required to use HotLine.  Unfortunately, Autodesk compiled Python with Visual Studio 2010. Which is fantastic because it means that you can't use one of the official binaries for PyQt4.  [Nathan Horne][Nathan Horne] has links to windows binaries for PyQt4 compiled against Maya 2013 and Maya 2012, these will work just fine.
+
+After you've installed PyQt4 installation of HotLine is simple. Just take hotline.py and place it in your Maya scripts directory. Set any key to run the following Python script, I use **h**:
 
 ```python
 import maya.cmds as cmds
@@ -29,7 +61,12 @@ except:
     hl.enter()
 ```
 
-##Key Bindings
 
--  Up and Down - Shuffle through Hotline history
--  Tab key - Change input mode
+[Nathan Horne]: http://nathanhorne.com/
+[hotline-header]: http://danbradham.github.io/images/hotline-header.png
+[hotline-pound]: http://danbradham.github.io/images/hotline-pound.png
+[hotline-prefix]: http://danbradham.github.io/images/hotline-prefix.png
+[hotline-suffix]: http://danbradham.github.io/images/hotline-suffix.png
+[hotline-remove]: http://danbradham.github.io/images/hotline-remove.png
+[hotline-replace]: http://danbradham.github.io/images/hotline-replace.png
+[hotline-node]: http://danbradham.github.io/images/hotline-node.png

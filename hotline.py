@@ -18,8 +18,9 @@ except:
     hl = HotLine()
     hl.enter()
 '''
-import re
 
+import re
+import inspect
 import sip
 sip.setapi('QVariant', 2)
 sip.setapi('QString', 2)
@@ -27,8 +28,7 @@ from PyQt4 import QtGui, QtCore
 import maya.OpenMayaUI as mui
 import maya.cmds as cmds
 import maya.mel as mel
-import inspect
-import pymel as pm
+
 
 def getMayaWindow():
     #Get the maya main window as a QMainWindow instance
@@ -90,7 +90,7 @@ class HotField(QtGui.QLineEdit):
 
 
 class HotLine(QtGui.QDialog):
-    '''HotLine, a hotbox script editor'''
+    '''A popup dialog with a single QLineEdit(HotField) and several modes of input.'''
 
     style = '''QPushButton {
                     border:0;
@@ -269,6 +269,7 @@ class HotLine(QtGui.QDialog):
     def exit(self):
         self.hotfield.clear()
         self.close()
+
 
 if __name__ == '__main__':
     hl = HotLine()
