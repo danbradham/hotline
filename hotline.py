@@ -44,7 +44,7 @@ def getMayaWindow():
     return wrapinstance(long(ptr), QtCore.QObject)
 
 
-class HotField(QtGui.QTextEdit):
+class HotField(QtGui.QLineEdit):
     '''QTextEdit with history and dropdown completion.'''
 
     def __init__(self, parent=None):
