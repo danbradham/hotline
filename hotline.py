@@ -28,7 +28,7 @@ try:
     from sip import wrapinstance
 except:
     import shiboken
-    from shiboken import wrapinstance
+    from shiboken import wrapInstance as wrapinstance
 try:
     from PyQt4 import QtGui, QtCore
 except:
@@ -44,8 +44,8 @@ def getMayaWindow():
     return wrapinstance(long(ptr), QtCore.QObject)
 
 
-class HotField(QtGui.QLineEdit):
-    '''QLineEdit with history and dropdown completion.'''
+class HotField(QtGui.QTextEdit):
+    '''QTextEdit with history and dropdown completion.'''
 
     def __init__(self, parent=None):
         super(HotField, self).__init__(parent)
