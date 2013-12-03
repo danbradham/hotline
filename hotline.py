@@ -21,19 +21,27 @@ except:
 
 import re
 import inspect
-import sip
-sip.setapi('QVariant', 2)
-sip.setapi('QString', 2)
-from PyQt4 import QtGui, QtCore
-import maya.OpenMayaUI as mui
+try:
+    import sip
+    sip.setapi('QVariant', 2)
+    sip.setapi('QString', 2)
+    from sip import wrapinstance
+except:
+    import shiboken
+    from shiboken import wrapinstance
+try:
+    from PyQt4 import QtGui, QtCore
+except:
+    from PySide import QtGui, QtCore
+import maya.OpenMayaUI as OpenMayaUI
 import maya.cmds as cmds
 import maya.mel as mel
 
 
 def getMayaWindow():
     #Get the maya main window as a QMainWindow instance
-    ptr = mui.MQtUtil.mainWindow()
-    return sip.wrapinstance(long(ptr), QtCore.QObject)
+    ptr = OpenMayaUI.MQtUtil.mainWindow()
+    return wrapinstance(long(ptr), QtCore.QObject)
 
 
 class HotField(QtGui.QLineEdit):
@@ -62,7 +70,7 @@ class HotField(QtGui.QLineEdit):
         "MEL": self.mel_callables,
         "SEL": cmds.ls(),
         "REN": [],
-        "NODE": self.node_types}[mode]
+        "NODE": cmds.allNodeTypes()}[mode]
         self.completer_list.setStringList(completion_list)
 
     def event(self, event):
@@ -148,7 +156,7 @@ class HotLine(QtGui.QDialog):
         self.hotfield.setFocus()
 
     def eval_hotfield(self):
-        input_str = self.hotfield.text()
+        input_str = str(self.hotfield.text())
         self.hotfield.history.append(input_str)
         self.hotfield.history_index = len(self.hotfield.history)
         if self.mode == 0:
