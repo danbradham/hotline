@@ -25,10 +25,10 @@ try:
     import sip
     sip.setapi('QVariant', 2)
     sip.setapi('QString', 2)
-    from sip import wrapinstance
+    wrapinstance = sip.wrapinstance
 except:
     import shiboken
-    from shiboken import wrapInstance as wrapinstance
+    wrapinstance = shiboken.wrapInstance
 try:
     from PyQt4 import QtGui, QtCore
 except:
