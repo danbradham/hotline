@@ -60,7 +60,7 @@ class HotField(QtGui.QTextEdit):
         self.completer = QtGui.QCompleter(self.completer_list, self)
         self.completer.setCompletionMode(QtGui.QCompleter.PopupCompletion)
         self.completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-        self.setCompleter(self.completer)
+        self.completer.activated.connect(self.insertCompletion)
 
     def setup_completer(self, mode):
         '''Change completer word list.'''
@@ -73,15 +73,28 @@ class HotField(QtGui.QTextEdit):
         "NODE": cmds.allNodeTypes()}[mode]
         self.completer_list.setStringList(completion_list)
 
-    def event(self, event):
-        if event.type() == QtCore.QEvent.KeyPress\
-        and event.key() == QtCore.Qt.Key_Tab:
-            self.parent().setMode()
-            return True
-        return QtGui.QLineEdit.event(self, event)
+    def insertCompletion(self, completion):
+        tc = self.textCursor()
+        tc.movePosition(QtGui.QTextCursor.Left)
+        tc.movePosition(QtGui.QTextCursor.EndOfWord)
+        tc.insertText(completion[len(self.completer.completionPrefix()):])
+        self.setTextCursor(tc)
+
+    def textUnderCursor(self):
+        tc = self.textCursor()
+        tc.select(QtGui.QTextCursor.WordUnderCursor)
+        return tc.selectedText()
+
+    def focusInEvent(self, event):
+        if self.completer:
+            self.completer.setWidget(self);
+        QtGui.QTextEdit.focusInEvent(self, event)
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Up:
+        if event.key() == QtCore.Qt.Key_Tab and not self.completer.popup().isVisible():
+            self.parent().setMode()
+            return
+        elif event.key() == QtCore.Qt.Key_Up:
             if self.history_index:
                 self.history_index -= 1
                 if self.text() and not self.text() in self.history:
@@ -94,7 +107,51 @@ class HotField(QtGui.QTextEdit):
             elif self.history_index == len(self.history):
                 self.clear()
         else:
-            QtGui.QLineEdit.keyPressEvent(self, event)
+            if self.completer.popup().isVisible():
+                if event.key() in (
+                QtCore.Qt.Key_Enter,
+                QtCore.Qt.Key_Return,
+                QtCore.Qt.Key_Escape,
+                QtCore.Qt.Key_Tab,
+                QtCore.Qt.Key_Backtab):
+                    event.ignore()
+                    return
+
+            ## has ctrl-E been pressed??
+            isShortcut = (event.modifiers() == QtCore.Qt.ControlModifier and
+                          event.key() == QtCore.Qt.Key_E)
+            if (not self.completer or not isShortcut):
+                QtGui.QTextEdit.keyPressEvent(self, event)
+
+            ## ctrl or shift key on it's own??
+            ctrlOrShift = event.modifiers() in (QtCore.Qt.ControlModifier ,
+                    QtCore.Qt.ShiftModifier)
+            if ctrlOrShift and not event.text():
+                # ctrl or shift key on it's own
+                return
+
+            eow = "~!@#$%^&*()_+{}|:\"<>?,/;'[]\\-=" #end of word
+
+            hasModifier = ((event.modifiers() != QtCore.Qt.NoModifier) and
+                            not ctrlOrShift)
+
+            completionPrefix = self.textUnderCursor()
+
+            if (not isShortcut and (hasModifier or not event.text() or
+            len(completionPrefix) < 3)):
+                self.completer.popup().hide()
+                return
+
+            if (completionPrefix != self.completer.completionPrefix()):
+                self.completer.setCompletionPrefix(completionPrefix)
+                popup = self.completer.popup()
+                popup.setCurrentIndex(
+                    self.completer.completionModel().index(0,0))
+
+            cr = self.cursorRect()
+            cr.setWidth(self.completer.popup().sizeHintForColumn(0)
+                + self.completer.popup().verticalScrollBar().sizeHint().width())
+            self.completer.complete(cr) ## popup it up!
 
 
 class HotLine(QtGui.QDialog):
@@ -130,7 +187,7 @@ class HotLine(QtGui.QDialog):
         self.mode = 0
 
         self.hotfield = HotField()
-        self.hotfield.returnPressed.connect(self.eval_hotfield)
+        #self.hotfield.returnPressed.connect(self.eval_hotfield)
         self.mode_button = QtGui.QPushButton('PY')
         self.mode_button.clicked.connect(self.setMode)
         self.mode_button.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
