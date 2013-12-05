@@ -44,6 +44,137 @@ def getMayaWindow():
     return wrapinstance(long(ptr), QtCore.QObject)
 
 
+def format_text(r, g, b, a=255, style=''):
+    color = QtGui.QColor(r, g, b, a)
+    fmt = QtGui.QTextCharFormat()
+    fmt.setForeground(color)
+    if "bold" in style:
+        fmt.setFontWeight(QtGui.QFont.Bold)
+    if "italic" in style:
+        fmt.setFontItalic(True)
+    return fmt
+
+HISTYLES = {
+    'keywords': format_text(246, 38, 114),
+    'operators': format_text(246, 38, 114),
+    'delimiters': format_text(255, 255, 255),
+    'defclass': format_text(102, 217, 239),
+    'string': format_text(230, 219, 116),
+    'string2': format_text(230, 219, 116),
+    'comment': format_text(117, 113, 94),
+    'numbers': format_text(132, 129, 255),}
+
+PY = {
+"keywords":
+    ["and", "assert", "break", "class", "continue", "def",
+    "del", "elif", "else", "except", "exec", "finally",
+    "for", "from", "global", "if", "import", "in",
+    "is", "lambda", "not", "or", "pass", "print",
+    "raise", "return", "try", "while", "yield"],
+"operators":
+    ["\+", "-", "\*", "\*\*", "/", "//", "\%", "<<", ">>", "\&", "\|", "\^",
+    "~", "<", ">", "<=", ">=", "==", "!=", "<>", "=", "\+=", "-=",
+    "\*=", "/=", "//=", "\%=", "\&=", "|=", "\^=", ">>=", "<<=", "\*\*="],
+"delimiters":
+    ["\(", "\)", "\[", "\]", "\{", "\}"],}
+
+class PyHighlighter(QtGui.QSyntaxHighlighter):
+    '''Python syntax highliter.
+    '''
+
+    def __init__(self, parent):
+        super(PyHighlighter, self).__init__(parent)
+
+        self.tri_single = (QtCore.QRegExp("'''"), 1, HISTYLES['string2'])
+        self.tri_double = (QtCore.QRegExp('"""'), 2, HISTYLES['string2'])
+
+        rules = []
+        for key, items in PY.iteritems():
+            for item in items:
+                rules.append((r'%s' % item, 0, HISTYLES[key]))
+
+        rules.extend([
+            # Double-quoted string, possibly containing escape sequences
+            (r'"[^"\\]*(\\.[^"\\]*)*"', 0, HISTYLES['string']),
+            # Single-quoted string, possibly containing escape sequences
+            (r"'[^'\\]*(\\.[^'\\]*)*'", 0, HISTYLES['string']),
+            # 'def' followed by an identifier
+            (r'\bdef\b\s*(\w+)', 1, HISTYLES['defclass']),
+            # 'class' followed by an identifier
+            (r'\bclass\b\s*(\w+)', 1, HISTYLES['defclass']),
+            # From '#' until a newline
+            (r'#[^\n]*', 0, HISTYLES['comment']),
+            # Numeric literals
+            (r'\b[+-]?[0-9]+[lL]?\b', 0, HISTYLES['numbers']),
+            (r'\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b', 0, HISTYLES['numbers']),
+            (r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b', 0, HISTYLES['numbers']),])
+
+        self.rules = [(QtCore.QRegExp(pat), index, fmt)
+            for (pat, index, fmt) in rules]
+
+    def highlightBlock(self, text):
+        """Apply syntax highlighting to the given block of text.
+        """
+        # Do other syntax formatting
+        for expression, nth, format in self.rules:
+            index = expression.indexIn(text, 0)
+
+            while index >= 0:
+                # We actually want the index of the nth match
+                index = expression.pos(nth)
+                length = expression.cap(nth).length()
+                self.setFormat(index, length, format)
+                index = expression.indexIn(text, index + length)
+
+        self.setCurrentBlockState(0)
+
+        # Do multi-line strings
+        in_multiline = self.match_multiline(text, *self.tri_single)
+        if not in_multiline:
+            in_multiline = self.match_multiline(text, *self.tri_double)
+
+
+    def match_multiline(self, text, delimiter, in_state, style):
+        """Do highlighting of multi-line strings. ``delimiter`` should be a
+        ``QRegExp`` for triple-single-quotes or triple-double-quotes, and
+        ``in_state`` should be a unique integer to represent the corresponding
+        state changes when inside those strings. Returns True if we're still
+        inside a multi-line string when this function is finished.
+        """
+        # If inside triple-single quotes, start at 0
+        if self.previousBlockState() == in_state:
+            start = 0
+            add = 0
+        # Otherwise, look for the delimiter on this line
+        else:
+            start = delimiter.indexIn(text)
+            # Move past this match
+            add = delimiter.matchedLength()
+
+        # As long as there's a delimiter match on this line...
+        while start >= 0:
+            # Look for the ending delimiter
+            end = delimiter.indexIn(text, start + add)
+            # Ending delimiter on this line?
+            if end >= add:
+                length = end - start + add + delimiter.matchedLength()
+                self.setCurrentBlockState(0)
+            # No; multi-line string
+            else:
+                self.setCurrentBlockState(in_state)
+                length = text.length() - start + add
+            # Apply formatting
+            self.setFormat(start, length, style)
+            # Look for the next match
+            start = delimiter.indexIn(text, start + length)
+
+        # Return True if still inside a multi-line string, False otherwise
+        if self.currentBlockState() == in_state:
+            return True
+        else:
+            return False
+
+
 class HotField(QtGui.QTextEdit):
     '''QTextEdit with history and dropdown completion.'''
 
@@ -61,6 +192,9 @@ class HotField(QtGui.QTextEdit):
         self.completer.setCompletionMode(QtGui.QCompleter.PopupCompletion)
         self.completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.completer.activated.connect(self.insertCompletion)
+
+        #Highlighter
+        self.highlighter = PyHighlighter(self)
 
     def setup_completer(self, mode):
         '''Change completer word list.'''
