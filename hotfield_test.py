@@ -167,7 +167,7 @@ class HotField(QtGui.QTextEdit):
     def adjust_size(self):
         doc_height = self.document().size().height()
         doc_width = self.document().idealWidth()
-        if doc_width > 322:
+        if doc_width > 322 and self.multiline:
             self.setFixedWidth(doc_width)
             self.parent().setFixedWidth(doc_width + 78)
         else:
@@ -346,6 +346,7 @@ class HotLine(QtGui.QDialog):
     def exit(self):
         self.hotfield.clear()
         self.close()
+
 
 if __name__ == "__main__":
     import signal
