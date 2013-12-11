@@ -165,16 +165,17 @@ class HotField(QtGui.QTextEdit):
         self.adjust_size()
 
     def adjust_size(self):
-        doc_size = self.document().size()
-        if doc_size.width() > 322:
-            self.setFixedWidth(doc_size.width())
-            self.parent().setMaximumWidth(doc_size.width())
+        doc_height = self.document().size().height()
+        doc_width = self.document().idealWidth()
+        if doc_width > 322:
+            self.setFixedWidth(doc_width)
+            self.parent().setFixedWidth(doc_width + 78)
         else:
             self.setFixedWidth(322)
-            self.parent().setMaximumWidth(400)
+            self.parent().setFixedWidth(400)
         if self.multiline:
-            self.setFixedHeight(doc_size.height())
-            self.parent().setFixedHeight(doc_size.height()+4)
+            self.setFixedHeight(doc_height)
+            self.parent().setFixedHeight(doc_height + 4)
         else:
             self.setFixedHeight(24)
             self.parent().setFixedHeight(28)
@@ -313,7 +314,7 @@ class HotLine(QtGui.QDialog):
             QtCore.Qt.WindowStaysOnTopHint)
         self.setObjectName('HotLine')
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         self.setFixedHeight(28)
         self.setStyleSheet(self.style)
 
@@ -347,9 +348,13 @@ class HotLine(QtGui.QDialog):
         self.close()
 
 if __name__ == "__main__":
+    import signal
     app = QtGui.QApplication(sys.argv)
 
     hl = HotLine()
     hl.enter()
 
-    sys.exit(app.exec_())
+    def sigint_handler(*args):
+        sys.exit(app.exec_())
+    signal.signal(signal.SIGINT, sigint_handler)
+    sys.exit(hl.exec_())

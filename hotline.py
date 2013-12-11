@@ -159,7 +159,6 @@ class HotField(QtGui.QTextEdit):
         super(HotField, self).__init__(parent)
         self.history = []
         self.history_index = 0
-        self.node_types = cmds.allNodeTypes()
         self.mel_callables = [name for name, data in inspect.getmembers(cmds, callable)]
         self.py_callables = ['cmds.' + name for name in self.mel_callables]
 
