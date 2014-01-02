@@ -1,0 +1,36 @@
+QPushButton {
+    border: 0;
+    background: none;
+}
+
+QPushButton:pressed {
+    border: 0;
+    border-top: 1px solid rgb(15, 15, 15);
+    border-left: 1px solid rgb(15, 15, 15);
+    color: rgb(0, 35, 55);
+    background: rgb(115, 115, 115);
+}
+
+QPushButton:checked {
+    border: 0;
+    border-top: 1px solid rgb(15, 15, 15);
+    border-left: 1px solid rgb(15, 15, 15);
+    color: rgb(0, 35, 55);
+    background: rgb(115, 115, 115);
+}
+
+QLineEdit {
+    background-color: none;
+    border: 0;
+    border-bottom: 1px solid rgb(42, 42, 42);
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 20;
+}
+
+QLineEdit:focus {
+    outline: none;
+    background: none;
+    border: 0;
+    height: 20;
+}
