@@ -1,0 +1,15 @@
+{
+    "Python": {
+        "keywords": [246, 38, 114],
+        "operators": [246, 38, 114],
+        "delimiters": [255, 255, 255],
+        "constants": [132, 129, 255],
+        "declaritives": [102, 217, 239],
+        "class.name": [255, 255, 255],
+        "func.name": [166, 226, 46],
+        "string": [230, 219, 116],
+        "comment": [117, 113, 94],
+        "numeric": [132, 129, 255],
+        "multiline": [230, 219, 116]
+    }
+}

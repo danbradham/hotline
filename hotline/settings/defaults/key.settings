@@ -1,0 +1,9 @@
+{
+    "keys": {
+        "Toggle Multiline": "Ctrl+M",
+        "Toggle Modes": "Tab",
+        "Execute": "Enter",
+        "Previous in History": "Up",
+        "Next in History": "Down"
+    }
+}
