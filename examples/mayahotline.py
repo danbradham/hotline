@@ -1,3 +1,12 @@
+'''
+mayahotline.py
+--------------
+An example of using hotline in Autodesk Maya.
+Place in your maya scripts directory and bind a key to:
+    import mayahotline
+    mayahotline.show()
+'''
+
 #Get wrapinstance from PyQt or PySide
 try:
     import sip
@@ -5,37 +14,40 @@ try:
 except ImportError:
     import shiboken
     wrapinstance = shiboken.wrapInstance
+import re
 
-from hotline import HotLine
+import hotline
 import maya.OpenMayaUI as OpenMayaUI
 import maya.cmds as cmds
 import maya.mel as mel
+
 
 def getMayaWindow():
     #Get the maya main window as a QMainWindow instance
     ptr = OpenMayaUI.MQtUtil.mainWindow()
     return wrapinstance(long(ptr), QtCore.QObject)
 
-@HotLine.add_mode("PY")
-def python_handler(input_str):
+
+def py_handler(input_str):
     cmds.evalDeferred(input_str)
     cmds.repeatLast(addCommand='python("{0}")'.format(input_str))
 
-@HotLine.add_mode("MEL")
+
 def mel_handler(input_str):
     mel.eval(input_str)
     cmds.repeatLast(addCommand=input_str)
 
-@HotLine.add_mode("SEL")
+
 def sel_handler(input_str):
     cmds.select(input_str, replace=True)
 
-@HotLine.add_mode("REN")
+
 def ren_handler(input_str):
-        nodes = [(node, index) 
-            for index, node in enumerate(cmds.ls(sl=True, long=True))]
-        sorted_nodes = sorted(nodes, 
-            key=lambda (node, index): len(node.split('|')), 
+        nodes = [(node, index)
+                 for index, node in enumerate(cmds.ls(sl=True, long=True))]
+        sorted_nodes = sorted(
+            nodes,
+            key=lambda (node, index): len(node.split('|')),
             reverse=True)
         rename_strings = input_str.split()
 
@@ -63,13 +75,15 @@ def ren_handler(input_str):
                         seq = str(i+1).zfill(seq_length)
                         name = name.replace('#' * seq_length, seq)
                     if name.endswith('+'):
-                        node = cmds.rename(node,
+                        node = cmds.rename(
+                            node,
                             name.replace('+', '') + node_shortname)
                     elif name.startswith('+'):
-                        node = cmds.rename(node,
+                        node = cmds.rename(
+                            node,
                             node_shortname + name.replace('+', ''))
                     else:
-                        print "+ symbols belong at the front or the end of a string"
+                        print "+ belongs at start or end of a string"
             else:
 
                 #Handle Search Replace
@@ -81,7 +95,8 @@ def ren_handler(input_str):
                         if seq_length:
                             seq = str(i+1).zfill(seq_length)
                             name = name.replace('#' * seq_length, seq)
-                        node = cmds.rename(node,
+                        node = cmds.rename(
+                            node,
                             node_shortname.replace(rename_strings[0], name))
                     break
 
@@ -96,7 +111,7 @@ def ren_handler(input_str):
 
         cmds.undoInfo(closeChunk=True)
 
-@HotLine.add_mode("NODE")
+
 def node_handler(input_str):
     input_buffer = input_str.split()
     if len(input_buffer) > 1:
@@ -133,9 +148,26 @@ def node_handler(input_str):
 
     cmds.undoInfo(closeChunk=True)
 
-try:
-    hl.enter()
-except NameError:
-    hl = HotLine(getMayaWindow())
-    hl.enter()
 
+def show():
+    '''Show HotLine ui.'''
+
+    try:
+        hl.enter()
+    except NameError:
+        #Instantiate HotLine as child of Maya Window
+        hl = hotline.HotLine(getMayaWindow())
+        #Instantiate Modes
+        PY = hotline.Mode("PY", py_handler, syntax="Python")
+        MEL = hotline.Mode("MEL", mel_handler)
+        SEL = hotline.Mode("SEL", sel_handler, completion_list_meth=cmds.ls)
+        REN = hotline.Mode("REN", ren_handler)
+        NODE = hotline.Mode("NODE", node_handler)
+        #Add Modes to HotLine instance
+        hl.add_mode(PY)
+        hl.add_mode(MEL)
+        hl.add_mode(SEL)
+        hl.add_mode(REN)
+        hl.add_mode(NODE)
+        #Show Window
+        hl.enter()

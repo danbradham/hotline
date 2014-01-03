@@ -75,13 +75,11 @@
         },
         "multiline.single": {
             "start": "'''",
-            "end": "'''",
-            "captures": 0
+            "end": "'''"
         },
         "multiline.double": {
             "start": "\"\"\"",
-            "end": "\"\"\"",
-            "captures": 0
+            "end": "\"\"\""
         }
     }
 }
