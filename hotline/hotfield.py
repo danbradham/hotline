@@ -20,7 +20,7 @@ try:
 except ImportError:
     from PySide import QtGui, QtCore
 
-KEYS = load_keys()
+KEYSET = load_keys()
 
 
 class History(object):
@@ -88,7 +88,7 @@ class HotField(QtGui.QTextEdit):
             "Previous in History": self.key_prev,
             "Next in History": self.key_next}
 
-        for mode, key_shortcuts in KEYS.iteritems():
+        for mode, key_shortcuts in KEYSET.iteritems():
             for name, seq in key_shortcuts.iteritems():
                 if mode == 'standard':
                     meth = key_methods['name']

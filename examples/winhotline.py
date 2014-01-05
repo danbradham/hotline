@@ -1,8 +1,6 @@
 '''
 An example of HotLine running with a global hotkey anywhere in windows.
 '''
-import sys
-sys.path.append("C:/Users/dbradham/Desktop/PROJECTS/HotLine")
 import pyhk
 import signal
 import subprocess
@@ -24,9 +22,9 @@ def cmd_handler(input_str):
 
 
 def main():
+
     PY = hotline.Mode("PY", py_handler, syntax='PYTHON')
     CMD = hotline.Mode("CMD", cmd_handler)
-
     app = QtGui.QApplication(sys.argv)
     hl = hotline.HotLine()
     hl.add_mode(PY)
