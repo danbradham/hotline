@@ -11,7 +11,8 @@ from .context import Context
 
 
 def show():
-    if not Context.instance:
+    if not Context.instance():
         raise Exception("Import a context first!")
     else:
-        Context.instance.show()
+        Context.instance()
+        return Context.instance().show()

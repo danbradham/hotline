@@ -5,12 +5,17 @@ import sys
 from PyQt4 import QtGui, QtCore
 
 
+REL = os.path.dirname(__file__)
+
+
 def test_rel_path_exist():
-    test_pth = "C:{0}PROJECTS{0}HotLine{0}hotline{0}__init__.py".format(os.sep)
+    test_pth = os.path.abspath(os.path.join(REL, "../hotline/__init__.py"))
     eq_(utils.rel_path("__init__.py"), test_pth)
+
 
 def test_rel_path_doesnt_exist():
     eq_(utils.rel_path("NONEXISTANT/PATH"), None)
+
 
 def test_load_settings():
     KEYS = utils.load_settings("key.settings")
@@ -30,10 +35,8 @@ class TestPatternFactory:
     def setup_class(cls):
         cls.factory = utils.PatternFactory()
 
-
     def test_init(self):
         assert(isinstance(self.factory.colors, dict))
-
 
     def test_format_text(self):
         fmt = self.factory.format_text(255, 255, 255, 255, "bold")

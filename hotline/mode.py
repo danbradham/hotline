@@ -28,13 +28,13 @@ class Mode(object):
         self.handler = handler if handler else self.handler
         self.completion_list_meth = completion_list_meth
         self.completion_list = completion_list if completion_list else []
-        self.set_syntax(syntax)
+        if syntax:
+            self.set_syntax(syntax)
 
     def set_syntax(self, syntax):
         '''Generates modes patterns and multline patterns from a syntax
         json file
         '''
-
         self.patterns = []
         self.multiline_patterns = []
 

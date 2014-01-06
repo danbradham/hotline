@@ -1,24 +1,23 @@
-from .hotline import HotLine
-from .mode import Mode
+import hotline
 
 
 class Context(object):
     '''Holds state for a specific set of modes for HotLine.'''
 
-    modes = {}
-    instance = None
-    name = None
+    __shared = {}
 
-    def __init__(self, name):
-        if name:
-            self.name = self.name + " and name"
-        else:
-            self.name = name
-        if not self.instance:
-            self.instance = self
+    def __init__(self):
+        self.__dict__ = self.__shared
+        self._instance = self
+        self.modes = self.__dict__.get("modes", {})
+        self.show = self.__dict__.get("show", None)
+
+    @classmethod
+    def instance(cls):
+        return cls.__shared.get("_instance", None)
 
     def add_mode(self, name, completion_list=None, syntax=None,
-                 hotline_cls=HotLine, mode_cls=Mode):
+                 hotline_cls=hotline.HotLine, mode_cls=hotline.Mode):
         '''Decorator used to create a Mode object and add it to HotLine plus
         register it with the Context.
 
@@ -32,27 +31,26 @@ class Context(object):
             Used for extending Mode. Not necessary unless you're looking to
             change the default behaviour of Modes.'''
 
-        def add_fn(handler):
-            mode = mode_cls(name, handler, completion_list, syntax)
+        def wrapped_handler(handler):
+            mode = mode_cls(name, handler,
+                            completion_list=completion_list, syntax=syntax)
             self.modes[name] = mode
             hotline_cls.add_mode(mode)
-
-    def add_setup(self, name):
-        '''Add a function to be called when mode is changed.'''
-
-        def setup(fn):
-            self.modes[name].setup()
-            fn()
-
-        self.modes[name].setup = setup
+            return handler
+        return wrapped_handler
 
     def add_completer(self, name):
         '''Add a function that generates a completion list
         for auto-completion'''
 
-        def completer_meth(fn):
-            self.modes[name].completion_list_meth = fn
+        def wrapped_completer(completer):
+            self.modes[name].completion_list_meth = completer
+            return completer
+        return wrapped_completer
 
     def set_show(self):
-        def show(fn):
+        '''Add a show function to context object.'''
+        def wrapped(fn):
             self.show = fn
+            return fn
+        return wrapped
