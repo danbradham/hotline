@@ -93,9 +93,7 @@ class HotLine(QtGui.QDialog):
     @property
     def mode(self):
         '''Returns current mode.'''
-        if self._modes:
-            return self._modes[0]
-        return Mode('Null')
+        return self._modes[0]
 
     @classmethod
     def add_mode(cls, mode):
@@ -104,11 +102,11 @@ class HotLine(QtGui.QDialog):
 
     def prev_mode(self):
         self._modes.rotate(1)
-        self.mode.set(self)
+        self.mode.setup(self)
 
     def next_mode(self):
         self._modes.rotate(1)
-        self.mode.set(self)
+        self.mode.setup(self)
 
     def handle_input(self, input_str):
         self.mode.handler(str(input_str))
