@@ -23,7 +23,7 @@ import maya.OpenMayaUI as OpenMayaUI
 import maya.cmds as cmds
 import maya.mel as mel
 
-CTX = hotline.Context("Maya")
+CTX = hotline.Context()
 MEL_CALLABLES = [name for name, data in inspect.getmembers(cmds, callable)]
 PY_CALLABLES = ['cmds.' + name for name in MEL_CALLABLES]
 
