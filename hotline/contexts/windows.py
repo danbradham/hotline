@@ -1,6 +1,7 @@
 '''
 An example of HotLine running with a global hotkey anywhere in windows.
 '''
+
 import pyhk
 import signal
 import subprocess
@@ -9,9 +10,8 @@ from PyQt4 import QtGui, QtCore
 
 
 def py_handler(input_str):
-    p = subprocess.Popen(
-        ["python", "-c", input_str],
-        stdout=subprocess.PIPE)
+    p = subprocess.Popen(["python", "-c", input_str],
+                         stdout=subprocess.PIPE)
     stdout, stderr = p.communicate()
     print(stdout)
 

@@ -2,15 +2,15 @@ import os
 import json
 #Try PyQt then PySide imports
 try:
-    from PyQt4 import QtGui
+    from PyQt4 import QtGui, QtCore
 except ImportError:
-    from PySide import QtGui
+    from PySide import QtGui, QtCore
 
 
 def rel_path(path):
     '''Returns paths relative to the modules directory.'''
 
-    fullpath = os.path.join(os.path.dirname(__file__), os.path.abspath(path))
+    fullpath = os.path.abspath(os.path.join(os.path.dirname(__file__), path))
     if os.path.exists(fullpath):
         return fullpath
     return None
@@ -60,7 +60,7 @@ class PatternFactory(object):
     def __init__(self, color_settings="color.settings"):
         self.colors = load_settings(color_settings)
 
-    def format_text(r, g, b, a=255, style=''):
+    def format_text(self, r, g, b, a=255, style=''):
         '''Create a QTextCharFormat for Highlighter.'''
         color = QtGui.QColor(r, g, b, a)
         fmt = QtGui.QTextCharFormat()
@@ -85,11 +85,11 @@ class PatternFactory(object):
 
         fmt = self.format_text(*color)
 
-        if 'multiline' in name:
-            start = QtGui.QRegexp(pattern['start'])
-            end = QtGui.QRegexp(pattern['end'])
+        if 'multiline' in pattern_name:
+            start = QtCore.QRegExp(pattern['start'])
+            end = QtCore.QRegExp(pattern['end'])
             return start, end, fmt
         else:
-            match = QtGui.QRegexp(pattern['match'])
+            match = QtCore.QRegExp(pattern['match'])
             captures = pattern['captures']
             return match, captures, fmt
