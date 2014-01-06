@@ -53,7 +53,7 @@ class Mode(object):
                         PATTERN_FACTORY.create(
                             syntax_name, pattern_name, pattern))
 
-    def set(self, parent):
+    def setup(self, parent):
         '''Called by HotLine instance when modes are cycled.'''
         if self.completion_list_meth:
             self.completion_list = self.completion_list_meth()

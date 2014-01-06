@@ -11,37 +11,46 @@ Place in your maya scripts directory and bind a key to:
 try:
     import sip
     wrapinstance = sip.wrapinstance
+    from PyQt4 import QtGui, QtCore
 except ImportError:
     import shiboken
     wrapinstance = shiboken.wrapInstance
+    from PySide import QtGui, QtCore
 import re
-
+import inspect
 import hotline
 import maya.OpenMayaUI as OpenMayaUI
 import maya.cmds as cmds
 import maya.mel as mel
 
-
-def getMayaWindow():
-    #Get the maya main window as a QMainWindow instance
-    ptr = OpenMayaUI.MQtUtil.mainWindow()
-    return wrapinstance(long(ptr), QtCore.QObject)
+CTX = hotline.Context()
+MEL_CALLABLES = [name for name, data in inspect.getmembers(cmds, callable)]
+PY_CALLABLES = ['cmds.' + name for name in MEL_CALLABLES]
 
 
+@CTX.add_mode("PY", completion_list=PY_CALLABLES, syntax="Python")
 def py_handler(input_str):
     cmds.evalDeferred(input_str)
     cmds.repeatLast(addCommand='python("{0}")'.format(input_str))
 
 
+@CTX.add_mode("MEL", completion_list=MEL_CALLABLES)
 def mel_handler(input_str):
     mel.eval(input_str)
     cmds.repeatLast(addCommand=input_str)
 
 
+@CTX.add_mode("SEL")
 def sel_handler(input_str):
     cmds.select(input_str, replace=True)
 
 
+@CTX.add_completer("SEL")
+def sel_completion_list_meth():
+    return cmds.ls()
+
+
+@CTX.add_mode("REN")
 def ren_handler(input_str):
         nodes = [(node, index)
                  for index, node in enumerate(cmds.ls(sl=True, long=True))]
@@ -112,6 +121,7 @@ def ren_handler(input_str):
         cmds.undoInfo(closeChunk=True)
 
 
+@CTX.add_mode("NODE")
 def node_handler(input_str):
     input_buffer = input_str.split()
     if len(input_buffer) > 1:
@@ -149,25 +159,18 @@ def node_handler(input_str):
     cmds.undoInfo(closeChunk=True)
 
 
+def getMayaWindow():
+    #Get the maya main window as a QMainWindow instance
+    ptr = OpenMayaUI.MQtUtil.mainWindow()
+    return wrapinstance(long(ptr), QtCore.QObject)
+
+
 def show():
     '''Show HotLine ui.'''
 
     try:
-        hl.enter()
+        HL.enter()
     except NameError:
         #Instantiate HotLine as child of Maya Window
-        hl = hotline.HotLine(getMayaWindow())
-        #Instantiate Modes
-        PY = hotline.Mode("PY", py_handler, syntax="Python")
-        MEL = hotline.Mode("MEL", mel_handler)
-        SEL = hotline.Mode("SEL", sel_handler, completion_list_meth=cmds.ls)
-        REN = hotline.Mode("REN", ren_handler)
-        NODE = hotline.Mode("NODE", node_handler)
-        #Add Modes to HotLine instance
-        hl.add_mode(PY)
-        hl.add_mode(MEL)
-        hl.add_mode(SEL)
-        hl.add_mode(REN)
-        hl.add_mode(NODE)
-        #Show Window
-        hl.enter()
+        HL = hotline.HotLine(getMayaWindow())
+        HL.enter()

@@ -21,7 +21,7 @@ setup(
     author='Dan Bradham',
     author_email='danielbradham@gmail.com',
     url='http://www.danbradham.com',
-    packages=['hotline'],
+    packages=['hotline', 'hotline.contexts'],
     package_dir={'hotline': 'hotline'},
     package_data=package_data,
     include_package_data=True,
