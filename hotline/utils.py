@@ -21,8 +21,8 @@ def json_load(path):
         with open(path) as f:
             try:
                 return json.load(f)
-            except ValueError:
-                return {}
+            except ValueError, e:
+                print "JSON ERROR: " + path
     return {}
 
 

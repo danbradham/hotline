@@ -17,34 +17,33 @@ class Mode(object):
     :param name: Name of the mode e.g. "PY"
     :param handler: Function to handle input_str.
         Must take exactly one string argument to evaluate.
-    :param completion_list_meth: A function that generations a completion list.
-    :param completion_list: List of words to autocomplete.
+    :param completer_fn: A function that generations a completion list.
+    :param completer_list: List of words to autocomplete.
     :param syntax: Name of syntax file in settings folder'''
 
     def __init__(self, name, handler, completer_fn=None,
-                 completion_list=None, syntax=None):
+                 completer_list=None, syntax=None):
         self.name = name
         self.completer_fn = completer_fn
-        self.completion_list = completion_list if completion_list else []
-        self.__call__ = handler
+        self.completer_list = completer_list if completer_list else []
+        self.handler = handler
+        self.patterns = []
+        self.multiline_patterns = []
         if syntax:
             self.set_syntax(syntax)
 
-    def __call__(self, input_str):
-        pass
+    def set_handler(self, fn):
+        self.handler = fn
 
-    def completer(self, fn):
+    def set_completer(self, fn):
         '''Add a function that generates a completion list
         for auto-completion'''
         self.completer_fn = fn
-        return fn
 
     def set_syntax(self, syntax):
         '''Generates modes patterns and multline patterns from a syntax
         json file
         '''
-        self.patterns = []
-        self.multiline_patterns = []
 
         syntax_data = load_settings(
             syntax + '.syntax',
@@ -63,9 +62,9 @@ class Mode(object):
 
     def setup(self, parent):
         '''Called by HotLine instance when modes are cycled.'''
-        if self.completer_fn:
-            self.completion_list = self.completer_fn()
-        parent.mode_button.setText(self.mode.name)
-        parent.highlighter.set_rules(self.patterns, self.multiline_patterns)
-        parent.hotfield.completer.set_model(self.completion_list)
 
+        if self.completer_fn:
+            self.completer_list = self.completer_fn()
+        parent.mode_button.setText(self.name)
+        parent.highlighter.set_rules(self.patterns, self.multiline_patterns)
+        parent.hotfield.set_completer_model(self.completer_list)

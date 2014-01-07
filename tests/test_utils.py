@@ -22,6 +22,11 @@ def test_load_settings():
     assert(isinstance(KEYS, dict))
 
 
+def test_load_syntax():
+    syntax_data = utils.load_settings("Python.syntax", combine_user_defaults=False)
+    assert(isinstance(syntax_data, dict))
+
+
 def test_load_keys():
     KEYS = utils.load_keys()
     for mode, hotkeys in KEYS.iteritems():

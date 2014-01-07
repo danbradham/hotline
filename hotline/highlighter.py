@@ -9,8 +9,10 @@ class Highlighter(QtGui.QSyntaxHighlighter):
 
     def __init__(self, parent):
         super(Highlighter, self).__init__(parent)
+        self.patterns = []
+        self.multiline_patterns = []
 
-    def set_rules(self, patterns, multiline_patterns=None):
+    def set_rules(self, patterns, multiline_patterns):
         '''Set patterns and rules for highlighter
 
         :param patterns: Patterns to highlight.
@@ -20,7 +22,9 @@ class Highlighter(QtGui.QSyntaxHighlighter):
         :param multiline_patterns: Multiline patterns to highlight.
             A list of tuples such as:
             [(start_pattern, end_pattern, format)...]
-            e.g. [(QtGui.QRegexp("\\*"), QtGui.QRegexp("*\\"), QtGui.QTextCharFormat())...]'''
+            e.g. [(QtGui.QRegexp("\\*"), 
+                   QtGui.QRegexp("*\\"), 
+                   QtGui.QTextCharFormat())...]'''
 
         self.patterns = patterns
         self.multiline_patterns = multiline_patterns
@@ -47,7 +51,7 @@ class Highlighter(QtGui.QSyntaxHighlighter):
 
         last_state = self.previousBlockState()
         if last_state >= 0:
-            start, end, fmt = self.multiline_rules[last_state]
+            start, end, fmt = self.multiline_patterns[last_state]
             end_index = end.indexIn(text)
             if end_index == -1:
                 self.setFormat(0, len(text), fmt)
@@ -55,7 +59,7 @@ class Highlighter(QtGui.QSyntaxHighlighter):
             else:
                 self.setFormat(0, end_index + 3, fmt)
         else:
-            for state, start, end, fmt in enumerate(self.multiline_rules):
+            for state, (start, end, fmt) in enumerate(self.multiline_patterns):
                 start_index = start.indexIn(text)
                 if start_index != -1:
                     end_index = end.indexIn(text, start_index + 3)
@@ -65,3 +69,4 @@ class Highlighter(QtGui.QSyntaxHighlighter):
                         self.setCurrentBlockState(state)
                     else:
                         self.setFormat(start_index, end_index + 3, fmt)
+                    return

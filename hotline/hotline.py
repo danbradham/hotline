@@ -11,12 +11,15 @@ from .highlighter import Highlighter
 from .utils import rel_path
 from .hotfield import HotField
 from .mode import Mode
+import os
 
 #Try PyQt then PySide imports
 try:
     from PyQt4 import QtGui, QtCore
 except ImportError:
     from PySide import QtGui, QtCore
+
+REL = rel_path(".").replace('\\', '/')
 
 
 class HotLine(QtGui.QDialog):
@@ -29,12 +32,14 @@ class HotLine(QtGui.QDialog):
 
         # Create and connect ui widgets
         self.hotfield = HotField()
+        self.hotfield.setObjectName("input")
         self.hotfield.modeToggled.connect(self.next_mode)
         self.hotfield.returnPressed.connect(self.handle_input)
         # Add python highlighter to hotfield
         self.highlighter = Highlighter(self.hotfield)
         # Add popup completer to hotfield
         self.mode_button = QtGui.QPushButton()
+        self.mode_button.setObjectName("mode")
         self.mode_button.clicked.connect(self.next_mode)
         self.mode_button.setSizePolicy(
             QtGui.QSizePolicy.Fixed,
@@ -45,7 +50,8 @@ class HotLine(QtGui.QDialog):
             "Switch HotLine Mode\n"
             "Tab in Single-line Mode\n"
             "CTRL + Tab in Multi-line Mode")
-        self.multiline_button = QtGui.QPushButton('=')
+        self.multiline_button = QtGui.QPushButton()
+        self.multiline_button.setObjectName("multiline")
         self.multiline_button.clicked.connect(self.toggle_multiline)
         self.multiline_button.setSizePolicy(
             QtGui.QSizePolicy.Fixed,
@@ -82,13 +88,16 @@ class HotLine(QtGui.QDialog):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         self.setFixedHeight(28)
+        if self._modes:
+            self.mode.setup(self)
 
         try:
             with open(rel_path('settings/user/style.css')) as f:
-                self.setStyleSheet(f.read())
+                style = f.read() % ({"rel": REL})
         except:
             with open(rel_path('settings/defaults/style.css')) as f:
-                self.setStyleSheet(f.read())
+                style = f.read() % ({"rel": REL})
+        self.setStyleSheet(style)
 
     @property
     def mode(self):

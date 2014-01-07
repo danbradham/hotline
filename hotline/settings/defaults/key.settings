@@ -2,14 +2,14 @@
     "standard": {
         "Toggle Multiline": "Ctrl+M",
         "Toggle Modes": "Tab",
-        "Execute": "Enter",
+        "Execute": "Return",
         "Previous in History": "Up",
         "Next in History": "Down"
     },
     "multiline": {
         "Toggle Multiline": "Ctrl+M",
         "Toggle Modes": "Ctrl+Tab",
-        "Execute": "Ctrl+Enter",
+        "Execute": "Ctrl+Return",
         "Previous in History": "Ctrl+Up",
         "Next in History": "Ctrl+Down"
     }

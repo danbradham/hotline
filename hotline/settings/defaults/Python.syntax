@@ -23,11 +23,11 @@
         },
         "class.name": {
             "match": "\\bclass\\b\\s*(\\w+)",
-            "captures": 1,
+            "captures": 1
         },
         "func.name": {
             "match": "\\bdef\\b\\s*(\\w+)",
-            "captures": 1,
+            "captures": 1
         },
         "numeric.complex": {
             "match": "\\b(?i:(((\\d+(\\.(?=[^a-zA-Z_])\\d*)?|(?<=[^0-9a-zA-Z_])\\.\\d+)(e[\\-\\+]?\\d+)?))J)",

@@ -39,18 +39,6 @@ class History(object):
         return self._history[0]
 
 
-class Completer(QtGui.QCompleter):
-
-    def __init__(self, parent):
-        self.completion_model = QtGui.QStringListModel([])
-        super(Completer, self).__init__(self.completion_model, parent)
-        self.setCompletionMode(QtGui.QCompleter.PopupCompletion)
-        self.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-
-    def set_model(self, completion_list):
-        self.completion_model.setStringList(completion_list)
-
-
 class HotField(QtGui.QTextEdit):
     '''A QTextEdit widget with history'''
 
@@ -75,29 +63,21 @@ class HotField(QtGui.QTextEdit):
         self.setFont(font)
 
         self.history = History()
-        self.completer = Completer(self)
+        self.completer_model = QtGui.QStringListModel([])
+        self.completer = QtGui.QCompleter(self.completer_model, self)
+        self.completer.setCompletionMode(QtGui.QCompleter.PopupCompletion)
+        self.completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.completer.activated.connect(self.insertCompletion)
         self._multiline = False
         self.document().contentsChanged.connect(self.adjust_size)
 
         #Setup Hotkeys
-        key_methods = {
+        self.key_methods = {
             "Toggle Multiline": self.key_multiline,
             "Toggle Modes": self.key_modes,
             "Execute": self.key_execute,
             "Previous in History": self.key_prev,
             "Next in History": self.key_next}
-
-        for mode, key_shortcuts in KEYSET.iteritems():
-            for name, seq in key_shortcuts.iteritems():
-                if mode == 'standard':
-                    meth = key_methods['name']
-                else:
-                    meth = partial(key_methods['name'], multiline_key=True)
-                if mode == "standard":
-                    shortcut = QtGui.QShortcut(
-                        seq, self, context=QtCore.Qt.WidgetShortcut)
-                    shortcut.activated.connect(meth)
 
     @property
     def multiline(self):
@@ -107,6 +87,9 @@ class HotField(QtGui.QTextEdit):
     def multiline(self, value):
         self._multiline = value
         self.adjust_size()
+
+    def set_completer_model(self, completer_list):
+        self.completer_model.setStringList(completer_list)
 
     def adjust_size(self):
         doc_height = self.document().size().height()
@@ -141,34 +124,69 @@ class HotField(QtGui.QTextEdit):
             self.completer.setWidget(self)
         QtGui.QTextEdit.focusInEvent(self, event)
 
-    def key_multiline(self, multiline_key=False):
+    def key_multiline(self):
         self.multiline = False if self.multiline else True
         self.multilineToggled.emit(self.multiline)
 
-    def key_modes(self, multiline_key=False):
-        if multiline_key or not self.multiline:
-            self.modeToggled.emit()
+    def key_modes(self):
+        self.modeToggled.emit()
 
-    def key_execute(self, multiline_key=False):
-        if multiline_key or not self.multiline:
-            plaintext = self.toPlainText()
-            self.returnPressed.emit(plaintext)
-            self.history.add(plaintext)
-            self.clear()
+    def key_execute(self):
+        plaintext = self.toPlainText()
+        self.returnPressed.emit(plaintext)
+        self.history.add(plaintext)
+        self.clear()
 
-    def key_prev(self, multiline_key=False):
-        if multiline_key or not self.multiline:
-            self.setText(self.history.prev())
+    def key_prev(self):
+        self.setText(self.history.prev())
 
-    def key_next(self, multiline_key=False):
-        if multiline_key or not self.multiline:
-            self.setText(self.history.next())
+    def key_next(self):
+        self.setText(self.history.next())
+
+    def to_key_sequence(self, key, modifiers):
+        mods = []
+        if modifiers & QtCore.Qt.ShiftModifier:
+            mods.append("Shift+")
+        if modifiers & QtCore.Qt.ControlModifier:
+            mods.append("Ctrl+")
+        if modifiers & QtCore.Qt.AltModifier:
+            mods.append("Alt+")
+        if modifiers & QtCore.Qt.MetaModifier:
+            mods.append("Meta+")
+        mod = ''.join(mods)
+        key = QtGui.QKeySequence(key).toString()
+        return QtGui.QKeySequence.fromString(mod + key)
 
     def keyPressEvent(self, event):
         completer_popup = self.completer.popup()
         is_completing = completer_popup.isVisible()
         is_multiline = self.multiline
         key = event.key()
+        mod = event.modifiers()
+        key_seq = self.to_key_sequence(key, mod)
+
+        #Singleline Hotkeys
+        if not is_multiline and not is_completing:
+            for name, seq in KEYSET['standard'].iteritems():
+                if key_seq.matches(seq):
+                    self.key_methods[name]()
+                    return
+
+        #Multiline Hotkeys
+        if is_multiline and not is_completing:
+            for name, seq in KEYSET['multiline'].iteritems():
+                if key_seq.matches(seq):
+                    self.key_methods[name]()
+                    return
+
+        #Tab Insertion as spaces
+        if (key in [QtCore.Qt.Key_Tab, QtCore.Qt.Key_Backtab]
+            and not is_completing):
+
+            self.insertPlainText('    ')
+            return
+
+        #Ignore event while completing
         if is_completing:
             if key in (QtCore.Qt.Key_Enter,
                        QtCore.Qt.Key_Return,
@@ -178,24 +196,20 @@ class HotField(QtGui.QTextEdit):
                 event.ignore()
                 return
 
-            completion_prefix = self.textUnderCursor()
-            if len(completion_prefix) < 3:
-                completer_popup.hide()
-                return
-            if completion_prefix != self.completer.completionPrefix():
-                self.completer.setCompletionPrefix(completion_prefix)
-                completer_popup.setCurrentIndex(
-                    self.completer.completionModle().index(0, 0))
+        #Insert keypress
+        super(HotField, self).keyPressEvent(event)
 
-            cr = self.cursorRect()
-            cr.setWidth(
-                completer_popup.sizeHintForColumn(0)
-                + completer_popup.verticalScrollBar().sizeHint().width())
-            self.completer.complete(cr)
+        completion_prefix = self.textUnderCursor()
+        if len(completion_prefix) < 3:
+            completer_popup.hide()
+            return
+        if completion_prefix != self.completer.completionPrefix():
+            self.completer.setCompletionPrefix(completion_prefix)
+            completer_popup.setCurrentIndex(
+                self.completer.completionModel().index(0, 0))
 
-        else:
-            # Tab insertion for multline mode
-            if (key == QtCore.Qt.Key_Tab and is_multiline):
-                self.insertPlainText('    ')
-            else:
-                super(HotField, self).keyPressEvent(event)
+        cr = self.cursorRect()
+        cr.setWidth(
+            completer_popup.sizeHintForColumn(0)
+            + completer_popup.verticalScrollBar().sizeHint().width())
+        self.completer.complete(cr)

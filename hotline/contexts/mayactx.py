@@ -22,35 +22,29 @@ import hotline
 import maya.OpenMayaUI as OpenMayaUI
 import maya.cmds as cmds
 import maya.mel as mel
+import pymel.core as pm
 
-CTX = hotline.Context()
-MEL_CALLABLES = [name for name, data in inspect.getmembers(cmds, callable)]
-PY_CALLABLES = ['cmds.' + name for name in MEL_CALLABLES]
+CMDS_CALLABLES = [name for name, data in inspect.getmembers(cmds, callable)]
 
 
-@CTX.add_mode("PY", completion_list=PY_CALLABLES, syntax="Python")
+@hotline.add_mode("PY", completer_list=CMDS_CALLABLES, syntax="Python")
 def py_handler(input_str):
     cmds.evalDeferred(input_str)
     cmds.repeatLast(addCommand='python("{0}")'.format(input_str))
 
 
-@CTX.add_mode("MEL", completion_list=MEL_CALLABLES)
+@hotline.add_mode("MEL", completer_list=CMDS_CALLABLES)
 def mel_handler(input_str):
     mel.eval(input_str)
     cmds.repeatLast(addCommand=input_str)
 
 
-@CTX.add_mode("SEL")
+@hotline.add_mode("SEL", completer_fn=cmds.ls)
 def sel_handler(input_str):
     cmds.select(input_str, replace=True)
 
 
-@CTX.add_completer("SEL")
-def sel_completion_list_meth():
-    return cmds.ls()
-
-
-@CTX.add_mode("REN")
+@hotline.add_mode("REN")
 def ren_handler(input_str):
         nodes = [(node, index)
                  for index, node in enumerate(cmds.ls(sl=True, long=True))]
@@ -121,7 +115,7 @@ def ren_handler(input_str):
         cmds.undoInfo(closeChunk=True)
 
 
-@CTX.add_mode("NODE")
+@hotline.add_mode("NODE", completer_fn=cmds.allNodeTypes)
 def node_handler(input_str):
     input_buffer = input_str.split()
     if len(input_buffer) > 1:
@@ -164,13 +158,14 @@ def getMayaWindow():
     ptr = OpenMayaUI.MQtUtil.mainWindow()
     return wrapinstance(long(ptr), QtCore.QObject)
 
-@CTX.set_show()
+
+@hotline.set_show()
 def show():
     '''Show HotLine ui.'''
 
     try:
-        HL.enter()
+        hl.enter()
     except NameError:
         #Instantiate HotLine as child of Maya Window
-        HL = hotline.HotLine(getMayaWindow())
-        HL.enter()
+        hl = hotline.HotLine(getMayaWindow())
+        hl.enter()

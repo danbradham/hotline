@@ -1,36 +1,29 @@
-QPushButton {
+QPushButton#mode {
     border: 0;
     background: none;
+    font-size: 11pt;
+    font-weight: 500;
 }
 
-QPushButton:pressed {
-    border: 0;
-    border-top: 1px solid rgb(15, 15, 15);
-    border-left: 1px solid rgb(15, 15, 15);
+QPushButton#mode:pressed {
     color: rgb(0, 35, 55);
     background: rgb(115, 115, 115);
 }
 
-QPushButton:checked {
+QPushButton#multiline {
     border: 0;
-    border-top: 1px solid rgb(15, 15, 15);
-    border-left: 1px solid rgb(15, 15, 15);
-    color: rgb(0, 35, 55);
-    background: rgb(115, 115, 115);
+    image: url(%(rel)s/icons/multiline.png);
 }
 
-QLineEdit {
-    background-color: none;
+QPushButton#multiline:checked {
     border: 0;
-    border-bottom: 1px solid rgb(42, 42, 42);
-    padding-left: 10px;
-    padding-right: 10px;
-    height: 20;
+    image: url(%(rel)s/icons/multiline_pressed.png);
 }
 
-QLineEdit:focus {
-    outline: none;
-    background: none;
+QTextEdit#input {
     border: 0;
     height: 20;
+    color: white;
 }
+
+QTextEdit#input:focus {}
