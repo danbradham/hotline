@@ -164,7 +164,7 @@ def getMayaWindow():
     ptr = OpenMayaUI.MQtUtil.mainWindow()
     return wrapinstance(long(ptr), QtCore.QObject)
 
-
+@CTX.set_show()
 def show():
     '''Show HotLine ui.'''
 
