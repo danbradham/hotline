@@ -24,26 +24,31 @@ KEYSET = load_keys()
 
 
 class History(object):
-    _history = deque([''])
+    _history = ['']
+    _history_index = 0
 
     def add(self, input_str):
         if not input_str in self._history:
-            self._history.append(input_str)
+            self._history.insert(1, input_str)
+        self._history_index = 0
 
     def next(self):
-        self._history.rotate(-1)
-        return self._history[0]
+        if self._history_index > 0:
+            self._history_index -= 1
+        return self._history[self._history_index]
 
     def prev(self):
-        self._history.rotate(1)
-        return self._history[0]
+        if self._history_index < len(self._history) - 1:
+            self._history_index += 1
+        return self._history[self._history_index]
 
 
 class HotField(QtGui.QTextEdit):
     '''A QTextEdit widget with history'''
 
     returnPressed = QtCore.Signal(str)
-    modeToggled = QtCore.Signal()
+    next_mode = QtCore.Signal()
+    prev_mode = QtCore.Signal()
     multilineToggled = QtCore.Signal(bool)
 
     def __init__(self, parent=None):
@@ -59,7 +64,6 @@ class HotField(QtGui.QTextEdit):
         font = QtGui.QFont()
         font.setFamily("Courier New")
         font.setPointSize(10)
-        font.setStyleHint(QtGui.QFont.Monospace)
         self.setFont(font)
 
         self.history = History()
@@ -74,7 +78,8 @@ class HotField(QtGui.QTextEdit):
         #Setup Hotkeys
         self.key_methods = {
             "Toggle Multiline": self.key_multiline,
-            "Toggle Modes": self.key_modes,
+            "Next Mode": self.key_next_mode,
+            "Prev Mode": self.key_prev_mode,
             "Execute": self.key_execute,
             "Previous in History": self.key_prev,
             "Next in History": self.key_next}
@@ -128,8 +133,11 @@ class HotField(QtGui.QTextEdit):
         self.multiline = False if self.multiline else True
         self.multilineToggled.emit(self.multiline)
 
-    def key_modes(self):
-        self.modeToggled.emit()
+    def key_next_mode(self):
+        self.next_mode.emit()
+
+    def key_prev_mode(self):
+        self.prev_mode.emit()
 
     def key_execute(self):
         plaintext = self.toPlainText()
@@ -144,6 +152,7 @@ class HotField(QtGui.QTextEdit):
         self.setText(self.history.next())
 
     def to_key_sequence(self, key, modifiers):
+        key = QtGui.QKeySequence(key).toString()
         mods = []
         if modifiers & QtCore.Qt.ShiftModifier:
             mods.append("Shift+")
@@ -154,7 +163,10 @@ class HotField(QtGui.QTextEdit):
         if modifiers & QtCore.Qt.MetaModifier:
             mods.append("Meta+")
         mod = ''.join(mods)
-        key = QtGui.QKeySequence(key).toString()
+        if key == "Return":
+            key = "Enter"
+        if key == "Backtab":
+            key = "Tab"
         return QtGui.QKeySequence.fromString(mod + key)
 
     def keyPressEvent(self, event):
@@ -164,6 +176,11 @@ class HotField(QtGui.QTextEdit):
         key = event.key()
         mod = event.modifiers()
         key_seq = self.to_key_sequence(key, mod)
+
+        #Tab Insertion as spaces
+        if (key == QtCore.Qt.Key_Tab and is_multiline and not is_completing):
+            self.insertPlainText('    ')
+            return
 
         #Singleline Hotkeys
         if not is_multiline and not is_completing:
@@ -179,13 +196,6 @@ class HotField(QtGui.QTextEdit):
                     self.key_methods[name]()
                     return
 
-        #Tab Insertion as spaces
-        if (key in [QtCore.Qt.Key_Tab, QtCore.Qt.Key_Backtab]
-            and not is_completing):
-
-            self.insertPlainText('    ')
-            return
-
         #Ignore event while completing
         if is_completing:
             if key in (QtCore.Qt.Key_Enter,
@@ -198,6 +208,8 @@ class HotField(QtGui.QTextEdit):
 
         #Insert keypress
         super(HotField, self).keyPressEvent(event)
+
+        eow = "~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-="
 
         completion_prefix = self.textUnderCursor()
         if len(completion_prefix) < 3:

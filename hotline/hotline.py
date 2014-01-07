@@ -33,7 +33,8 @@ class HotLine(QtGui.QDialog):
         # Create and connect ui widgets
         self.hotfield = HotField()
         self.hotfield.setObjectName("input")
-        self.hotfield.modeToggled.connect(self.next_mode)
+        self.hotfield.next_mode.connect(self.next_mode)
+        self.hotfield.prev_mode.connect(self.prev_mode)
         self.hotfield.returnPressed.connect(self.handle_input)
         # Add python highlighter to hotfield
         self.highlighter = Highlighter(self.hotfield)
@@ -114,7 +115,7 @@ class HotLine(QtGui.QDialog):
         self.mode.setup(self)
 
     def next_mode(self):
-        self._modes.rotate(1)
+        self._modes.rotate(-1)
         self.mode.setup(self)
 
     def handle_input(self, input_str):

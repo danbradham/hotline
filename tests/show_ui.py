@@ -1,6 +1,10 @@
 '''
 A quick test of HotLine running with a global hotkey anywhere in windows.
 '''
+import sip
+for datatype in ['QString', 'QVariant', 'QUrl', 'QDate',
+                 'QDateTime', 'QTextStream', 'QTime']:
+    sip.setapi(datatype, 2)
 
 import sys
 import signal
