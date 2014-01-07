@@ -22,7 +22,6 @@ import hotline
 import maya.OpenMayaUI as OpenMayaUI
 import maya.cmds as cmds
 import maya.mel as mel
-import pymel.core as pm
 
 CMDS_CALLABLES = [name for name, data in inspect.getmembers(cmds, callable)]
 

@@ -1,15 +1,17 @@
 {
     "standard": {
         "Toggle Multiline": "Ctrl+M",
-        "Toggle Modes": "Tab",
-        "Execute": "Return",
+        "Next Mode": "Tab",
+        "Prev Mode": "Shift+Tab",
+        "Execute": "Enter",
         "Previous in History": "Up",
         "Next in History": "Down"
     },
     "multiline": {
         "Toggle Multiline": "Ctrl+M",
-        "Toggle Modes": "Ctrl+Tab",
-        "Execute": "Ctrl+Return",
+        "Next Mode": "Ctrl+Tab",
+        "Prev Mode": "Ctrl+Shift+Tab",
+        "Execute": "Ctrl+Enter",
         "Previous in History": "Ctrl+Up",
         "Next in History": "Ctrl+Down"
     }
