@@ -189,6 +189,7 @@ class HotField(QtGui.QTextEdit):
                 if key_seq.matches(seq):
                     self.key_methods[name]()
                     return
+
         #Tab Insertion as spaces
         if (
             key == QtCore.Qt.Key_Tab
@@ -197,6 +198,7 @@ class HotField(QtGui.QTextEdit):
         ):
             self.insertPlainText('    ')
             return
+
         #Ignore event while completing
         if is_completing:
             if key in (
