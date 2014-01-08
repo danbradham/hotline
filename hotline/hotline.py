@@ -10,10 +10,6 @@ from collections import deque
 from .highlighter import Highlighter
 from .utils import rel_path
 from .hotfield import HotField
-from .mode import Mode
-import os
-
-#Try PyQt then PySide imports
 try:
     from PyQt4 import QtGui, QtCore
 except ImportError:
@@ -47,10 +43,7 @@ class HotLine(QtGui.QDialog):
             QtGui.QSizePolicy.Fixed)
         self.mode_button.setFixedWidth(50)
         self.mode_button.setFixedHeight(24)
-        self.mode_button.setToolTip(
-            "Switch HotLine Mode\n"
-            "Tab in Single-line Mode\n"
-            "CTRL + Tab in Multi-line Mode")
+        self.mode_button.setToolTip("Switch HotLine Mode\n")
         self.multiline_button = QtGui.QPushButton()
         self.multiline_button.setObjectName("multiline")
         self.multiline_button.clicked.connect(self.toggle_multiline)
@@ -60,12 +53,7 @@ class HotLine(QtGui.QDialog):
         self.multiline_button.setFixedWidth(24)
         self.multiline_button.setFixedHeight(24)
         self.multiline_button.setCheckable(True)
-        self.multiline_button.setToolTip(
-            "Toggle Multi-line Mode\n"
-            "CTRL + M\n"
-            "Multi-Line mode modifies existing hotkeys to use CTRL modifier\n"
-            "CTRL + Enter executes code\n"
-            "CTRL + Up and Down flips through history")
+        self.multiline_button.setToolTip("Toggle Multi-line Mode\n")
         self.hotfield.multilineToggled.connect(
             self.multiline_button.setChecked)
 
