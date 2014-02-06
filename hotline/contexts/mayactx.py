@@ -1,10 +1,12 @@
 '''
-mayahotline.py
+mayactx.py
 --------------
 An example of using hotline in Autodesk Maya.
 Place in your maya scripts directory and bind a key to:
-    import mayahotline
-    mayahotline.show()
+    import hotline
+    from hotline.contexts import mayactx
+
+    hotline.show()
 '''
 
 #Get wrapinstance from PyQt or PySide
