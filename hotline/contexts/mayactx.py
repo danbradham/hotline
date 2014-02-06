@@ -156,8 +156,10 @@ def node_handler(input_str):
 
 def getMayaWindow():
     #Get the maya main window as a QMainWindow instance
-    ptr = OpenMayaUI.MQtUtil.mainWindow()
-    return wrapinstance(long(ptr), QtCore.QObject)
+    ptr = long(OpenMayaUI.MQtUtil.mainWindow())
+    if "shiboken" in globals():
+        return wrapinstance(ptr, QtGui.QWidget)
+    return wrapinstance(ptr, QtCore.QObject)
 
 
 @hotline.set_show()

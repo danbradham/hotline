@@ -59,7 +59,7 @@ class HotField(QtGui.QTextEdit):
         self.setFixedWidth(322)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setWordWrapMode(0)
+        self.setWordWrapMode(QtGui.QTextOption.NoWrap)
 
         font = QtGui.QFont()
         font.setFamily("Courier New")
@@ -94,6 +94,7 @@ class HotField(QtGui.QTextEdit):
         self.adjust_size()
 
     def set_completer_model(self, completer_list):
+        print completer_list
         self.completer_model.setStringList(completer_list)
 
     def adjust_size(self):
@@ -210,6 +211,7 @@ class HotField(QtGui.QTextEdit):
             ):
                 event.ignore()
                 return
+
         #Insert keypress
         super(HotField, self).keyPressEvent(event)
 
