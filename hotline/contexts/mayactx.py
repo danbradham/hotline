@@ -20,9 +20,11 @@ except ImportError:
     from PySide import QtGui, QtCore
 import re
 import inspect
+from functools import partial
 import hotline
 import maya.OpenMayaUI as OpenMayaUI
 import maya.cmds as cmds
+from maya.utils import executeInMainThreadWithResult as execInMain
 import maya.mel as mel
 
 CMDS_CALLABLES = [name for name, data in inspect.getmembers(cmds, callable)]
@@ -30,13 +32,13 @@ CMDS_CALLABLES = [name for name, data in inspect.getmembers(cmds, callable)]
 
 @hotline.add_mode("PY", completer_list=CMDS_CALLABLES, syntax="Python")
 def py_handler(input_str):
-    cmds.evalDeferred(input_str)
+    execInMain(input_str)
     cmds.repeatLast(addCommand='python("{0}")'.format(input_str))
 
 
 @hotline.add_mode("MEL", completer_list=CMDS_CALLABLES)
 def mel_handler(input_str):
-    mel.eval(input_str)
+    execInMain(partial(mel.eval, input_str))
     cmds.repeatLast(addCommand=input_str)
 
 
@@ -49,6 +51,8 @@ def sel_handler(input_str):
 def ren_handler(input_str):
         nodes = [(node, index)
                  for index, node in enumerate(cmds.ls(sl=True, long=True))]
+        if not nodes:
+            raise NameError("Select some nodes first!")
         sorted_nodes = sorted(
             nodes,
             key=lambda (node, index): len(node.split('|')),
@@ -167,8 +171,8 @@ def show():
     '''Show HotLine ui.'''
 
     try:
-        hl.enter()
-    except NameError:
+        hotline.HotLine.instance.enter()
+    except:
         #Instantiate HotLine as child of Maya Window
         hl = hotline.HotLine(getMayaWindow())
         hl.enter()

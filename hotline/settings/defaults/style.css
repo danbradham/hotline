@@ -20,10 +20,68 @@ QPushButton#multiline:checked {
     image: url(%(rel)s/icons/multiline_pressed.png);
 }
 
+QPushButton#save {
+    border: 0;
+    image: url(%(rel)s/icons/save.png);
+}
+
+QPushButton#save:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/save_pressed.png);
+}
+
+QPushButton#pin {
+    border: 0;
+    image: url(%(rel)s/icons/pin.png);
+}
+
+QPushButton#pin:checked {
+    border: 0;
+    image: url(%(rel)s/icons/pin_pressed.png);
+}
+
+QPushButton#clear {
+    border: 0;
+    image: url(%(rel)s/icons/clear.png);
+}
+
+QPushButton#clear:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/clear_pressed.png);
+}
+
+QPushButton#help {
+    border: 0;
+    image: url(%(rel)s/icons/help.png);
+}
+
+QPushButton#help:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/help_pressed.png);
+}
+
+QPushButton#output {
+    border: 0;
+    image: url(%(rel)s/icons/output.png);
+}
+
+QPushButton#output:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/output_pressed.png);
+}
+
 QTextEdit#input {
     border: 0;
     height: 20;
-    color: white;
+    color: rgb(235, 235, 235);
 }
 
 QTextEdit#input:focus {}
+
+QTextBrowser {
+    border: 0;
+    height: 20;
+    color: rgb(235, 235, 235);
+}
+
+QTextBrowser:focus {}

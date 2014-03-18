@@ -18,15 +18,15 @@
             "captures": 0
         },
         "declaritives": {
-            "match": "\\b(class|def)\\b",
-            "captures": 0
+            "match": "\\b(class|def)\\b\\s*(\\w+)\\(",
+            "captures": 1
         },
         "class.name": {
-            "match": "\\bclass\\b\\s*(\\w+)",
+            "match": "\\bclass\\b\\s*(\\w+)\\(",
             "captures": 1
         },
         "func.name": {
-            "match": "\\bdef\\b\\s*(\\w+)",
+            "match": "\\bdef\\b\\s*(\\w+)\\(",
             "captures": 1
         },
         "numeric.complex": {
@@ -66,11 +66,11 @@
             "captures": 0
         },
         "string.double": {
-            "match": "\"[^\"\\]*(\\.[^\"\\]*)*\"",
+            "match": "\"[^\"\\\\]*(\\\\.[^\"\\\\]*)*\"",
             "captures": 0
         },
         "string.single": {
-            "match": "'[^'\\]*(\\.[^'\\]*)*'",
+            "match": "'[^'\\\\]*(\\\\.[^'\\\\]*)*'",
             "captures": 0
         },
         "multiline.single": {

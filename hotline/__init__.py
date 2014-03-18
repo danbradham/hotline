@@ -1,4 +1,3 @@
-#Try PyQt then PySide imports
 try:
     import sip
     for datatype in ['QString', 'QVariant', 'QUrl', 'QDate',

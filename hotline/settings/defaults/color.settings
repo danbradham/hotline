@@ -1,6 +1,6 @@
 {
     "Defaults": {
-        "input_color": [255, 255, 255],
+        "input_color": [235, 235, 235],
         "input_bg": [25, 25, 25]
     },
     "Python": {

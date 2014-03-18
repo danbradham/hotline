@@ -22,8 +22,8 @@ class Highlighter(QtGui.QSyntaxHighlighter):
         :param multiline_patterns: Multiline patterns to highlight.
             A list of tuples such as:
             [(start_pattern, end_pattern, format)...]
-            e.g. [(QtGui.QRegexp("\\*"), 
-                   QtGui.QRegexp("*\\"), 
+            e.g. [(QtGui.QRegexp("\\*"),
+                   QtGui.QRegexp("*\\"),
                    QtGui.QTextCharFormat())...]'''
 
         self.patterns = patterns

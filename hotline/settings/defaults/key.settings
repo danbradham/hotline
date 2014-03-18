@@ -5,7 +5,9 @@
         "Prev Mode": "Shift+Tab",
         "Execute": "Enter",
         "Previous in History": "Up",
-        "Next in History": "Down"
+        "Next in History": "Down",
+        "Pin": "Ctrl+P",
+        "Toggle Toolbar": "Alt+M"
     },
     "multiline": {
         "Toggle Multiline": "Ctrl+M",
@@ -13,6 +15,8 @@
         "Prev Mode": "Ctrl+Shift+Tab",
         "Execute": "Ctrl+Enter",
         "Previous in History": "Ctrl+Up",
-        "Next in History": "Ctrl+Down"
+        "Next in History": "Ctrl+Down",
+        "Pin": "Ctrl+P",
+        "Toggle Toolbar": "Alt+M"
     }
 }
