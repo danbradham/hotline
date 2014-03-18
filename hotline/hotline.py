@@ -10,6 +10,7 @@ import traceback
 from collections import deque
 from .highlighter import Highlighter
 from .utils import rel_path
+from .help import help_string
 from .hotfield import HotField
 try:
     from PyQt4 import QtGui, QtCore
@@ -89,10 +90,10 @@ class Toolbar(QtGui.QWidget):
         self.parent.mouseMoveEvent(event)
 
 
-class HOutput(QtGui.QDialog):
+class HotIO(QtGui.QDialog):
 
     def __init__(self, parent=None):
-        super(HOutput, self).__init__(parent)
+        super(HotIO, self).__init__(parent)
 
         self.setWindowFlags(QtCore.Qt.Window|QtCore.Qt.WindowStaysOnTopHint)
 
@@ -103,6 +104,7 @@ class HOutput(QtGui.QDialog):
 
         self.textfield = QtGui.QTextBrowser(self)
         self.textfield.setReadOnly(True)
+        self.textfield.setOpenExternalLinks(True)
         self.dump_button = Button(
             name="save",
             tip="Save log to file.",
@@ -128,7 +130,7 @@ class HOutput(QtGui.QDialog):
         self.textfield.append(txt)
 
     def show(self):
-        super(HOutput, self).show()
+        super(HotIO, self).show()
         self.textfield.clear()
         self.textfield.append(''.join(self._buffer))
 
@@ -149,8 +151,8 @@ class HotLine(QtGui.QWidget):
         self._multiline = False
         self.pinned = False
 
-        self.houtput = HOutput(self)
-        self.houtput.hide()
+        self.hotio = HotIO(self)
+        self.hotio.hide()
 
         # Create and connect ui widgets
         self.hotfield = HotField(self)
@@ -175,7 +177,7 @@ class HotLine(QtGui.QWidget):
         self.toolbar.hide()
         self.toolbar.multiline_button.clicked.connect(self.toggle_multiline)
         self.toolbar.pin_button.clicked.connect(self.toggle_pin)
-        self.toolbar.output_button.clicked.connect(self.houtput.show)
+        self.toolbar.output_button.clicked.connect(self.hotio.show)
         self.toolbar.save_button.clicked.connect(self.save)
         self.toolbar.help_button.clicked.connect(self.help)
 
@@ -275,13 +277,13 @@ class HotLine(QtGui.QWidget):
         self.mode.setup(self)
 
     def handle_input(self, input_str):
-        self.houtput.append(
+        self.hotio.append(
             "{0} Command: \n\n {1}\n\n".format(self.mode.name, str(input_str)))
         try:
             self.mode.handler(str(input_str))
         except:
-            self.houtput.show()
-            self.houtput.append(traceback.format_exc())
+            self.hotio.show()
+            self.hotio.append(traceback.format_exc())
         if not self.pinned:
             self.exit()
 
@@ -316,11 +318,8 @@ class HotLine(QtGui.QWidget):
         txt = self.hotfield.toPlainText()
 
     def help(self):
-        self.houtput.show()
-        self.houtput.append(
-            '<a href="http://danbradham.com">Dan Bradham</a> 2014\n'
-            'Visit <a href="http://github.com/danbradham/HotLine">Github</a>'
-            " for more help and the latest information regarding HotLine.\n")
+        self.hotio.show()
+        self.hotio.append(help_string)
 
     def enter(self):
         pos = QtGui.QCursor.pos()
