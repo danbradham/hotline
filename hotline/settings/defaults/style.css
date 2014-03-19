@@ -85,3 +85,64 @@ QTextBrowser {
 }
 
 QTextBrowser:focus {}
+
+QTabWidget {
+    background: rgb(68, 68, 68);
+    border: 0;
+}
+
+QTabBar {
+    background: rgb(42, 42, 42);
+    border: 0;
+}
+
+QTabBar::tab {
+    background: rgb(42, 42, 42);
+    padding: 10px;
+    border: 0;
+    color: rgb(68, 68, 68);
+}
+
+QTabBar::tab:hover {
+    color: rgb(126, 126, 126);
+}
+
+QTabBar::tab:selected {
+    background: rgb(68, 68, 68);
+    border: 0;
+    color: rgb(235, 235, 235);
+}
+
+QTreeView,
+QListWidget{
+    border: 0px;
+}
+
+QTreeView:focus,
+QListWidget:focus{
+    border: 0px;
+}
+
+QListWidget::item,
+QTreeWidget::item{
+    padding: 5px;
+    border: 0px;
+    border-radius: 0px;
+}
+
+QListWidget::item:focus,
+QTreeWidget::item:focus{
+    border: 0px;
+}
+
+QListWidget::item:selected,
+QTreeWidget::item:selected{
+    background: rgb(103, 141, 178);
+}
+
+QListWidget QLineEdit{
+    padding: 0px;
+    margin: 0px;
+    border: 0px;
+    border-radius: 0px;
+}

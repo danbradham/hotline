@@ -8,6 +8,7 @@ manages modes it's modes.
 
 import traceback
 from collections import deque
+from functools import partial
 from .highlighter import Highlighter
 from .utils import rel_path
 from .help import help_string
@@ -18,6 +19,27 @@ except ImportError:
     from PySide import QtGui, QtCore
 
 REL = rel_path(".").replace('\\', '/')
+
+
+def load_script(name):
+    script_path = rel_path("settings/user/scripts/{0}.py".format(name))
+    with open(script_path, r) as f:
+        script = f.read()
+    return script
+
+
+def save_script(name, script):
+    script_path = rel_path("settings/user/scripts/{0}.py".format(name))
+    with open(script_path, w) as f:
+        f.write(script)
+
+
+def delete_script(name):
+    script_path = rel_path("settings/user/scripts/{0}.py".format(name))
+    try:
+        os.remove(script_path)
+    except OSError:
+        return
 
 
 class Button(QtGui.QPushButton):
@@ -49,7 +71,7 @@ class Toolbar(QtGui.QWidget):
         self.setLayout(grid)
 
 
-        self.output_button = Button(
+        self.hotio_button = Button(
             name="output",
             tip="Open output window.",
             checkable=False,
@@ -57,11 +79,6 @@ class Toolbar(QtGui.QWidget):
         self.help_button = Button(
             name="help",
             tip="Get some help.",
-            checkable=False,
-            parent=self)
-        self.save_button = Button(
-            name="save",
-            tip="Save current.",
             checkable=False,
             parent=self)
         self.pin_button = Button(
@@ -75,9 +92,10 @@ class Toolbar(QtGui.QWidget):
             checkable=True,
             parent=self)
 
+
+        grid.setColumnStretch(0, 1)
         grid.addWidget(self.help_button, 0, 1)
-        grid.addWidget(self.output_button, 0, 2)
-        grid.addWidget(self.save_button, 0, 3)
+        grid.addWidget(self.hotio_button, 0, 2)
         grid.addWidget(self.multiline_button, 0, 4)
         grid.addWidget(self.pin_button, 0, 5)
 
@@ -91,20 +109,74 @@ class Toolbar(QtGui.QWidget):
 
 
 class HotIO(QtGui.QDialog):
+    '''Input Output window for HotLine.
+
+    Handles script/command storage and logging output.'''
+
+    save_current = QtCore.Signal()
+    load_current = QtCore.Signal()
+    del_current = QtCore.Signal()
 
     def __init__(self, parent=None):
         super(HotIO, self).__init__(parent)
 
         self.setWindowFlags(QtCore.Qt.Window|QtCore.Qt.WindowStaysOnTopHint)
 
-        grid = QtGui.QGridLayout()
-        self.setLayout(grid)
+        layout = QtGui.QGridLayout()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
 
+        tabs = QtGui.QTabWidget()
+
+        #Store Tab
+        store_widget = QtGui.QWidget()
+        store_grid = QtGui.QGridLayout()
+        store_widget.setLayout(store_grid)
+        self.store_list = QtGui.QListWidget()
+        self.store_load = Button(
+            name="clear",
+            tip="Load selectd.",
+            checkable=False,
+            parent=self)
+        self.store_save = Button(
+            name="save",
+            tip="Save current script.",
+            checkable=False,
+            parent=self)
+        self.store_del = Button(
+            name="clear",
+            tip="Delete selected",
+            checkable=False,
+            parent=self)
+
+        self.store_save.clicked.connect(self.save_current.emit)
+        self.store_load.clicked.connect(self.load_current.emit)
+        self.store_del.clicked.connect(self.del_current.emit)
+
+        store_grid.setColumnStretch(0, 1)
+        store_grid.setRowStretch(0, 1)
+        store_grid.addWidget(self.store_list, 0, 0, 1, 4)
+        store_grid.addWidget(self.store_save, 1, 1)
+        store_grid.addWidget(self.store_load, 1, 2)
+        store_grid.addWidget(self.store_del, 1, 3)
+
+        tabs.addTab(store_widget, "Store")
+
+        #Output Tab
         self._buffer = []
+        out_widget = QtGui.QWidget()
+        grid = QtGui.QGridLayout()
+        out_widget.setLayout(grid)
 
         self.textfield = QtGui.QTextBrowser(self)
         self.textfield.setReadOnly(True)
         self.textfield.setOpenExternalLinks(True)
+        self.help_button = Button(
+            name="help",
+            tip="Print some help!",
+            checkable=False,
+            parent=self)
         self.dump_button = Button(
             name="save",
             tip="Save log to file.",
@@ -116,26 +188,35 @@ class HotIO(QtGui.QDialog):
             checkable=False,
             parent=self)
 
-        self.dump_button.clicked.connect(self.dump)
-        self.clear_button.clicked.connect(self.textfield.clear)
+        self.dump_button.clicked.connect(self.dump_output)
+        self.clear_button.clicked.connect(self.clear_output)
+        self.help_button.clicked.connect(partial(self.append, help_string))
 
         grid.setColumnStretch(0, 1)
         grid.setRowStretch(0, 1)
-        grid.addWidget(self.textfield, 0, 0, 1, 3)
-        grid.addWidget(self.dump_button, 1, 1)
-        grid.addWidget(self.clear_button, 1, 2)
+        grid.addWidget(self.textfield, 0, 0, 1, 4)
+        grid.addWidget(self.clear_button, 1, 1)
+        grid.addWidget(self.dump_button, 1, 2)
+        grid.addWidget(self.help_button, 1, 3)
+
+        tabs.addTab(out_widget, "Output")
+        layout.addWidget(tabs, 0, 0)
 
     def append(self, txt):
         self._buffer.append(txt)
         self.textfield.append(txt)
 
+    def clear_output(self):
+        self.textfield.clear()
+        self._buffer = []
+
+    def dump_output(self):
+        pass
+
     def show(self):
         super(HotIO, self).show()
         self.textfield.clear()
         self.textfield.append(''.join(self._buffer))
-
-    def dump(self):
-        pass
 
 
 class HotLine(QtGui.QWidget):
@@ -177,8 +258,7 @@ class HotLine(QtGui.QWidget):
         self.toolbar.hide()
         self.toolbar.multiline_button.clicked.connect(self.toggle_multiline)
         self.toolbar.pin_button.clicked.connect(self.toggle_pin)
-        self.toolbar.output_button.clicked.connect(self.hotio.show)
-        self.toolbar.save_button.clicked.connect(self.save)
+        self.toolbar.hotio_button.clicked.connect(self.hotio.show)
         self.toolbar.help_button.clicked.connect(self.help)
 
         self.hotfield.multiline_toggled.connect(self.toggle_multiline)
@@ -313,9 +393,6 @@ class HotLine(QtGui.QWidget):
             return
         if not self.hotfield.hasFocus():
             self.close()
-
-    def save(self):
-        txt = self.hotfield.toPlainText()
 
     def help(self):
         self.hotio.show()
