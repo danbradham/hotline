@@ -28,6 +28,12 @@ def json_load(path):
     return {}
 
 
+def save_settings(which, data):
+
+    with open(rel_path("settings/user/" + which), "w") as f:
+        json.dump(data, f)
+
+
 def load_settings(which, combine_user_defaults=True):
     '''Load and concatentate user and default settings.
 

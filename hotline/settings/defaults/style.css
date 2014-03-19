@@ -86,6 +86,7 @@ QTextBrowser {
 
 QTextBrowser:focus {}
 
+QDialog,
 QTabWidget {
     background: rgb(68, 68, 68);
     border: 0;

@@ -10,7 +10,7 @@ import traceback
 from collections import deque
 from functools import partial
 from .highlighter import Highlighter
-from .utils import rel_path
+from .utils import rel_path, load_settings, save_settings
 from .help import help_string
 from .hotfield import HotField
 try:
@@ -19,27 +19,6 @@ except ImportError:
     from PySide import QtGui, QtCore
 
 REL = rel_path(".").replace('\\', '/')
-
-
-def load_script(name):
-    script_path = rel_path("settings/user/scripts/{0}.py".format(name))
-    with open(script_path, r) as f:
-        script = f.read()
-    return script
-
-
-def save_script(name, script):
-    script_path = rel_path("settings/user/scripts/{0}.py".format(name))
-    with open(script_path, w) as f:
-        f.write(script)
-
-
-def delete_script(name):
-    script_path = rel_path("settings/user/scripts/{0}.py".format(name))
-    try:
-        os.remove(script_path)
-    except OSError:
-        return
 
 
 class Button(QtGui.QPushButton):
@@ -113,55 +92,28 @@ class HotIO(QtGui.QDialog):
 
     Handles script/command storage and logging output.'''
 
-    save_current = QtCore.Signal()
-    load_current = QtCore.Signal()
-    del_current = QtCore.Signal()
-
     def __init__(self, parent=None):
         super(HotIO, self).__init__(parent)
 
+        self.parent = parent
         self.setWindowFlags(QtCore.Qt.Window|QtCore.Qt.WindowStaysOnTopHint)
 
+        wrap_widget = QtGui.QWidget(self)
+        wrap_layout = QtGui.QGridLayout(wrap_widget)
+        wrap_layout.setContentsMargins(0, 0, 0, 0)
+        wrap_layout.setSpacing(0)
         layout = QtGui.QGridLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(layout)
+        self.setLayout(wrap_layout)
+        wrap_layout.addWidget(wrap_widget)
+        wrap_widget.setLayout(layout)
 
-        tabs = QtGui.QTabWidget()
-
-        #Store Tab
-        store_widget = QtGui.QWidget()
-        store_grid = QtGui.QGridLayout()
-        store_widget.setLayout(store_grid)
-        self.store_list = QtGui.QListWidget()
-        self.store_load = Button(
-            name="clear",
-            tip="Load selectd.",
-            checkable=False,
-            parent=self)
-        self.store_save = Button(
-            name="save",
-            tip="Save current script.",
-            checkable=False,
-            parent=self)
-        self.store_del = Button(
-            name="clear",
-            tip="Delete selected",
-            checkable=False,
-            parent=self)
-
-        self.store_save.clicked.connect(self.save_current.emit)
-        self.store_load.clicked.connect(self.load_current.emit)
-        self.store_del.clicked.connect(self.del_current.emit)
-
-        store_grid.setColumnStretch(0, 1)
-        store_grid.setRowStretch(0, 1)
-        store_grid.addWidget(self.store_list, 0, 0, 1, 4)
-        store_grid.addWidget(self.store_save, 1, 1)
-        store_grid.addWidget(self.store_load, 1, 2)
-        store_grid.addWidget(self.store_del, 1, 3)
-
-        tabs.addTab(store_widget, "Store")
+        self.tabs = QtGui.QTabWidget(self)
+        self.tabs.setDocumentMode(True)
+        tb = self.tabs.tabBar()
+        tb.setDrawBase(False)
+        tb.setExpanding(True)
 
         #Output Tab
         self._buffer = []
@@ -199,8 +151,49 @@ class HotIO(QtGui.QDialog):
         grid.addWidget(self.dump_button, 1, 2)
         grid.addWidget(self.help_button, 1, 3)
 
-        tabs.addTab(out_widget, "Output")
-        layout.addWidget(tabs, 0, 0)
+        self.tabs.addTab(out_widget, "Output")
+
+        #Store Tab
+        store_widget = QtGui.QWidget(self)
+        store_grid = QtGui.QGridLayout(store_widget)
+        store_widget.setLayout(store_grid)
+        self.store_list = QtGui.QListWidget(store_widget)
+        self.store_load = Button(
+            name="clear",
+            tip="Load selectd.",
+            checkable=False,
+            parent=self)
+        self.store_save = Button(
+            name="save",
+            tip="Save current script.",
+            checkable=False,
+            parent=self)
+        self.store_del = Button(
+            name="clear",
+            tip="Delete selected",
+            checkable=False,
+            parent=self)
+        self.store_autoload = QtGui.QCheckBox("Autoload Selected")
+        self.store_autoload.setEnabled(False)
+
+        self.store = load_settings("store.settings")
+        self.evaluate_store()
+        self.store_list.currentTextChanged.connect(self.store_changed)
+        self.store_autoload.stateChanged.connect(self.autoload_changed)
+        self.store_save.clicked.connect(self.save)
+        self.store_load.clicked.connect(self.load)
+        self.store_del.clicked.connect(self.delete)
+
+        store_grid.setColumnStretch(0, 1)
+        store_grid.setRowStretch(0, 1)
+        store_grid.addWidget(self.store_list, 0, 0, 1, 4)
+        store_grid.addWidget(self.store_autoload, 1, 0)
+        store_grid.addWidget(self.store_save, 1, 1)
+        store_grid.addWidget(self.store_load, 1, 2)
+        store_grid.addWidget(self.store_del, 1, 3)
+
+        self.tabs.addTab(store_widget, "Store")
+        layout.addWidget(self.tabs, 0, 0)
 
     def append(self, txt):
         self._buffer.append(txt)
@@ -212,6 +205,86 @@ class HotIO(QtGui.QDialog):
 
     def dump_output(self):
         pass
+
+    def evaluate_store(self):
+        for mode in self.parent._modes:
+            for name, value in self.store.iteritems():
+                if value["mode"] == mode.name:
+                    self.store_list.addItem(name)
+                    if value["autoload"]:
+                        mode.handler(value["command"])
+
+    def store_changed(self, name):
+        command_values = self.store.get(name, None)
+        if not command_values:
+            self.store_autoload.setChecked(False)
+            self.store_autoload.setEnabled(False)
+            return
+        self.store_autoload.setEnabled(True)
+        self.store_autoload.setChecked(command_values["autoload"])
+
+    def autoload_changed(self, value):
+        list_item = self.store_list.currentItem()
+        self.store_autoload.setEnabled(True)
+        self.store[list_item.text()]["autoload"] = value
+        save_settings("store.settings", self.store)
+
+    def save(self):
+        name, accept = QtGui.QInputDialog.getText(self, 'Save Current Command',
+            'Command Name')
+
+        if accept:
+            command = self.parent.hotfield.toPlainText()
+            if not name in self.store:
+                self.store_list.addItem(name)
+                autoload = False
+            else:
+                overwrite_it = QtGui.QMessageBox.question(
+                    self,
+                    name,
+                    "Overwrite {0}?".format(name),
+                    QtGui.QMessageBox.Yes|QtGui.QMessageBox.No,
+                    QtGui.QMessageBox.No)
+                autoload = self.store["name"]["autoload"]
+                if overwrite_it == QtGui.QMessageBox.No:
+                    return
+            self.store[name] = {
+                "autoload": False,
+                "mode": self.parent.mode.name,
+                "command": command
+            }
+            save_settings("store.settings", self.store)
+
+    def load(self):
+        list_item = self.store_list.currentItem()
+        if not list_item:
+            return
+        command_values = self.store.get(list_item.text(), None)
+        if command_values:
+            self.parent.hotfield.clear()
+            text = command_values["command"]
+            if "\n" in text:
+                self.parent.multiline = True
+                self.parent.toolbar.multiline_button.setChecked(True)
+                self.parent.hotfield.setFocus()
+            self.parent.hotfield.setText(command_values["command"])
+
+
+    def delete(self):
+        list_item = self.store_list.currentItem()
+        if not list_item:
+            return
+        delete_it = QtGui.QMessageBox.question(
+            self,
+            list_item.text(),
+            "Delete {0}?".format(list_item.text()),
+            QtGui.QMessageBox.Yes|QtGui.QMessageBox.No,
+            QtGui.QMessageBox.No)
+
+        if delete_it == QtGui.QMessageBox.Yes:
+            self.store.pop(list_item.text())
+            self.store_list.takeItem(self.store_list.currentRow())
+            save_settings("store.settings", self.store)
 
     def show(self):
         super(HotIO, self).show()
