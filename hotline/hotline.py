@@ -9,6 +9,7 @@ manages modes it's modes.
 import traceback
 from collections import deque
 from functools import partial
+import sys
 from .highlighter import Highlighter
 from .utils import rel_path, load_settings, save_settings
 from .help import help_string
@@ -55,10 +56,15 @@ class Toolbar(QtGui.QWidget):
             tip="Open output window.",
             checkable=False,
             parent=self)
-        self.help_button = Button(
-            name="help",
-            tip="Get some help.",
-            checkable=False,
+        # self.help_button = Button(
+        #     name="help",
+        #     tip="Get some help.",
+        #     checkable=False,
+        #     parent=self)
+        self.auto_button = Button(
+            name="auto",
+            tip="Autocomplete",
+            checkable=True,
             parent=self)
         self.pin_button = Button(
             name="pin",
@@ -73,8 +79,9 @@ class Toolbar(QtGui.QWidget):
 
 
         grid.setColumnStretch(0, 1)
-        grid.addWidget(self.help_button, 0, 1)
+        # grid.addWidget(self.help_button, 0, 1)
         grid.addWidget(self.hotio_button, 0, 2)
+        grid.addWidget(self.auto_button, 0, 3)
         grid.addWidget(self.multiline_button, 0, 4)
         grid.addWidget(self.pin_button, 0, 5)
 
@@ -95,6 +102,7 @@ class HotIO(QtGui.QDialog):
     def __init__(self, parent=None):
         super(HotIO, self).__init__(parent)
 
+        self.setWindowTitle("HotLine IO")
         self.parent = parent
         self.setWindowFlags(QtCore.Qt.Window|QtCore.Qt.WindowStaysOnTopHint)
 
@@ -158,8 +166,12 @@ class HotIO(QtGui.QDialog):
         store_grid = QtGui.QGridLayout(store_widget)
         store_widget.setLayout(store_grid)
         self.store_list = QtGui.QListWidget(store_widget)
+        self.store_list.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.store_doc = QtGui.QLabel(store_widget)
+        self.store_doc.setWordWrap(True)
+        self.store_doc.hide()
         self.store_load = Button(
-            name="clear",
+            name="load",
             tip="Load selectd.",
             checkable=False,
             parent=self)
@@ -169,7 +181,7 @@ class HotIO(QtGui.QDialog):
             checkable=False,
             parent=self)
         self.store_del = Button(
-            name="clear",
+            name="delete",
             tip="Delete selected",
             checkable=False,
             parent=self)
@@ -177,7 +189,10 @@ class HotIO(QtGui.QDialog):
         self.store_autoload.setEnabled(False)
 
         self.store = load_settings("store.settings")
-        self.evaluate_store()
+        try:
+            self.evaluate_store()
+        except:
+            print "Failed to autoload items from store."
         self.store_list.currentTextChanged.connect(self.store_changed)
         self.store_autoload.stateChanged.connect(self.autoload_changed)
         self.store_save.clicked.connect(self.save)
@@ -187,10 +202,11 @@ class HotIO(QtGui.QDialog):
         store_grid.setColumnStretch(0, 1)
         store_grid.setRowStretch(0, 1)
         store_grid.addWidget(self.store_list, 0, 0, 1, 4)
-        store_grid.addWidget(self.store_autoload, 1, 0)
-        store_grid.addWidget(self.store_save, 1, 1)
-        store_grid.addWidget(self.store_load, 1, 2)
-        store_grid.addWidget(self.store_del, 1, 3)
+        store_grid.addWidget(self.store_doc, 1, 0, 1, 4)
+        store_grid.addWidget(self.store_autoload, 2, 0)
+        store_grid.addWidget(self.store_save, 2, 1)
+        store_grid.addWidget(self.store_load, 2, 2)
+        store_grid.addWidget(self.store_del, 2, 3)
 
         self.tabs.addTab(store_widget, "Store")
         layout.addWidget(self.tabs, 0, 0)
@@ -222,11 +238,19 @@ class HotIO(QtGui.QDialog):
             return
         self.store_autoload.setEnabled(True)
         self.store_autoload.setChecked(command_values["autoload"])
+        fn = getattr(sys.modules["__main__"], name, None)
+        if fn:
+            doc = fn.__doc__
+            if doc:
+                self.store_doc.show()
+                self.store_doc.setText(doc)
+        else:
+            self.store_doc.hide()
 
     def autoload_changed(self, value):
         list_item = self.store_list.currentItem()
         self.store_autoload.setEnabled(True)
-        self.store[list_item.text()]["autoload"] = value
+        self.store[list_item.text()]["autoload"] = True if value else False
         save_settings("store.settings", self.store)
 
     def save(self):
@@ -237,7 +261,6 @@ class HotIO(QtGui.QDialog):
             command = self.parent.hotfield.toPlainText()
             if not name in self.store:
                 self.store_list.addItem(name)
-                autoload = False
             else:
                 overwrite_it = QtGui.QMessageBox.question(
                     self,
@@ -245,7 +268,7 @@ class HotIO(QtGui.QDialog):
                     "Overwrite {0}?".format(name),
                     QtGui.QMessageBox.Yes|QtGui.QMessageBox.No,
                     QtGui.QMessageBox.No)
-                autoload = self.store["name"]["autoload"]
+                autoload = self.store[name]["autoload"]
                 if overwrite_it == QtGui.QMessageBox.No:
                     return
             self.store[name] = {
@@ -268,7 +291,6 @@ class HotIO(QtGui.QDialog):
                 self.parent.toolbar.multiline_button.setChecked(True)
                 self.parent.hotfield.setFocus()
             self.parent.hotfield.setText(command_values["command"])
-
 
     def delete(self):
         list_item = self.store_list.currentItem()
@@ -304,6 +326,7 @@ class HotLine(QtGui.QWidget):
         HotLine.instance = self
         self._multiline = False
         self.pinned = False
+        self.auto = False
 
         self.hotio = HotIO(self)
         self.hotio.hide()
@@ -332,11 +355,14 @@ class HotLine(QtGui.QWidget):
         self.toolbar.multiline_button.clicked.connect(self.toggle_multiline)
         self.toolbar.pin_button.clicked.connect(self.toggle_pin)
         self.toolbar.hotio_button.clicked.connect(self.hotio.show)
-        self.toolbar.help_button.clicked.connect(self.help)
+        #self.toolbar.help_button.clicked.connect(self.help)
+        self.toolbar.auto_button.clicked.connect(self.toggle_auto)
 
         self.hotfield.multiline_toggled.connect(self.toggle_multiline)
         self.hotfield.toolbar_toggled.connect(self.toggle_toolbar)
         self.hotfield.pin_toggled.connect(self.toggle_pin)
+        self.hotfield.autocomplete_toggled.connect(self.toggle_auto)
+        self.hotfield.show_output.connect(self.hotio.show)
 
         # Layout widgets and set stretch policies
         self.layout = QtGui.QGridLayout()
@@ -412,10 +438,10 @@ class HotLine(QtGui.QWidget):
         else:
             self.hotfield.setFixedWidth(346)
             self.setFixedWidth(400)
-        if self.multiline:
-            self.hotfield.setFixedHeight(doc_height + 1)
-            height = (doc_height + 29 if self.toolbar.isVisible()
-                      else doc_height + 5)
+        if self.multiline and doc_height > 30:
+            self.hotfield.setFixedHeight(doc_height)
+            height = (doc_height + 28 if self.toolbar.isVisible()
+                      else doc_height + 4)
             self.setFixedHeight(height)
         else:
             self.hotfield.setFixedHeight(24)
@@ -459,6 +485,10 @@ class HotLine(QtGui.QWidget):
     def toggle_pin(self):
         self.pinned = False if self.pinned else True
         self.toolbar.pin_button.setChecked(self.pinned)
+
+    def toggle_auto(self):
+        self.auto = False if self.auto else True
+        self.toolbar.auto_button.setChecked(self.auto)
 
     def focusOutEvent(self, event):
         if self.pinned:

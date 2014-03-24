@@ -55,8 +55,10 @@ class HotField(QtGui.QTextEdit):
     next_mode = QtCore.Signal()
     prev_mode = QtCore.Signal()
     multiline_toggled = QtCore.Signal()
+    autocomplete_toggled = QtCore.Signal()
     pin_toggled = QtCore.Signal()
     toolbar_toggled = QtCore.Signal()
+    show_output = QtCore.Signal()
 
     def __init__(self, parent=None):
         super(HotField, self).__init__(parent)
@@ -92,7 +94,9 @@ class HotField(QtGui.QTextEdit):
             "Previous in History": self.key_prev,
             "Next in History": self.key_next,
             "Pin": self.pin_toggled.emit,
-            "Toggle Toolbar": self.toolbar_toggled.emit}
+            "Toggle Toolbar": self.toolbar_toggled.emit,
+            "Toggle Autocomplete": self.autocomplete_toggled.emit,
+            "Show Output": self.show_output.emit}
 
     def set_completer_model(self, completer_list):
         self.completer_model.setStringList(completer_list)
@@ -153,6 +157,7 @@ class HotField(QtGui.QTextEdit):
         completer_popup = self.completer.popup()
         is_completing = completer_popup.isVisible()
         is_multiline = self.parent.multiline
+        auto = self.parent.auto
         key = event.key()
         mod = event.modifiers()
         key_seq = self.to_key_sequence(key, mod)
@@ -172,9 +177,8 @@ class HotField(QtGui.QTextEdit):
 
         #Tab Insertion as spaces
         if (
-            key == QtCore.Qt.Key_Tab
-            or key == QtCore.Qt.Key_Backtab
-            and not is_completing
+            not is_completing
+            and key in (QtCore.Qt.Key_Tab, QtCore.Qt.Key_Backtab)
         ):
             self.insertPlainText('    ')
             return
@@ -194,17 +198,18 @@ class HotField(QtGui.QTextEdit):
         #Insert keypress
         super(HotField, self).keyPressEvent(event)
 
-        completion_prefix = self.textUnderCursor()
-        if len(completion_prefix) < 3:
-            completer_popup.hide()
-            return
-        if completion_prefix != self.completer.completionPrefix():
-            self.completer.setCompletionPrefix(completion_prefix)
-            completer_popup.setCurrentIndex(
-                self.completer.completionModel().index(0, 0))
+        if auto:
+            completion_prefix = self.textUnderCursor()
+            if len(completion_prefix) < 3:
+                completer_popup.hide()
+                return
+            if completion_prefix != self.completer.completionPrefix():
+                self.completer.setCompletionPrefix(completion_prefix)
+                completer_popup.setCurrentIndex(
+                    self.completer.completionModel().index(0, 0))
 
-        cr = self.cursorRect()
-        cr.setWidth(
-            completer_popup.sizeHintForColumn(0)
-            + completer_popup.verticalScrollBar().sizeHint().width())
-        self.completer.complete(cr)
+            cr = self.cursorRect()
+            cr.setWidth(
+                completer_popup.sizeHintForColumn(0)
+                + completer_popup.verticalScrollBar().sizeHint().width())
+            self.completer.complete(cr)
