@@ -129,7 +129,12 @@ class HotIO(QtGui.QDialog):
         grid = QtGui.QGridLayout()
         out_widget.setLayout(grid)
 
+        font = QtGui.QFont()
+        font.setFamily("Courier New")
+        font.setPointSize(10)
+
         self.textfield = QtGui.QTextBrowser(self)
+        self.textfield.setFont(font)
         self.textfield.setReadOnly(True)
         self.textfield.setOpenExternalLinks(True)
         self.help_button = Button(
