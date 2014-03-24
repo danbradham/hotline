@@ -172,6 +172,7 @@ class HotIO(QtGui.QDialog):
         store_widget.setLayout(store_grid)
         self.store_list = QtGui.QListWidget(store_widget)
         self.store_list.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.store_list.setSortingEnabled(True)
         self.store_doc = QtGui.QLabel(store_widget)
         self.store_doc.setWordWrap(True)
         self.store_doc.hide()
@@ -282,6 +283,7 @@ class HotIO(QtGui.QDialog):
                 "command": command
             }
             save_settings("store.settings", self.store)
+        self.store_list.sortItems()
 
     def load(self):
         list_item = self.store_list.currentItem()
@@ -296,6 +298,8 @@ class HotIO(QtGui.QDialog):
                 self.parent.toolbar.multiline_button.setChecked(True)
                 self.parent.hotfield.setFocus()
             self.parent.hotfield.setText(command_values["command"])
+        self.store_list.sortItems()
+        self.parent.hotfield.setFocus(True)
 
     def delete(self):
         list_item = self.store_list.currentItem()
@@ -312,6 +316,7 @@ class HotIO(QtGui.QDialog):
             self.store.pop(list_item.text())
             self.store_list.takeItem(self.store_list.currentRow())
             save_settings("store.settings", self.store)
+        self.store_list.sortItems()
 
     def show(self):
         super(HotIO, self).show()
