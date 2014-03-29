@@ -53,7 +53,7 @@ class Toolbar(QtGui.QWidget):
 
         self.hotio_button = Button(
             name="output",
-            tip="Open output window.",
+            tip="Open output window",
             checkable=False,
             parent=self)
         # self.help_button = Button(
@@ -66,14 +66,14 @@ class Toolbar(QtGui.QWidget):
             tip="Autocomplete",
             checkable=True,
             parent=self)
-        self.pin_button = Button(
-            name="pin",
-            tip="Pin HotLine (Keep on top)",
-            checkable=True,
-            parent=self)
         self.multiline_button = Button(
             name="multiline",
             tip="Toggle Multi-line Mode",
+            checkable=True,
+            parent=self)
+        self.pin_button = Button(
+            name="pin",
+            tip="Pin HotLine (Keep on top)",
             checkable=True,
             parent=self)
 
@@ -92,6 +92,54 @@ class Toolbar(QtGui.QWidget):
     def mouseMoveEvent(self, event):
         '''Redirect to HotLine'''
         self.parent.mouseMoveEvent(event)
+
+
+class SaveDialog(QtGui.QDialog):
+
+    def __init__(self, mode, options, parent=None):
+        super(SaveDialog, self).__init__(parent)
+
+        self.setWindowTitle("Save current command?")
+
+        grid = QtGui.QGridLayout(self)
+        grid.setColumnStretch(1, 1)
+        name_label = QtGui.QLabel("name", self)
+        self.name = QtGui.QLineEdit(self)
+        mode_label = QtGui.QLabel("mode", self)
+        self.mode = QtGui.QComboBox(self)
+        self.mode.addItems(options)
+        self.mode.setCurrentIndex(self.mode.findText(mode))
+        desc_label = QtGui.QLabel("description", self)
+        self.desc = QtGui.QTextEdit(self)
+        self.autoload = QtGui.QCheckBox("Autoload Selected")
+        self.ok = QtGui.QPushButton("Save", self)
+        self.ok.clicked.connect(self.accept)
+        self.notok = QtGui.QPushButton("Cancel", self)
+        self.notok.clicked.connect(self.reject)
+        buttons = QtGui.QHBoxLayout(self)
+        buttons.setContentsMargins(0, 0, 0, 0)
+        buttons.addWidget(self.ok)
+        buttons.addWidget(self.notok)
+
+        grid.addWidget(name_label, 0, 0)
+        grid.addWidget(self.name, 0, 1)
+        grid.addWidget(mode_label, 1, 0)
+        grid.addWidget(self.mode, 1, 1)
+        grid.addWidget(desc_label, 2, 0)
+        grid.addWidget(self.desc, 3, 0, 1, 2)
+        grid.addWidget(self.autoload, 4, 1)
+        grid.addLayout(buttons, 5, 1)
+
+        self.setLayout(grid)
+
+    def data(self):
+        data = {
+            "name": self.name.text(),
+            "autoload": self.autoload.isChecked(),
+            "mode": self.mode.currentText(),
+            "description": self.desc.toPlainText()
+        }
+        return data
 
 
 class HotIO(QtGui.QDialog):
@@ -142,26 +190,20 @@ class HotIO(QtGui.QDialog):
             tip="Print some help!",
             checkable=False,
             parent=self)
-        self.dump_button = Button(
-            name="save",
-            tip="Save log to file.",
-            checkable=False,
-            parent=self)
         self.clear_button = Button(
             name="clear",
             tip="Clear Log.",
             checkable=False,
             parent=self)
 
-        self.dump_button.clicked.connect(self.dump_output)
         self.clear_button.clicked.connect(self.clear_output)
-        self.help_button.clicked.connect(partial(self.append, help_string))
+        self.help_button.clicked.connect(
+            partial(self.textfield.insertHtml, help_string))
 
         grid.setColumnStretch(0, 1)
         grid.setRowStretch(0, 1)
         grid.addWidget(self.textfield, 0, 0, 1, 4)
-        grid.addWidget(self.clear_button, 1, 1)
-        grid.addWidget(self.dump_button, 1, 2)
+        grid.addWidget(self.clear_button, 1, 2)
         grid.addWidget(self.help_button, 1, 3)
 
         self.tabs.addTab(out_widget, "Output")
@@ -173,12 +215,19 @@ class HotIO(QtGui.QDialog):
         self.store_list = QtGui.QListWidget(store_widget)
         self.store_list.setFocusPolicy(QtCore.Qt.NoFocus)
         self.store_list.setSortingEnabled(True)
-        self.store_doc = QtGui.QLabel(store_widget)
-        self.store_doc.setWordWrap(True)
-        self.store_doc.hide()
+        self.store_mode = QtGui.QLabel(store_widget)
+        self.store_mode.hide()
+        self.store_desc = QtGui.QLabel(store_widget)
+        self.store_desc.setWordWrap(True)
+        self.store_desc.hide()
+        self.store_run = Button(
+            name="run",
+            tip="Run Selected.",
+            checkable=False,
+            parent=self)
         self.store_load = Button(
             name="load",
-            tip="Load selectd.",
+            tip="Load selected.",
             checkable=False,
             parent=self)
         self.store_save = Button(
@@ -201,32 +250,32 @@ class HotIO(QtGui.QDialog):
             print "Failed to autoload items from store."
         self.store_list.currentTextChanged.connect(self.store_changed)
         self.store_autoload.stateChanged.connect(self.autoload_changed)
+        self.store_run.clicked.connect(self.run)
         self.store_save.clicked.connect(self.save)
         self.store_load.clicked.connect(self.load)
         self.store_del.clicked.connect(self.delete)
 
         store_grid.setColumnStretch(0, 1)
         store_grid.setRowStretch(0, 1)
-        store_grid.addWidget(self.store_list, 0, 0, 1, 4)
-        store_grid.addWidget(self.store_doc, 1, 0, 1, 4)
-        store_grid.addWidget(self.store_autoload, 2, 0)
-        store_grid.addWidget(self.store_save, 2, 1)
-        store_grid.addWidget(self.store_load, 2, 2)
-        store_grid.addWidget(self.store_del, 2, 3)
+        store_grid.addWidget(self.store_list, 0, 0, 1, 5)
+        store_grid.addWidget(self.store_mode, 1, 0)
+        store_grid.addWidget(self.store_desc, 2, 0, 1, 5)
+        store_grid.addWidget(self.store_autoload, 3, 0)
+        store_grid.addWidget(self.store_run, 3,1)
+        store_grid.addWidget(self.store_save, 3, 2)
+        store_grid.addWidget(self.store_load, 3, 3)
+        store_grid.addWidget(self.store_del, 3, 4)
 
         self.tabs.addTab(store_widget, "Store")
         layout.addWidget(self.tabs, 0, 0)
 
-    def append(self, txt):
+    def write(self, txt):
         self._buffer.append(txt)
         self.textfield.append(txt)
 
     def clear_output(self):
         self.textfield.clear()
         self._buffer = []
-
-    def dump_output(self):
-        pass
 
     def evaluate_store(self):
         for mode in self.parent._modes:
@@ -244,14 +293,14 @@ class HotIO(QtGui.QDialog):
             return
         self.store_autoload.setEnabled(True)
         self.store_autoload.setChecked(command_values["autoload"])
-        fn = getattr(sys.modules["__main__"], name, None)
-        if fn:
-            doc = fn.__doc__
-            if doc:
-                self.store_doc.show()
-                self.store_doc.setText(doc)
+        self.store_mode.show()
+        self.store_mode.setText(command_values["mode"])
+        desc = command_values.get("description", None)
+        if desc:
+            self.store_desc.show()
+            self.store_desc.setText(desc)
         else:
-            self.store_doc.hide()
+            self.store_desc.hide()
 
     def autoload_changed(self, value):
         list_item = self.store_list.currentItem()
@@ -259,12 +308,32 @@ class HotIO(QtGui.QDialog):
         self.store[list_item.text()]["autoload"] = True if value else False
         save_settings("store.settings", self.store)
 
-    def save(self):
-        name, accept = QtGui.QInputDialog.getText(self, 'Save Current Command',
-            'Command Name')
+    def run(self):
+        list_item = self.store_list.currentItem()
+        if not list_item:
+            return
+        command_values = self.store.get(list_item.text(), None)
+        if command_values:
+            self.parent.hotfield.clear()
+            text = command_values["command"]
+            mode = command_values["mode"]
+            if mode == self.parent.mode.name:
+                self.parent.handle_input(text)
+                return
+            for x in xrange(len(self.parent._modes)):
+                self.parent.next_mode()
+                if mode == self.parent.mode.name:
+                    self.parent.handle_input(text)
+                    return
 
-        if accept:
-            command = self.parent.hotfield.toPlainText()
+    def save(self):
+
+        options = [m.name for m in self.parent._modes]
+        save_diag = SaveDialog(self.parent.mode.name, options, self)
+
+        if save_diag.exec_():
+            data = save_diag.data()
+            name = data["name"]
             if not name in self.store:
                 self.store_list.addItem(name)
             else:
@@ -277,11 +346,8 @@ class HotIO(QtGui.QDialog):
                 autoload = self.store[name]["autoload"]
                 if overwrite_it == QtGui.QMessageBox.No:
                     return
-            self.store[name] = {
-                "autoload": False,
-                "mode": self.parent.mode.name,
-                "command": command
-            }
+            data["command"] = self.parent.hotfield.toPlainText()
+            self.store[name] = data
             save_settings("store.settings", self.store)
         self.store_list.sortItems()
 
@@ -297,9 +363,14 @@ class HotIO(QtGui.QDialog):
                 self.parent.multiline = True
                 self.parent.toolbar.multiline_button.setChecked(True)
                 self.parent.hotfield.setFocus()
+            if not self.parent.mode.name == command_values["mode"]:
+                for x in xrange(len(self.parent._modes)):
+                    self.parent.next_mode()
+                    if command_values["mode"] == self.parent.mode.name:
+                        break
             self.parent.hotfield.setText(command_values["command"])
         self.store_list.sortItems()
-        self.parent.hotfield.setFocus(True)
+        self.parent.hotfield.setFocus()
 
     def delete(self):
         list_item = self.store_list.currentItem()
@@ -466,13 +537,15 @@ class HotLine(QtGui.QWidget):
         self.mode.setup(self)
 
     def handle_input(self, input_str):
-        self.hotio.append(
-            "{0} Command: \n\n {1}\n\n".format(self.mode.name, str(input_str)))
+        self.hotio.write(
+            "{0} Command: \n {1}\n".format(self.mode.name, str(input_str)))
         try:
             self.mode.handler(str(input_str))
         except:
+            e = traceback.format_exc()
+            self.hotio.write(e)
             self.hotio.show()
-            self.hotio.append(traceback.format_exc())
+            self.hotio.tabs.setCurrentIndex(0)
         if not self.pinned:
             self.exit()
 
@@ -509,7 +582,7 @@ class HotLine(QtGui.QWidget):
 
     def help(self):
         self.hotio.show()
-        self.hotio.append(help_string)
+        self.hotio.write(help_string)
 
     def enter(self):
         pos = QtGui.QCursor.pos()

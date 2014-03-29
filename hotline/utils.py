@@ -9,13 +9,13 @@ except ImportError:
     from PySide import QtGui, QtCore
 
 
-def rel_path(path):
+def rel_path(path, check=True):
     '''Returns paths relative to the modules directory.'''
 
     fullpath = os.path.abspath(os.path.join(os.path.dirname(__file__), path))
-    if os.path.exists(fullpath):
-        return fullpath
-    return None
+    if check and not os.path.exists(fullpath):
+        return None
+    return fullpath
 
 
 def json_load(path):
@@ -29,7 +29,8 @@ def json_load(path):
 
 
 def save_settings(which, data):
-    with open(rel_path("settings/user/" + which), "w") as f:
+    encode = json.dumps(data, indent=4)
+    with open(rel_path("settings/user/" + which, check=False), "w") as f:
         f.write(json.dumps(data, indent=4))
 
 def load_settings(which, combine_user_defaults=True):

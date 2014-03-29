@@ -30,6 +30,16 @@ QPushButton#save:pressed {
     image: url(%(rel)s/icons/save_pressed.png);
 }
 
+QPushButton#run {
+    border: 0;
+    image: url(%(rel)s/icons/run.png);
+}
+
+QPushButton#run:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/run_pressed.png);
+}
+
 QPushButton#load {
     border: 0;
     image: url(%(rel)s/icons/load.png);
