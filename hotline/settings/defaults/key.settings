@@ -1,22 +1,26 @@
 {
     "standard": {
-        "Toggle Multiline": "Ctrl+M",
+        "Toggle Toolbar": "Ctrl+T",
+        "Show Output": "Ctrl+1",
+        "Toggle Autocomplete": "Ctrl+2",
+        "Toggle Multiline": "Ctrl+3",
+        "Pin": "Ctrl+4",
         "Next Mode": "Tab",
         "Prev Mode": "Shift+Tab",
         "Execute": "Enter",
         "Previous in History": "Up",
-        "Next in History": "Down",
-        "Pin": "Ctrl+P",
-        "Toggle Toolbar": "Alt+M"
+        "Next in History": "Down"
     },
     "multiline": {
-        "Toggle Multiline": "Ctrl+M",
+        "Toggle Toolbar": "Ctrl+T",
+        "Show Output": "Ctrl+1",
+        "Toggle Autocomplete": "Ctrl+2",
+        "Toggle Multiline": "Ctrl+3",
+        "Pin": "Ctrl+4",
         "Next Mode": "Ctrl+Tab",
         "Prev Mode": "Ctrl+Shift+Tab",
         "Execute": "Ctrl+Enter",
         "Previous in History": "Ctrl+Up",
-        "Next in History": "Ctrl+Down",
-        "Pin": "Ctrl+P",
-        "Toggle Toolbar": "Alt+M"
+        "Next in History": "Ctrl+Down"
     }
 }

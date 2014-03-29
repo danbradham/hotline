@@ -30,6 +30,37 @@ QPushButton#save:pressed {
     image: url(%(rel)s/icons/save_pressed.png);
 }
 
+QPushButton#load {
+    border: 0;
+    image: url(%(rel)s/icons/load.png);
+}
+
+QPushButton#load:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/load_pressed.png);
+}
+
+QPushButton#auto {
+    border: 0;
+    image: url(%(rel)s/icons/auto.png);
+}
+
+QPushButton#auto:checked {
+    border: 0;
+    image: url(%(rel)s/icons/auto_pressed.png);
+}
+
+QPushButton#delete {
+    border: 0;
+    image: url(%(rel)s/icons/delete.png);
+}
+
+QPushButton#delete:pressed,
+QPushButton#delete:hover{
+    border: 0;
+    image: url(%(rel)s/icons/delete_pressed.png);
+}
+
 QPushButton#pin {
     border: 0;
     image: url(%(rel)s/icons/pin.png);
