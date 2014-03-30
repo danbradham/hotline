@@ -184,6 +184,7 @@ class HotIO(QtGui.QDialog):
         tb = self.tabs.tabBar()
         tb.setDrawBase(False)
         tb.setExpanding(True)
+        tb.setFocusPolicy(QtCore.Qt.NoFocus)
 
         #Output Tab
         self._buffer = []
