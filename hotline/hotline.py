@@ -12,7 +12,7 @@ from functools import partial
 import sys
 from .highlighter import Highlighter
 from .utils import rel_path, load_settings, save_settings
-from .help import help_string
+from .help import help_string, help_html
 from .hotfield import HotField
 try:
     from PyQt4 import QtGui, QtCore
@@ -103,15 +103,20 @@ class SaveDialog(QtGui.QDialog):
 
         grid = QtGui.QGridLayout(self)
         grid.setColumnStretch(1, 1)
-        name_label = QtGui.QLabel("name", self)
+
+        name_label = QtGui.QLabel("Name:", self)
         self.name = QtGui.QLineEdit(self)
-        mode_label = QtGui.QLabel("mode", self)
+
+        mode_label = QtGui.QLabel("Mode:", self)
         self.mode = QtGui.QComboBox(self)
         self.mode.addItems(options)
         self.mode.setCurrentIndex(self.mode.findText(mode))
-        desc_label = QtGui.QLabel("description", self)
+
+        desc_label = QtGui.QLabel("Description:", self)
         self.desc = QtGui.QTextEdit(self)
+
         self.autoload = QtGui.QCheckBox("Autoload Selected")
+
         self.ok = QtGui.QPushButton("Save", self)
         self.ok.clicked.connect(self.accept)
         self.notok = QtGui.QPushButton("Cancel", self)
@@ -131,6 +136,15 @@ class SaveDialog(QtGui.QDialog):
         grid.addLayout(buttons, 5, 1)
 
         self.setLayout(grid)
+
+        try:
+            with open(rel_path('settings/user/style.css')) as f:
+                style = f.read() % ({"rel": REL})
+        except:
+            with open(rel_path('settings/defaults/style.css')) as f:
+                style = f.read() % ({"rel": REL})
+        print style
+        self.setStyleSheet(style)
 
     def data(self):
         data = {
@@ -179,7 +193,7 @@ class HotIO(QtGui.QDialog):
 
         font = QtGui.QFont()
         font.setFamily("Courier New")
-        font.setPointSize(10)
+        font.setPointSize(8)
 
         self.textfield = QtGui.QTextBrowser(self)
         self.textfield.setFont(font)
@@ -197,8 +211,7 @@ class HotIO(QtGui.QDialog):
             parent=self)
 
         self.clear_button.clicked.connect(self.clear_output)
-        self.help_button.clicked.connect(
-            partial(self.textfield.insertHtml, help_string))
+        self.help_button.clicked.connect(self.print_help)
 
         grid.setColumnStretch(0, 1)
         grid.setRowStretch(0, 1)
@@ -268,6 +281,12 @@ class HotIO(QtGui.QDialog):
 
         self.tabs.addTab(store_widget, "Store")
         layout.addWidget(self.tabs, 0, 0)
+
+    def print_help(self):
+        self.textfield.append(help_string)
+        cursor = self.textfield.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        self.textfield.insertHtml(help_html)
 
     def write(self, txt):
         self._buffer.append(txt)
@@ -538,7 +557,7 @@ class HotLine(QtGui.QWidget):
 
     def handle_input(self, input_str):
         self.hotio.write(
-            "{0} Command: \n {1}\n".format(self.mode.name, str(input_str)))
+            "\n{0} Command: \n {1}\n\n".format(self.mode.name, str(input_str)))
         try:
             self.mode.handler(str(input_str))
         except:

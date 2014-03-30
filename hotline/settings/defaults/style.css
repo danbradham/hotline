@@ -111,20 +111,16 @@ QPushButton#output:pressed {
     image: url(%(rel)s/icons/output_pressed.png);
 }
 
-QTextEdit#input {
-    border: 0;
-    height: 20;
-    color: rgb(235, 235, 235);
-}
-
-QTextEdit#input:focus {}
-
+QLineEdit,
+QTextEdit,
 QTextBrowser {
     border: 0;
     height: 20;
     color: rgb(235, 235, 235);
 }
 
+QLineEdit:focus,
+QTextEdit:focus,
 QTextBrowser:focus {}
 
 QDialog,

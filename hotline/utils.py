@@ -63,6 +63,7 @@ def load_keys():
 
 
 class PatternFactory(object):
+    '''Create patterns for Highlighter.'''
 
     def __init__(self, color_settings="color.settings"):
         self.colors = load_settings(color_settings)

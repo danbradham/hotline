@@ -15,7 +15,7 @@ package_data = {
 
 setup(
     name="hotline",
-    version="0.2",
+    version="0.3.1",
     description="A customizable popup input field.",
     long_description=readme,
     author="Dan Bradham",

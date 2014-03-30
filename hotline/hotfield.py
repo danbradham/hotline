@@ -104,8 +104,8 @@ class HotField(QtGui.QTextEdit):
     def insertCompletion(self, completion):
         tc = self.textCursor()
         tc.movePosition(QtGui.QTextCursor.Left)
-        tc.movePosition(QtGui.QTextCursor.EndOfWord)
-        tc.insertText(completion[len(self.completer.completionPrefix()):])
+        tc.select(QtGui.QTextCursor.WordUnderCursor)
+        tc.insertText(completion)
         self.setTextCursor(tc)
 
     def textUnderCursor(self):

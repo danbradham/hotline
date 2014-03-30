@@ -28,10 +28,12 @@ help_string = '''
 |        Hotkey       | singleline |   multiline    |
 | ------------------- | ---------- | -------------- |
 {hotkeys}
+'''.format(hotkeys="\n".join(hotkey_table))
 
+help_html = '''
 
 <a href="http://danbradham.com">Dan Bradham</a> 2014
 Visit <a href="http://github.com/danbradham/HotLine">Github</a> for more help
 and the latest information regarding HotLine.
 
-'''.format(hotkeys="\n".join(hotkey_table))
+'''
