@@ -32,8 +32,9 @@ help_string = '''
 
 help_html = '''
 
-<a href="http://danbradham.com">Dan Bradham</a> 2014
+<html>
+<a href="http://danbradham.com">Dan Bradham</a> 2014</b>
 Visit <a href="http://github.com/danbradham/HotLine">Github</a> for more help
 and the latest information regarding HotLine.
-
+</html>
 '''

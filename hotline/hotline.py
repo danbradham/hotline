@@ -143,7 +143,6 @@ class SaveDialog(QtGui.QDialog):
         except:
             with open(rel_path('settings/defaults/style.css')) as f:
                 style = f.read() % ({"rel": REL})
-        print style
         self.setStyleSheet(style)
 
     def data(self):
@@ -198,6 +197,7 @@ class HotIO(QtGui.QDialog):
 
         self.textfield = QtGui.QTextBrowser(self)
         self.textfield.setFont(font)
+        self.textfield.setLineWrapMode(QtGui.QTextEdit.NoWrap)
         self.textfield.setReadOnly(True)
         self.textfield.setOpenExternalLinks(True)
         self.help_button = Button(
@@ -608,6 +608,7 @@ class HotLine(QtGui.QWidget):
         pos = QtGui.QCursor.pos()
         self.move(pos.x(), pos.y())
         self.show()
+        self.adjust_size()
         self.hotfield.setFocus()
 
     def exit(self):
