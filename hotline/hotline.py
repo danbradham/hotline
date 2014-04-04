@@ -23,7 +23,7 @@ REL = rel_path(".").replace('\\', '/')
 
 
 class Button(QtGui.QPushButton):
-    '''A button template...because I'm getting tired of QPushButtons.'''
+    '''A button template'''
 
     def __init__(self, name, tip, checkable, *args, **kwargs):
         super(Button, self).__init__(*args, **kwargs)
@@ -56,11 +56,6 @@ class Toolbar(QtGui.QWidget):
             tip="Open output window",
             checkable=False,
             parent=self)
-        # self.help_button = Button(
-        #     name="help",
-        #     tip="Get some help.",
-        #     checkable=False,
-        #     parent=self)
         self.auto_button = Button(
             name="auto",
             tip="Autocomplete",
@@ -79,7 +74,6 @@ class Toolbar(QtGui.QWidget):
 
 
         grid.setColumnStretch(0, 1)
-        # grid.addWidget(self.help_button, 0, 1)
         grid.addWidget(self.hotio_button, 0, 2)
         grid.addWidget(self.auto_button, 0, 3)
         grid.addWidget(self.multiline_button, 0, 4)
@@ -263,6 +257,7 @@ class HotIO(QtGui.QDialog):
         except:
             print "Failed to autoload items from store."
         self.store_list.currentTextChanged.connect(self.store_changed)
+        self.store_list.itemChanged.connect(self.store_item_changed)
         self.store_autoload.stateChanged.connect(self.autoload_changed)
         self.store_run.clicked.connect(self.run)
         self.store_save.clicked.connect(self.save)
@@ -297,11 +292,24 @@ class HotIO(QtGui.QDialog):
         self.textfield.clear()
         self._buffer = []
 
+    def store_add_item(self, name):
+        list_item = QtGui.QListWidgetItem(name)
+        list_item.setFlags(list_item.flags() | QtCore.Qt.ItemIsEditable)
+        list_item.setData(QtCore.Qt.UserRole, name)
+        self.store_list.addItem(list_item)
+
+    def store_item_changed(self, list_item):
+        new_name = list_item.text()
+        old_name = list_item.data(QtCore.Qt.UserRole)
+        self.store[new_name] = self.store.pop(old_name)
+        save_settings("store.settings", self.store)
+        list_item.setData(QtCore.Qt.UserRole, new_name)
+
     def evaluate_store(self):
         for mode in self.parent._modes:
             for name, value in self.store.iteritems():
                 if value["mode"] == mode.name:
-                    self.store_list.addItem(name)
+                    self.store_add_item(name)
                     if value["autoload"]:
                         mode.handler(value["command"])
 
@@ -355,7 +363,7 @@ class HotIO(QtGui.QDialog):
             data = save_diag.data()
             name = data["name"]
             if not name in self.store:
-                self.store_list.addItem(name)
+                self.store_add_item(name)
             else:
                 overwrite_it = QtGui.QMessageBox.question(
                     self,
