@@ -132,30 +132,30 @@ def node_handler(input_str):
     input_buffer = input_str.split()
     if len(input_buffer) > 1:
         node_type, node_name = input_buffer
+        if "#" in node_name:
+            raise NameError(
+                "# symbol found in node name. "
+                "This will completely fuck your maya scene. \n"
+                "Try again without the #.")
     else:
         node_type = input_buffer[0]
         node_name = None
 
-    node_class = cmds.getClassification(node_type)
-
     #Wrap node creation and naming in a single chunk
     cmds.undoInfo(openChunk=True)
 
-    if node_class:
-        if "utility" in node_class[0].lower():
-            node = cmds.shadingNode(node_type, asUtility=True)
-        elif "shader" in node_class[0].lower():
-            node = cmds.shadingNode(node_type, asShader=True)
-        elif "texture" in node_class[0].lower():
-            node = cmds.shadingNode(node_type, asTexture=True)
-        elif "rendering" in node_class[0].lower():
-            node = cmds.shadingNode(node_type, asRendering=True)
-        elif "postprocess" in node_class[0].lower():
-            node = cmds.shadingNode(node_type, asPostProcess=True)
-        elif "light" in node_class[0].lower():
-            node = cmds.shadingNode(node_type, asLight=True)
-        else:
-            node = cmds.createNode(node_type)
+    if cmds.getClassification(node_type, satisfies="utility"):
+        node = cmds.shadingNode(node_type, asUtility=True)
+    elif cmds.getClassification(node_type, satisfies="shader"):
+        node = cmds.shadingNode(node_type, asShader=True)
+    elif cmds.getClassification(node_type, satisfies="texture"):
+        node = cmds.shadingNode(node_type, asTexture=True)
+    elif cmds.getClassification(node_type, satisfies="rendering"):
+        node = cmds.shadingNode(node_type, asRendering=True)
+    elif cmds.getClassification(node_type, satisfies="postprocess"):
+        node = cmds.shadingNode(node_type, asPostProcess=True)
+    elif cmds.getClassification(node_type, satisfies="light"):
+        node = cmds.shadingNode(node_type, asLight=True)
     else:
         node = cmds.createNode(node_type)
 
