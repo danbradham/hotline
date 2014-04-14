@@ -8,8 +8,6 @@ A QTextEdit widget that maintains input history.
     a parent class.
 '''
 
-from collections import deque
-from functools import partial
 from .utils import load_keys
 
 #Try PyQt then PySide imports

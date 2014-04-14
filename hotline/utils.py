@@ -1,6 +1,4 @@
 import os
-import glob
-import sys
 import json
 #Try PyQt then PySide imports
 try:

@@ -26,14 +26,16 @@ import maya.OpenMayaUI as OpenMayaUI
 import maya.cmds as cmds
 from maya.utils import executeInMainThreadWithResult as execInMain
 import maya.mel as mel
+import __main__
 
 CMDS_CALLABLES = [name for name, data in inspect.getmembers(cmds, callable)]
 
 
 @hotline.add_mode("PY", completer_list=CMDS_CALLABLES, syntax="Python")
 def py_handler(input_str):
-    execInMain(input_str)
-    cmds.repeatLast(addCommand='python("{0}")'.format(input_str))
+    main = __main__.__dict__
+    exec(input_str, main, main)
+    cmds.repeatLast(addCommand='python("exec({0}, main, main)")'.format(input_str))
 
 
 @hotline.add_mode("MEL", completer_list=CMDS_CALLABLES)
@@ -64,7 +66,13 @@ def ren_handler(input_str):
         for rename_string in rename_strings:
             remMatch = re.search('\-', rename_string)
             addMatch = re.search('\+', rename_string)
-            seq_length = rename_string.count('#')
+            seqMatch = re.search(r"(#+)(\((\d+)\))?", rename_string)
+            seq_length = len(seqMatch.group(1))
+            if seqMatch.group(3):
+                start_index = int(seqMatch.group(3))
+                rename_string = rename_string.replace(seqMatch.group(2), "")
+            else:
+                start_index = 1
 
             #Handle subtract tokens
             if remMatch:
@@ -80,7 +88,7 @@ def ren_handler(input_str):
                     name = rename_string
                     node_shortname = node.split('|')[-1]
                     if seq_length:
-                        seq = str(i+1).zfill(seq_length)
+                        seq = str(i+start_index).zfill(seq_length)
                         name = name.replace('#' * seq_length, seq)
                     if name.endswith('+'):
                         node = cmds.rename(
@@ -96,12 +104,11 @@ def ren_handler(input_str):
 
                 #Handle Search Replace
                 if len(rename_strings) == 2:
-                    seq_length = rename_strings[-1].count('#')
                     for node, i in sorted_nodes:
                         node_shortname = node.split('|')[-1]
                         name = rename_strings[-1]
                         if seq_length:
-                            seq = str(i+1).zfill(seq_length)
+                            seq = str(i+start_index).zfill(seq_length)
                             name = name.replace('#' * seq_length, seq)
                         node = cmds.rename(
                             node,
@@ -113,7 +120,7 @@ def ren_handler(input_str):
                     for node, i in sorted_nodes:
                         name = rename_string
                         if seq_length:
-                            seq = str(i+1).zfill(seq_length)
+                            seq = str(i+start_index).zfill(seq_length)
                             name = name.replace('#' * seq_length, seq)
                         cmds.rename(node, name)
 

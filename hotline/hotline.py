@@ -8,7 +8,6 @@ manages modes it's modes.
 
 import traceback
 from collections import deque
-from functools import partial
 import sys
 from .highlighter import Highlighter
 from .utils import rel_path, load_settings, save_settings
@@ -256,6 +255,7 @@ class HotIO(QtGui.QDialog):
             self.evaluate_store()
         except:
             print "Failed to autoload items from store."
+
         self.store_list.currentTextChanged.connect(self.store_changed)
         self.store_list.itemChanged.connect(self.store_item_changed)
         self.store_autoload.stateChanged.connect(self.autoload_changed)
@@ -371,7 +371,6 @@ class HotIO(QtGui.QDialog):
                     "Overwrite {0}?".format(name),
                     QtGui.QMessageBox.Yes|QtGui.QMessageBox.No,
                     QtGui.QMessageBox.No)
-                autoload = self.store[name]["autoload"]
                 if overwrite_it == QtGui.QMessageBox.No:
                     return
             data["command"] = self.parent.hotfield.toPlainText()
@@ -567,13 +566,16 @@ class HotLine(QtGui.QWidget):
     def handle_input(self, input_str):
         self.hotio.write(
             "\n{0} Command: \n {1}\n\n".format(self.mode.name, str(input_str)))
+        old_stdout = sys.stdout
+        sys.stdout = self.hotio
         try:
             self.mode.handler(str(input_str))
         except:
-            e = traceback.format_exc()
-            self.hotio.write(e)
+            self.hotio.write(
+                "".join(traceback.format_exception(*sys.exc_info())))
             self.hotio.show()
             self.hotio.tabs.setCurrentIndex(0)
+        sys.stdout = old_stdout
         if not self.pinned:
             self.exit()
 
