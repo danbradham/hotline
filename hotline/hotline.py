@@ -306,6 +306,7 @@ class HotIO(QtGui.QDialog):
         list_item.setData(QtCore.Qt.UserRole, new_name)
 
     def evaluate_store(self):
+        print "Evaluating store..."
         for mode in self.parent._modes:
             for name, value in self.store.iteritems():
                 if value["mode"] == mode.name:

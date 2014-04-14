@@ -193,8 +193,11 @@ class HotField(QtGui.QTextEdit):
                 event.ignore()
                 return
 
-        #Insert keypress
-        super(HotField, self).keyPressEvent(event)
+        if key in (QtCore.Qt.Key.Key_Shift, QtCore.Qt.Key.Key_Control):
+            event.accept()
+            return
+        else:
+            super(HotField, self).keyPressEvent(event)
 
         if auto:
             completion_prefix = self.textUnderCursor()
