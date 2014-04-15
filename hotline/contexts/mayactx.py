@@ -67,11 +67,13 @@ def ren_handler(input_str):
             remMatch = re.search('\-', rename_string)
             addMatch = re.search('\+', rename_string)
             seqMatch = re.search(r"(#+)(\((\d+)\))?", rename_string)
-            seq_length = len(seqMatch.group(1))
-            if seqMatch.group(3):
-                start_index = int(seqMatch.group(3))
-                rename_string = rename_string.replace(seqMatch.group(2), "")
+            if seqMatch:
+                seq_length = len(seqMatch.group(1))
+                if seqMatch.group(3):
+                    start_index = int(seqMatch.group(3))
+                    rename_string = rename_string.replace(seqMatch.group(2),"")
             else:
+                seq_length = 0
                 start_index = 1
 
             #Handle subtract tokens
