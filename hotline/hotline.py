@@ -15,6 +15,8 @@ from .help import help_string, help_html
 from .hotfield import HotField
 try:
     from PyQt4 import QtGui, QtCore
+    QtCore.Signal = QtCore.pyqtSignal
+    QtCore.Slot = QtCore.pyqtSlot
 except ImportError:
     from PySide import QtGui, QtCore
 
@@ -35,6 +37,48 @@ class Button(QtGui.QPushButton):
         self.setFixedWidth(24)
         self.setCheckable(checkable)
         self.setToolTip(tip)
+
+
+class EditLine(QtGui.QLineEdit):
+
+    text_emitted = QtCore.Signal(str)
+    text_changed = QtCore.Signal(str)
+
+    def __init__(self, default='', parent=None):
+        super(EditLine, self).__init__(parent)
+        self.default = default
+        self.setText(self.default)
+        self.returnPressed.connect(self.return_line)
+        self.setSizePolicy(QtGui.QSizePolicy.Expanding,
+                           QtGui.QSizePolicy.Expanding,)
+
+    def mousePressEvent(self, event):
+        super(EditLine, self).mousePressEvent(event)
+        if self.default == self.text():
+            self.setCursorPosition(0)
+
+    def focusInEvent(self, event):
+        super(EditLine, self).focusInEvent(event)
+        if self.default == self.text():
+            self.setCursorPosition(0)
+
+    def focusOutEvent(self, event):
+        super(EditLine, self).focusOutEvent(event)
+        if not self.text():
+            self.setText(self.default)
+
+    def keyPressEvent(self, event):
+        if event.key() in (QtCore.Qt.Key.Key_Shift, QtCore.Qt.Key.Key_Control):
+            event.accept()
+        if self.default == self.text():
+            self.clear()
+        super(EditLine, self).keyPressEvent(event)
+        self.text_changed.emit(self.text())
+
+    def return_line(self):
+        self.text_emitted.emit(self.text())
+        self.setText(self.default)
+        self.clearFocus()
 
 
 class Toolbar(QtGui.QWidget):
@@ -219,6 +263,13 @@ class HotIO(QtGui.QDialog):
         store_widget = QtGui.QWidget(self)
         store_grid = QtGui.QGridLayout(store_widget)
         store_widget.setLayout(store_grid)
+        self.store_line = EditLine("Insert Filter", store_widget)
+        self.store_line.setObjectName("filter")
+        self.store_refr = Button(
+            name="refresh",
+            tip="Refresh Store",
+            checkable=False,
+            parent=store_widget)
         self.store_list = QtGui.QListWidget(store_widget)
         self.store_list.setFocusPolicy(QtCore.Qt.NoFocus)
         self.store_list.setSortingEnabled(True)
@@ -231,31 +282,29 @@ class HotIO(QtGui.QDialog):
             name="run",
             tip="Run Selected.",
             checkable=False,
-            parent=self)
+            parent=store_widget)
         self.store_load = Button(
             name="load",
             tip="Load selected.",
             checkable=False,
-            parent=self)
+            parent=store_widget)
         self.store_save = Button(
             name="save",
             tip="Save current script.",
             checkable=False,
-            parent=self)
+            parent=store_widget)
         self.store_del = Button(
             name="delete",
             tip="Delete selected",
             checkable=False,
-            parent=self)
+            parent=store_widget)
         self.store_autoload = QtGui.QCheckBox("Autoload Selected")
         self.store_autoload.setEnabled(False)
 
-        self.store = load_settings("store.settings")
-        try:
-            self.evaluate_store()
-        except:
-            print "Failed to autoload items from store."
+        self.store_refresh()
 
+        self.store_line.text_changed.connect(self.store_filter)
+        self.store_refr.clicked.connect(self.store_refresh)
         self.store_list.currentTextChanged.connect(self.store_changed)
         self.store_list.itemChanged.connect(self.store_item_changed)
         self.store_autoload.stateChanged.connect(self.autoload_changed)
@@ -265,15 +314,17 @@ class HotIO(QtGui.QDialog):
         self.store_del.clicked.connect(self.delete)
 
         store_grid.setColumnStretch(0, 1)
-        store_grid.setRowStretch(0, 1)
-        store_grid.addWidget(self.store_list, 0, 0, 1, 5)
-        store_grid.addWidget(self.store_mode, 1, 0)
-        store_grid.addWidget(self.store_desc, 2, 0, 1, 5)
-        store_grid.addWidget(self.store_autoload, 3, 0)
-        store_grid.addWidget(self.store_run, 3,1)
-        store_grid.addWidget(self.store_save, 3, 2)
-        store_grid.addWidget(self.store_load, 3, 3)
-        store_grid.addWidget(self.store_del, 3, 4)
+        store_grid.setRowStretch(1, 1)
+        store_grid.addWidget(self.store_line, 0, 0, 1, 4)
+        store_grid.addWidget(self.store_refr, 0, 4)
+        store_grid.addWidget(self.store_list, 1, 0, 1, 5)
+        store_grid.addWidget(self.store_mode, 2, 0)
+        store_grid.addWidget(self.store_desc, 3, 0, 1, 5)
+        store_grid.addWidget(self.store_autoload, 4, 0)
+        store_grid.addWidget(self.store_run, 4,1)
+        store_grid.addWidget(self.store_save, 4, 2)
+        store_grid.addWidget(self.store_load, 4, 3)
+        store_grid.addWidget(self.store_del, 4, 4)
 
         self.tabs.addTab(store_widget, "Store")
         layout.addWidget(self.tabs, 0, 0)
@@ -305,13 +356,29 @@ class HotIO(QtGui.QDialog):
         save_settings("store.settings", self.store)
         list_item.setData(QtCore.Qt.UserRole, new_name)
 
-    def evaluate_store(self):
+    def store_filter(self, text_filter):
+        self.store_list.clear()
+        for name, value in self.store.iteritems():
+            if not text_filter.lower() in name.lower():
+                continue
+            self.store_add_item(name)
+
+    def store_refresh(self):
+        self.store = load_settings("store.settings")
+        self.store_list.clear()
+        self.store_line.clear()
+        try:
+            self.evaluate_store()
+        except:
+            print "Failed to autoload items from store."
+
+    def evaluate_store(self, autoload=True):
         print "Evaluating store..."
         for mode in self.parent._modes:
             for name, value in self.store.iteritems():
                 if value["mode"] == mode.name:
                     self.store_add_item(name)
-                    if value["autoload"]:
+                    if autoload and value["autoload"]:
                         mode.handler(value["command"])
 
     def store_changed(self, name):

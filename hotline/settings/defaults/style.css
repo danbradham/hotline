@@ -111,6 +111,16 @@ QPushButton#output:pressed {
     image: url(%(rel)s/icons/output_pressed.png);
 }
 
+QPushButton#refresh {
+    border: 0;
+    image: url(%(rel)s/icons/refresh.png);
+}
+
+QPushButton#refresh:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/refresh_pressed.png);
+}
+
 QLineEdit,
 QTextEdit,
 QTextBrowser {
