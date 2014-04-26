@@ -35,7 +35,8 @@ CMDS_CALLABLES = [name for name, data in inspect.getmembers(cmds, callable)]
 def py_handler(input_str):
     main = __main__.__dict__
     exec(input_str, main, main)
-    cmds.repeatLast(addCommand='python("exec({0}, main, main)")'.format(input_str))
+    cmds.repeatLast(
+        addCommand='python("exec({0}, {1}, {1})")'.format(input_str, main))
 
 
 @hotline.add_mode("MEL", completer_list=CMDS_CALLABLES)
