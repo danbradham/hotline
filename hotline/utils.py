@@ -2,9 +2,9 @@ import os
 import json
 #Try PyQt then PySide imports
 try:
-    from PyQt4 import QtGui, QtCore
-except ImportError:
     from PySide import QtGui, QtCore
+except ImportError:
+    from PyQt4 import QtGui, QtCore
 
 
 def rel_path(path, check=True):
@@ -21,13 +21,12 @@ def json_load(path):
         with open(path) as f:
             try:
                 return json.load(f)
-            except ValueError, e:
+            except ValueError:
                 print "JSON ERROR: " + path
     return {}
 
 
 def save_settings(which, data):
-    encode = json.dumps(data, indent=4)
     with open(rel_path("settings/user/" + which, check=False), "w") as f:
         f.write(json.dumps(data, indent=4))
 

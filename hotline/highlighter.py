@@ -1,7 +1,7 @@
 try:
-    from PyQt4 import QtGui
-except ImportError:
     from PySide import QtGui
+except ImportError:
+    from PyQt4 import QtGui
 
 
 class Highlighter(QtGui.QSyntaxHighlighter):

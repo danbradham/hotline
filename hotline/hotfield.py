@@ -12,11 +12,11 @@ from .utils import load_keys
 
 #Try PyQt then PySide imports
 try:
+    from PySide import QtGui, QtCore
+except ImportError:
     from PyQt4 import QtGui, QtCore
     QtCore.Signal = QtCore.pyqtSignal
     QtCore.Slot = QtCore.pyqtSlot
-except ImportError:
-    from PySide import QtGui, QtCore
 
 KEYSET = load_keys()
 
@@ -193,11 +193,12 @@ class HotField(QtGui.QTextEdit):
                 event.ignore()
                 return
 
-        if key in (QtCore.Qt.Key.Key_Shift, QtCore.Qt.Key.Key_Control):
-            event.accept()
-            return
-        else:
-            super(HotField, self).keyPressEvent(event)
+        if not hasattr(QtCore, "pyqtSignal"): # Check if we're using PyQt
+            if key in (QtCore.Qt.Key.Key_Shift, QtCore.Qt.Key.Key_Control):
+                event.accept()
+                return
+            else:
+                super(HotField, self).keyPressEvent(event)
 
         if auto:
             completion_prefix = self.textUnderCursor()

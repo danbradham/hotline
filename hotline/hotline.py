@@ -14,13 +14,27 @@ from .utils import rel_path, load_settings, save_settings
 from .help import help_string, help_html
 from .hotfield import HotField
 try:
+    from PySide import QtGui, QtCore
+except ImportError:
     from PyQt4 import QtGui, QtCore
     QtCore.Signal = QtCore.pyqtSignal
     QtCore.Slot = QtCore.pyqtSlot
-except ImportError:
-    from PySide import QtGui, QtCore
 
 REL = rel_path(".").replace('\\', '/')
+
+
+class NonStdOut(object):
+
+    handlers = []
+
+    def write(self, msg):
+        sys.__stdout__.write(msg)
+
+        for handler in self.handlers:
+            handler(msg)
+
+    def add_handler(self, fn):
+        self.handlers.append(fn)
 
 
 class Button(QtGui.QPushButton):
@@ -192,27 +206,30 @@ class SaveDialog(QtGui.QDialog):
         return data
 
 
-class HotIO(QtGui.QDialog):
+class HotIO(QtGui.QDockWidget):
     '''Input Output window for HotLine.
 
     Handles script/command storage and logging output.'''
 
-    def __init__(self, parent=None):
+    def __init__(self, hotline, parent=None):
         super(HotIO, self).__init__(parent)
 
+        self.setFeatures(
+            QtGui.QDockWidget.DockWidgetClosable|
+            QtGui.QDockWidget.DockWidgetFloatable|
+            QtGui.QDockWidget.DockWidgetMovable)
+        self.setFloating(True)
+        self.setAllowedAreas(
+            QtCore.Qt.LeftDockWidgetArea|
+            QtCore.Qt.RightDockWidgetArea)
+
         self.setWindowTitle("HotLine IO")
-        self.parent = parent
-        self.setWindowFlags(QtCore.Qt.Window|QtCore.Qt.WindowStaysOnTopHint)
+        self.hotline = hotline
 
         wrap_widget = QtGui.QWidget(self)
-        wrap_layout = QtGui.QGridLayout(wrap_widget)
-        wrap_layout.setContentsMargins(0, 0, 0, 0)
-        wrap_layout.setSpacing(0)
         layout = QtGui.QGridLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(wrap_layout)
-        wrap_layout.addWidget(wrap_widget)
         wrap_widget.setLayout(layout)
 
         self.tabs = QtGui.QTabWidget(self)
@@ -329,6 +346,16 @@ class HotIO(QtGui.QDialog):
         self.tabs.addTab(store_widget, "Store")
         layout.addWidget(self.tabs, 0, 0)
 
+        self.setWidget(wrap_widget)
+
+        try:
+            with open(rel_path('settings/user/style.css')) as f:
+                style = f.read() % ({"rel": REL})
+        except:
+            with open(rel_path('settings/defaults/style.css')) as f:
+                style = f.read() % ({"rel": REL})
+        self.setStyleSheet(style)
+
     def print_help(self):
         self.textfield.append(help_string)
         cursor = self.textfield.textCursor()
@@ -374,7 +401,7 @@ class HotIO(QtGui.QDialog):
 
     def evaluate_store(self, autoload=True):
         print "Evaluating store..."
-        for mode in self.parent._modes:
+        for mode in self.hotline._modes:
             for name, value in self.store.iteritems():
                 if value["mode"] == mode.name:
                     self.store_add_item(name)
@@ -410,22 +437,22 @@ class HotIO(QtGui.QDialog):
             return
         command_values = self.store.get(list_item.text(), None)
         if command_values:
-            self.parent.hotfield.clear()
+            self.hotline.hotfield.clear()
             text = command_values["command"]
             mode = command_values["mode"]
-            if mode == self.parent.mode.name:
-                self.parent.handle_input(text)
+            if mode == self.hotline.mode.name:
+                self.hotline.handle_input(text)
                 return
-            for x in xrange(len(self.parent._modes)):
-                self.parent.next_mode()
-                if mode == self.parent.mode.name:
-                    self.parent.handle_input(text)
+            for x in xrange(len(self.hotline._modes)):
+                self.hotline.next_mode()
+                if mode == self.hotline.mode.name:
+                    self.hotline.handle_input(text)
                     return
 
     def save(self):
 
-        options = [m.name for m in self.parent._modes]
-        save_diag = SaveDialog(self.parent.mode.name, options, self)
+        options = [m.name for m in self.hotline._modes]
+        save_diag = SaveDialog(self.hotline.mode.name, options, self)
 
         if save_diag.exec_():
             data = save_diag.data()
@@ -441,7 +468,7 @@ class HotIO(QtGui.QDialog):
                     QtGui.QMessageBox.No)
                 if overwrite_it == QtGui.QMessageBox.No:
                     return
-            data["command"] = self.parent.hotfield.toPlainText()
+            data["command"] = self.hotline.hotfield.toPlainText()
             self.store[name] = data
             save_settings("store.settings", self.store)
         self.store_list.sortItems()
@@ -452,20 +479,20 @@ class HotIO(QtGui.QDialog):
             return
         command_values = self.store.get(list_item.text(), None)
         if command_values:
-            self.parent.hotfield.clear()
+            self.hotline.hotfield.clear()
             text = command_values["command"]
             if "\n" in text:
-                self.parent.multiline = True
-                self.parent.toolbar.multiline_button.setChecked(True)
-                self.parent.hotfield.setFocus()
-            if not self.parent.mode.name == command_values["mode"]:
-                for x in xrange(len(self.parent._modes)):
-                    self.parent.next_mode()
-                    if command_values["mode"] == self.parent.mode.name:
+                self.hotline.multiline = True
+                self.hotline.toolbar.multiline_button.setChecked(True)
+                self.hotline.hotfield.setFocus()
+            if not self.hotline.mode.name == command_values["mode"]:
+                for x in xrange(len(self.hotline._modes)):
+                    self.hotline.next_mode()
+                    if command_values["mode"] == self.hotline.mode.name:
                         break
-            self.parent.hotfield.setText(command_values["command"])
+            self.hotline.hotfield.setText(command_values["command"])
         self.store_list.sortItems()
-        self.parent.hotfield.setFocus()
+        self.hotline.hotfield.setFocus()
 
     def delete(self):
         list_item = self.store_list.currentItem()
@@ -504,8 +531,12 @@ class HotLine(QtGui.QWidget):
         self.pinned = False
         self.auto = False
 
-        self.hotio = HotIO(self)
+        self.hotio = HotIO(self, parent if parent else self)
         self.hotio.hide()
+
+        self.output = NonStdOut()
+        sys.stdout = self.output
+        self.output.add_handler(self.hotio.write)
 
         # Create and connect ui widgets
         self.hotfield = HotField(self)
@@ -632,18 +663,15 @@ class HotLine(QtGui.QWidget):
         self.mode.setup(self)
 
     def handle_input(self, input_str):
-        self.hotio.write(
+        self.output.write(
             "\n{0} Command: \n {1}\n\n".format(self.mode.name, str(input_str)))
-        old_stdout = sys.stdout
-        sys.stdout = self.hotio
         try:
             self.mode.handler(str(input_str))
         except:
-            self.hotio.write(
+            self.output.write(
                 "".join(traceback.format_exception(*sys.exc_info())))
             self.hotio.show()
             self.hotio.tabs.setCurrentIndex(0)
-        sys.stdout = old_stdout
         if not self.pinned:
             self.exit()
 

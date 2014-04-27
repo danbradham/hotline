@@ -11,13 +11,13 @@ Place in your maya scripts directory and bind a key to:
 
 #Get wrapinstance from PyQt or PySide
 try:
-    import sip
-    wrapinstance = sip.wrapinstance
-    from PyQt4 import QtGui, QtCore
-except ImportError:
     import shiboken
     wrapinstance = shiboken.wrapInstance
     from PySide import QtGui, QtCore
+except ImportError:
+    import sip
+    wrapinstance = sip.wrapinstance
+    from PyQt4 import QtGui, QtCore
 import re
 import inspect
 from functools import partial
