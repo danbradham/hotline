@@ -11,6 +11,7 @@ STYLE = None
 
 # Define all of our UI Events
 # Make sure we're emitting these from the correct ui elements.
+# Handlers added in controller.
 store_filter = Event("Filter")
 store_refresh = Event("Refresh")
 store_run = Event("Run")
@@ -34,8 +35,12 @@ clear_out = Event("Clear Output")
 def get_style():
     global STYLE
     if not STYLE:
-        with open(rel_path("settings/defaults/style.css")) as f:
-            STYLE = f.read() % {"rel": REL}
+        try:
+            with open(rel_path('settings/user/style.css')) as f:
+                STYLE = f.read() % ({"rel": REL})
+        except:
+            with open(rel_path('settings/defaults/style.css')) as f:
+                STYLE = f.read() % ({"rel": REL})
     return STYLE
 
 
@@ -131,6 +136,67 @@ class Store(QtGui.QWidget):
         self.refr_button.pressed += partial(store_refresh, self.store_list)
 
 
+class Save(QtGui.QDialog):
+
+    def __init__(self, mode, options, parent=None):
+        super(Save, self).__init__(parent)
+
+        self.setWindowTitle("Save current command?")
+
+        grid = QtGui.QGridLayout(self)
+        grid.setColumnStretch(1, 1)
+
+        name_label = QtGui.QLabel("Name:", self)
+        self.name = QtGui.QLineEdit(self)
+
+        mode_label = QtGui.QLabel("Mode:", self)
+        self.mode = QtGui.QComboBox(self)
+        self.mode.addItems(options)
+        self.mode.setCurrentIndex(self.mode.findText(mode))
+
+        desc_label = QtGui.QLabel("Description:", self)
+        self.desc = QtGui.QTextEdit(self)
+
+        self.autoload = QtGui.QCheckBox("Autoload Selected")
+
+        self.ok = QtGui.QPushButton("Save", self)
+        self.ok.clicked.connect(self.accept)
+        self.notok = QtGui.QPushButton("Cancel", self)
+        self.notok.clicked.connect(self.reject)
+        buttons = QtGui.QHBoxLayout(self)
+        buttons.setContentsMargins(0, 0, 0, 0)
+        buttons.addWidget(self.ok)
+        buttons.addWidget(self.notok)
+
+        grid.addWidget(name_label, 0, 0)
+        grid.addWidget(self.name, 0, 1)
+        grid.addWidget(mode_label, 1, 0)
+        grid.addWidget(self.mode, 1, 1)
+        grid.addWidget(desc_label, 2, 0)
+        grid.addWidget(self.desc, 3, 0, 1, 2)
+        grid.addWidget(self.autoload, 4, 1)
+        grid.addLayout(buttons, 5, 1)
+
+        self.setLayout(grid)
+
+        try:
+            with open(rel_path('settings/user/style.css')) as f:
+                style = f.read() % ({"rel": REL})
+        except:
+            with open(rel_path('settings/defaults/style.css')) as f:
+                style = f.read() % ({"rel": REL})
+        self.setStyleSheet(style)
+
+    def data(self):
+        data = {
+            "name": self.name.text(),
+            "autoload": self.autoload.isChecked(),
+            "mode": self.mode.currentText(),
+            "description": self.desc.toPlainText()
+        }
+        return data
+
+
 class Dock(QtGui.QDockWidget):
 
     def __init__(self, out=Output, store=Store, conf=Configurator, **kwargs):
@@ -147,6 +213,20 @@ class Dock(QtGui.QDockWidget):
         self.widget.addTab(self.store_tab, "Store")
         self.widget.addTab(self.conf_tab, "Configuration")
 
+        self.setFeatures(
+            QtGui.QDockWidget.DockWidgetClosable|
+            QtGui.QDockWidget.DockWidgetFloatable|
+            QtGui.QDockWidget.DockWidgetMovable)
+        self.setFloating(True)
+        self.setAllowedAreas(
+            QtCore.Qt.LeftDockWidgetArea|
+            QtCore.Qt.RightDockWidgetArea)
+        self.widget.setDocumentMode(True)
+        tb = self.widget.tabBar()
+        tb.setDrawBase(False)
+        tb.setExpanding(True)
+        tb.setFocusPolicy(QtCore.Qt.NoFocus)
+
         self.setStyleSheet(get_style())
 
 
@@ -154,12 +234,21 @@ class Tools(QtGui.QWidget):
 
     def __init__(self, parent=None):
         super(Tools, self).__init__(parent)
+        self.parent = parent
 
         grid = QtGui.QGridLayout()
         grid.setColumnStretch(0, 1)
         grid.setContentsMargins(0, 0, 0, 0)
         self.setLayout(grid)
         self.addWidget = grid.addWidget
+
+    def mousePressEvent(self, event):
+        '''Redirect to Parent'''
+        self.parent.mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        '''Redirect to Parent'''
+        self.parent.mouseMoveEvent(event)
 
 
 class Editor(QtGui.QTextEdit):
@@ -180,10 +269,11 @@ class Button(QtGui.QPushButton):
         self.clicked.connect(self.pressed)
         self.setCheckable(checkable)
 
-class View(QtGui.QWidget):
+
+class Base(QtGui.QWidget):
 
     def __init__(self, editor=Editor, parent=None):
-        super(View, self).__init__(parent)
+        super(Base, self).__init__(parent)
 
         grid = QtGui.QGridLayout()
         grid.setContentsMargins(0, 0, 2, 2)
@@ -226,4 +316,20 @@ class View(QtGui.QWidget):
         grid.addWidget(self.mode_button, 1, 0)
         grid.addWidget(self.editor, 1, 1)
 
+        self.setWindowFlags(
+            QtCore.Qt.Window|
+            QtCore.Qt.FramelessWindowHint|
+            QtCore.Qt.WindowStaysOnTopHint)
+        self.setObjectName('HotLine')
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setFixedHeight(50)
         self.setStyleSheet(get_style())
+
+
+    def mousePressEvent(self, event):
+        self.start_pos = event.pos()
+
+    def mouseMoveEvent(self, event):
+        vect = event.globalPos() - self.start_pos
+        self.move(vect.x(), vect.y())
