@@ -1,0 +1,85 @@
+{
+    "name": "Python",
+    "patterns": {
+        "keywords": {
+            "match": "\\b(and|assert|break|continue|del|elif|else|except|exec|finally|for|from|global|if|import|in|is|lambda|not|or|pass|print|raise|return|try|while|yield)\\b",
+            "captures": 0
+        },
+        "operators": {
+            "match": "\\+|\\-|\\*|\\*\\*|/|//|%|<<|>>|&|\\||\\^|~|\\+\\=|-\\=|\\*\\=|/\\=|//\\=|%\\=|&\\=|\\|\\=|\\^\\=|>>\\=|<<\\=|\\*\\*\\=|\\=|<\\=|>\\=|\\=\\=|<|>|\\!\\=",
+            "captures": 0
+        },
+        "delimiters": {
+            "match": "\\(|\\)|[|]|{|}",
+            "captures": 0
+        },
+        "constants": {
+            "match": "\\b(None|True|False|Ellipsis|NotImplemented)\\b",
+            "captures": 0
+        },
+        "declaritives": {
+            "match": "\\b(class|def)\\b\\s*(\\w+)\\(",
+            "captures": 1
+        },
+        "class.name": {
+            "match": "\\bclass\\b\\s*(\\w+)\\(",
+            "captures": 1
+        },
+        "func.name": {
+            "match": "\\bdef\\b\\s*(\\w+)\\(",
+            "captures": 1
+        },
+        "numeric.complex": {
+            "match": "\\b(?i:(((\\d+(\\.(?=[^a-zA-Z_])\\d*)?|(?<=[^0-9a-zA-Z_])\\.\\d+)(e[\\-\\+]?\\d+)?))J)",
+            "captures": 0
+        },
+        "numeric.float": {
+            "match": "\\b(?i:(\\d+e[\\-\\+]?\\d+))",
+            "captures": 0
+        },
+        "numeric.decimal": {
+            "match": "\\b([1-9]+[0-9]*|0)",
+            "captures": 0
+        },
+        "numeric.hexadecimal": {
+            "match": "\\b(?i:(0x\\h*))",
+            "captures": 0
+        },
+        "numeric.long.decimal": {
+            "match": "\\b(?i:([1-9]+[0-9]*|0)L)",
+            "captures": 0
+        },
+        "numeric.long.hexadecimal": {
+            "match": "\\b(?i:(0x\\h*)L)",
+            "captures": 0
+        },
+        "numeric.long.octal": {
+            "match": "\\b(?i:(0[0-7]+)L)",
+            "captures": 0
+        },
+        "numeric.octal": {
+            "match": "\\b(0[0-7]+)",
+            "captures": 0
+        },
+        "comment.line": {
+            "match": "#[^\\n]*",
+            "captures": 0
+        },
+        "string.double": {
+            "match": "\"[^\"\\\\]*(\\\\.[^\"\\\\]*)*\"",
+            "captures": 0
+        },
+        "string.single": {
+            "match": "'[^'\\\\]*(\\\\.[^'\\\\]*)*'",
+            "captures": 0
+        },
+        "multiline.single": {
+            "start": "'''",
+            "end": "'''"
+        },
+        "multiline.double": {
+            "start": "\"\"\"",
+            "end": "\"\"\""
+        }
+    }
+}

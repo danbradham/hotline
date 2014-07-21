@@ -1,0 +1,196 @@
+QPushButton#mode {
+    border: 0;
+    background: none;
+    font-size: 11pt;
+    font-weight: 500;
+}
+
+QPushButton#mode:pressed {
+    color: rgb(0, 35, 55);
+    background: rgb(115, 115, 115);
+}
+
+QPushButton#multiline {
+    border: 0;
+    image: url(%(rel)s/icons/multiline.png);
+}
+
+QPushButton#multiline:checked {
+    border: 0;
+    image: url(%(rel)s/icons/multiline_pressed.png);
+}
+
+QPushButton#save {
+    border: 0;
+    image: url(%(rel)s/icons/save.png);
+}
+
+QPushButton#save:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/save_pressed.png);
+}
+
+QPushButton#run {
+    border: 0;
+    image: url(%(rel)s/icons/run.png);
+}
+
+QPushButton#run:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/run_pressed.png);
+}
+
+QPushButton#load {
+    border: 0;
+    image: url(%(rel)s/icons/load.png);
+}
+
+QPushButton#load:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/load_pressed.png);
+}
+
+QPushButton#auto {
+    border: 0;
+    image: url(%(rel)s/icons/auto.png);
+}
+
+QPushButton#auto:checked {
+    border: 0;
+    image: url(%(rel)s/icons/auto_pressed.png);
+}
+
+QPushButton#delete {
+    border: 0;
+    image: url(%(rel)s/icons/delete.png);
+}
+
+QPushButton#delete:pressed,
+QPushButton#delete:hover{
+    border: 0;
+    image: url(%(rel)s/icons/delete_pressed.png);
+}
+
+QPushButton#pin {
+    border: 0;
+    image: url(%(rel)s/icons/pin.png);
+}
+
+QPushButton#pin:checked {
+    border: 0;
+    image: url(%(rel)s/icons/pin_pressed.png);
+}
+
+QPushButton#clear {
+    border: 0;
+    image: url(%(rel)s/icons/clear.png);
+}
+
+QPushButton#clear:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/clear_pressed.png);
+}
+
+QPushButton#help {
+    border: 0;
+    image: url(%(rel)s/icons/help.png);
+}
+
+QPushButton#help:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/help_pressed.png);
+}
+
+QPushButton#output {
+    border: 0;
+    image: url(%(rel)s/icons/output.png);
+}
+
+QPushButton#output:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/output_pressed.png);
+}
+
+QPushButton#refresh {
+    border: 0;
+    image: url(%(rel)s/icons/refresh.png);
+}
+
+QPushButton#refresh:pressed {
+    border: 0;
+    image: url(%(rel)s/icons/refresh_pressed.png);
+}
+
+QLineEdit,
+QTextEdit,
+QTextBrowser {
+    border: 0;
+    height: 20;
+    color: rgb(235, 235, 235);
+}
+
+QLineEdit:focus,
+QTextEdit:focus,
+QTextBrowser:focus {}
+
+QDialog,
+QTabWidget {
+    background: rgb(68, 68, 68);
+    border: 0;
+}
+
+QTabBar {
+    background: rgb(42, 42, 42);
+    border: 0;
+}
+
+QTabBar::tab {
+    background: rgb(42, 42, 42);
+    padding: 10px;
+    border: 0;
+    color: rgb(68, 68, 68);
+}
+
+QTabBar::tab:hover {
+    color: rgb(126, 126, 126);
+}
+
+QTabBar::tab:selected {
+    background: rgb(68, 68, 68);
+    border: 0;
+    color: rgb(235, 235, 235);
+}
+
+QTreeView,
+QListWidget{
+    border: 0px;
+}
+
+QTreeView:focus,
+QListWidget:focus{
+    border: 0px;
+}
+
+QListWidget::item,
+QTreeWidget::item{
+    padding: 5px;
+    border: 0px;
+    border-radius: 0px;
+}
+
+QListWidget::item:focus,
+QTreeWidget::item:focus{
+    border: 0px;
+}
+
+QListWidget::item:selected,
+QTreeWidget::item:selected{
+    background: rgb(103, 141, 178);
+}
+
+QListWidget QLineEdit{
+    padding: 0px;
+    margin: 0px;
+    border: 0px;
+    border-radius: 0px;
+}
