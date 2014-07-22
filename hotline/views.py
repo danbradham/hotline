@@ -1,35 +1,12 @@
 from .qt import QtCore, QtGui
 from .utils import rel_path
 from .core import Event
+from .events import *
 from functools import partial
-from settings import KeySettings
 import os
 
 REL = os.path.dirname(__file__)
 STYLE = None
-
-
-# Define all of our UI Events
-# Make sure we're emitting these from the correct ui elements.
-# Handlers added in controller.
-store_filter = Event("Filter")
-store_refresh = Event("Refresh")
-store_run = Event("Run")
-store_save = Event("Save")
-store_load = Event("Load")
-store_delete = Event("Delete")
-show_help = Event("Help")
-hotkey = Event("Hotkey Pressed")
-tgl_tools = Event("Show Tools")
-show_dock = Event("Show Dock")
-tgl_auto = Event("Toggle Autocomplete")
-tgl_pin = Event("Toggle Pin")
-next_mode = Event("Next Mode")
-prev_mode = Event("Previous Mode")
-run = Event("Run")
-next_hist = Event("Next History")
-prev_hist = Event("Previous History")
-clear_out = Event("Clear Output")
 
 
 def get_style():
@@ -51,6 +28,16 @@ class Configurator(QtGui.QWidget):
 
         grid = QtGui.QGridLayout()
         self.setLayout(grid)
+        self.rows = {}
+
+    def add_row(self, name, value):
+        pass
+
+    def get(self, name, default=None):
+        pass
+
+    def set(self, name, value):
+        pass
 
 
 class Output(QtGui.QWidget):

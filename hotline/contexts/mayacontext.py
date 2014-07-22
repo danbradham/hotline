@@ -31,8 +31,8 @@ def getMayaWindow():
 
 class MayaContext(Context):
 
-    @add_mode(completer_list=CMDS_CALLABLES, syntax="Python")
-    def py(input_str):
+    @add_mode("PY", completer_list=CMDS_CALLABLES, syntax="Python")
+    def py_handler(input_str):
         main = __main__.__dict__
         exec(input_str, main, main)
         cmds.repeatLast(

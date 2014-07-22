@@ -12,3 +12,6 @@ if "maya" in PY_EXE:
 elif "nuke" in PY_EXE:
     from .nukecontext import NukeContext
     CTX = NukeContext
+else:
+    from .basiccontext import BasicContext
+    CTX = BasicContext

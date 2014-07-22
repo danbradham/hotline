@@ -64,12 +64,16 @@ class Context(object):
         self.hotline = None
 
     @property
+    def modes(self):
+        return self._modes
+
+    @property
     def mode(self):
         '''Returns current mode.'''
         return self._modes[0]
 
     @property
-    def handler(self):
+    def run(self):
         '''Returns current handler'''
         return self.mode.handler
 
