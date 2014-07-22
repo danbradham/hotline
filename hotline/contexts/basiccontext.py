@@ -11,8 +11,8 @@ import subprocess
 
 class BasicContext(Context):
 
-    @add_mode("Run")
-    def run_handler(self, input):
+    @add_mode("SH")
+    def shell_handler(self, input):
         plat = platform.system()
         if plat == "Windows":
             os.startfile(os.path.abspath(script))
