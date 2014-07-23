@@ -79,8 +79,8 @@ def load_settings(which, combine_user_defaults=True):
         elif False -- user settings if they exist, else default settings
     '''
 
-    defaults = json_load(rel_path("settings/defaults/" + which))
-    user = json_load(rel_path("settings/user/" + which))
+    defaults = json_load(rel_path("settings/defaults/" + which, check=False))
+    user = json_load(rel_path("settings/user/" + which, check=False))
 
     if combine_user_defaults:
         settings = defaults

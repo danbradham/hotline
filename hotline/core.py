@@ -86,31 +86,3 @@ class Mode(object):
         hotline.mode_button.setText(self.name)
         hotline.highlighter.set_rules(self.patterns, self.multiline_patterns)
         hotline.hotfield.set_completer_model(self.completer_list)
-
-
-class Event(object):
-
-    def __init__(self, name, descr=None):
-        self.name = name
-        self.descr = descr
-        self.handlers = WeakSet()
-
-    def add(self, fn):
-        self.handlers.add(fn)
-        return self
-
-    def remove(self, fn):
-        self.handlers.remove(fn)
-        return self
-
-    def fire(self, *args, **kwargs):
-        for handler in self.handlers:
-            handler(*args, **kwargs)
-
-    @property
-    def count(self):
-        return len(self.handlers)
-
-    __iadd__ = add
-    __isub__ = remove
-    __call__ = fire

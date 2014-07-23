@@ -50,7 +50,7 @@ class MetaContext(type):
 
                 modes.append(m)
 
-        setattr(self, "_modes", deque(modes))
+        self._modes = deque(modes)
 
         return self
 

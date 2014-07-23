@@ -1,9 +1,13 @@
 from .qt import QtCore, QtGui
 from .utils import rel_path
-from .core import Event
 from .events import *
 from functools import partial
 import os
+import logging
+import inspect
+
+logger = logging.getLogger("hotline.views")
+
 
 REL = os.path.dirname(__file__)
 STYLE = None
@@ -19,6 +23,26 @@ def get_style():
             with open(rel_path('settings/defaults/style.css')) as f:
                 STYLE = f.read() % ({"rel": REL})
     return STYLE
+
+
+class View(object):
+
+    def __init__(self, *args, **kwargs):
+        logger.debug("In View __init__")
+
+        bound_receivers = []
+        for n, m in inspect.getmembers(self.__class__):
+            if getattr(m, "is_receiver", False):
+                bound_receivers.append(getattr(self, m.__name__))
+        logger.debug("Event Receivers: {0}".format(bound_receivers))
+
+        for receiver in bound_receivers:
+            bound_receiver = getattr(self, receiver.__name__)
+            receiver.event.calls(bound_receiver)
+            logger.debug(
+                "{0} ------> {1}".format(receiver.event, bound_receiver))
+
+        super(View, self).__init__(*args, **kwargs)
 
 
 class Configurator(QtGui.QWidget):
@@ -63,8 +87,8 @@ class Output(QtGui.QWidget):
         grid.addWidget(self.help_button, 1, 1)
         grid.addWidget(self.clear_button, 1, 2)
 
-        self.help_button.pressed += partial(show_help, self.text_area)
-        self.clear_button.pressed += partial(clear_out, self.text_area)
+        self.help_button.pressed.calls(partial(Help, self.text_area))
+        self.clear_button.pressed.calls(partial(ClearOutput, self.text_area))
 
 
 class Store(QtGui.QWidget):
@@ -110,17 +134,17 @@ class Store(QtGui.QWidget):
         grid.addWidget(self.del_button, 3, 4)
 
         button_events = (
-            (self.del_button, store_delete),
-            (self.save_button, store_save),
-            (self.load_button, store_load),
-            (self.run_button, store_run))
+            (self.del_button, Delete),
+            (self.save_button, Save),
+            (self.load_button, Load),
+            (self.run_button, Run))
         for button, event in button_events:
             def emit_ev(self):
                 event(self.store_list.currentItem())
-            button.pressed += emit_ev
+            button.pressed.calls(emit_ev)
 
-        self.filter.textChanged.connect(partial(store_filter, self.store_list))
-        self.refr_button.pressed += partial(store_refresh, self.store_list)
+        self.filter.textChanged.connect(partial(Filter, self.store_list))
+        self.refr_button.pressed.calls(partial(Refresh, self.store_list))
 
 
 class Save(QtGui.QDialog):
@@ -252,12 +276,14 @@ class Button(QtGui.QPushButton):
         self.setObjectName(name)
         self.setToolTip(tooltip)
         self.setFixedSize(*size)
-        self.pressed = Event("{0} pressed".format(name))
+
+        self.pressed = Event.create("{0} Button Pressed".format(name.title()))
+
         self.clicked.connect(self.pressed)
         self.setCheckable(checkable)
 
 
-class Base(QtGui.QWidget):
+class Base(View, QtGui.QWidget):
 
     def __init__(self, editor=Editor, parent=None):
         super(Base, self).__init__(parent)
@@ -284,7 +310,7 @@ class Base(QtGui.QWidget):
             tooltip="Toggle Autocomplete.",
             checkable=True,
             parent=self.tools)
-        self.out_button = Button(
+        self.dock_button = Button(
             name="output",
             tooltip="Show HotLine's Dock.",
             parent=self.tools)
@@ -293,15 +319,23 @@ class Base(QtGui.QWidget):
             tooltip="Change HotLine mode",
             size=(40, 24),
             parent=self)
-        self.editor = editor(self)
+        self.editor = Editor(self)
 
-        self.tools.addWidget(self.out_button, 0, 1)
+        self.tools.addWidget(self.dock_button, 0, 1)
         self.tools.addWidget(self.auto_button, 0, 2)
         self.tools.addWidget(self.multi_button, 0, 3)
         self.tools.addWidget(self.pin_button, 0, 4)
         grid.addWidget(self.tools, 0, 0, 1, 2)
         grid.addWidget(self.mode_button, 1, 0)
         grid.addWidget(self.editor, 1, 1)
+
+        self.dock = Dock(parent)
+        self.dock.hide()
+
+        self.dock_button.pressed.calls(self.dock.show)
+        self.auto_button.pressed.calls(ToggleAutocomplete)
+        self.multi_button.pressed.calls(ToggleMultiline)
+        self.pin_button.pressed.calls(TogglePin)
 
         self.setWindowFlags(
             QtCore.Qt.Window|

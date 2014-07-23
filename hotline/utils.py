@@ -12,7 +12,7 @@ def rel_path(path, check=True):
 
 
 def json_load(path):
-    if path:
+    if os.path.exists(path):
         with open(path) as f:
             try:
                 return json.load(f)

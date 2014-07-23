@@ -8,10 +8,10 @@ CTX = None
 
 if "maya" in PY_EXE:
     from .mayacontext import MayaContext
-    CTX = MayaContext
+    CTX = MayaContext()
 elif "nuke" in PY_EXE:
     from .nukecontext import NukeContext
-    CTX = NukeContext
+    CTX = NukeContext()
 else:
     from .basiccontext import BasicContext
-    CTX = BasicContext
+    CTX = BasicContext()
