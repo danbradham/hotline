@@ -1,6 +1,6 @@
 import os
 import json
-from qt import QtCore, QtGui
+from PySide import QtCore, QtGui
 
 
 def rel_path(path, check=True):

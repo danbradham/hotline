@@ -13,7 +13,7 @@ from .highlighter import Highlighter
 from .utils import rel_path, load_settings, save_settings
 from .help import help_string, help_html
 from .hotfield import HotField
-from qt import QtGui, QtCore
+from PySide import QtGui, QtCore
 
 REL = rel_path(".").replace('\\', '/')
 

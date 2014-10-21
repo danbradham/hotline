@@ -1,4 +1,4 @@
-from qt import QtGui
+from PySide import QtGui
 
 class Highlighter(QtGui.QSyntaxHighlighter):
     '''Python syntax highlighter.'''

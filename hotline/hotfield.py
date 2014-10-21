@@ -9,7 +9,7 @@ A QTextEdit widget that maintains input history.
 '''
 
 from .utils import load_keys
-from qt import QtCore, QtGui
+from PySide import QtCore, QtGui
 
 KEYSET = load_keys()
 

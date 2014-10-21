@@ -9,7 +9,8 @@ Place in your maya scripts directory and bind a key to:
     hotline.show()
 '''
 
-from qt import QtCore, QtGui, wrapinstance
+from PySide import QtCore, QtGui
+from shiboken import wrapInstance
 import re
 import inspect
 from functools import partial
@@ -18,17 +19,23 @@ import maya.OpenMayaUI as OpenMayaUI
 import maya.cmds as cmds
 from maya.utils import executeInMainThreadWithResult as execInMain
 import maya.mel as mel
-import __main__
+
 
 CMDS_CALLABLES = [name for name, data in inspect.getmembers(cmds, callable)]
 
 
 @hotline.add_mode("PY", completer_list=CMDS_CALLABLES, syntax="Python")
 def py_handler(input_str):
-    main = __main__.__dict__
-    exec(input_str, main, main)
-    cmds.repeatLast(
-        addCommand='python("exec({0}, {1}, {1})")'.format(input_str, main))
+    cmds.undoInfo(openChunk=True)
+    try:
+        execInMain(input_str)
+    except:
+        cmds.undoInfo(closeChunk=True)
+        cmds.undo()
+        raise
+    else:
+        cmds.undoInfo(closeChunk=True)
+        cmds.repeatLast(addCommand='python("{0}")'.format(input_str))
 
 
 @hotline.add_mode("MEL", completer_list=CMDS_CALLABLES)
@@ -162,9 +169,7 @@ def node_handler(input_str):
 def getMayaWindow():
     #Get the maya main window as a QMainWindow instance
     ptr = long(OpenMayaUI.MQtUtil.mainWindow())
-    if "shiboken" in globals():
-        return wrapinstance(ptr, QtGui.QWidget)
-    return wrapinstance(ptr, QtCore.QObject)
+    return wrapInstance(ptr, QtGui.QWidget)
 
 
 @hotline.set_show()
