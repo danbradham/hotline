@@ -1,0 +1,156 @@
+{
+    "Component Paste Selection": {
+        "autoload": false,
+        "command": "paste_component_selection()",
+        "mode": "PY",
+        "name": "Past Component Selection",
+        "description": "Select the components stored in your component clipboard on the objects you currently have selected."
+    },
+    "clear flats": {
+        "description": "Remove extranneous keyframes...",
+        "command": "from dbr.anim.clearflats import clear_flats\nclear_flats()",
+        "autoload": true,
+        "name": "clear flats",
+        "mode": "PY"
+    },
+    "add_parent_joint": {
+        "description": "Adds a joint above the currently selected object.",
+        "command": "def add_parent_joint(nodes=None):\n    if not nodes:\n        nodes = cmds.ls(sl=True, long=True)\n    for node in nodes:\n        cmds.select(clear=True)\n        p = cmds.listRelatives(node, parent=True)[0]\n        ws_matrix = cmds.xform(node, q=True, ws=True, matrix=True)\n        jnt = cmds.joint(name=node.split(\"|\")[-1].replace(\"JNT\", \"SQSH_JNT\"))\n        cmds.xform(jnt, ws=True, matrix=ws_matrix)\n        cmds.parent(jnt, p)\n        cmds.parent(node, jnt)",
+        "autoload": true,
+        "name": "add_parent_joint",
+        "mode": "PY"
+    },
+    "pivot_to_cv": {
+        "mode": "PY",
+        "command": "import maya.cmds as cmds\nfrom itertools import izip\n\n\ndef pivot_to_cv(index=0):\n    '''Sets the pivot of a NurbsCurve to cv at index.\n\n    :param index: Index of cv to snap pivot to.'''\n\n    crvs = cmds.ls(sl=True, long=True)\n    cvs = ['%s.cv[%d]' % (crv, index) for crv in crvs]\n    for crv, cv in izip(crvs, cvs):\n        cv_pos = cmds.xform(cv, q=True, ws=True, translation=True)\n        cmds.xform(crv, ws=True, pivots=cv_pos)",
+        "description": "pivot_to_cv(index=0)\n\nSets the pivot of a nurbsCurve to one of it's cv positions.\n\nparameters:\n    index - Index of cv to snap your pivot to.",
+        "name": "pivot_to_cv",
+        "autoload": true
+    },
+    "assign_alembic_ids": {
+        "autoload": true,
+        "command": "@chunk\ndef assign_alembic_ids(base_name):\n    '''Assign alembic ids alphabetically to current selection.\n\n    :param base_name: The base name to append a capital letter to.'''\n\n    import string\n    caps = string.ascii_uppercase\n    nodes = cmds.ls(sl=True, long=True)\n    for cap, node in zip(caps, nodes):\n        if not cmds.objExists(node + \".alembicID\"):\n            cmds.addAttr(node, longName=\"alembicID\", dt=\"string\")\n        cmds.setAttr(\n            node + \".alembicID\", \"{0}_{1}\".format(base_name, cap), \n            type=\"string\")",
+        "mode": "PY",
+        "name": "assign_alembic_ids",
+        "description": "Assign alembic ids alphabetically to current selection.\n\n:param base_name: The base name to append a capital letter to."
+    },
+    "filter_by": {
+        "autoload": true,
+        "command": "import maya.cmds as cmds\n\ndef filter_by(node_type=None, child_type=None, select=True):\n    '''Filters the currently selected nodes by node type and/or child node type\n\n    :param node_type: Name of node type.\n    :param child_type: Name of child node type.\n    :param select: Replace selection after filtering?(default=True)'''\n    \n    nodes = cmds.ls(sl=True, long=True)\n    filtered = []\n    for node in nodes:\n        if node_type and not cmds.nodeType(node).lower() == node_type.lower():\n            continue\n        if child_type and not cmds.listRelatives(node, children=True, type=child_type):\n            continue\n        filtered.append(node)\n    if select:\n        cmds.select(filtered, replace=True)\n    return filtered",
+        "mode": "PY",
+        "name": "filter_by",
+        "description": "filter_by(node_type=None, child_type=None, select=True)\n\n    Filters the currently selected nodes by node type and/or child node type\n\n    :param node_type: Name of node type.\n    :param child_type: Name of child node type.\n    :param select: Replace selection after filtering."
+    },
+    "nParticle_ring": {
+        "description": "Create a particle ring!\n\n    :param num_points: Number of points in the ring\n    :param r: Radius of the particle ring.\n    Returns the name of the nParticle\n\ne.g.\n\nnParticle_ring(20, 10)",
+        "command": "import math\n\ndef nParticle_ring(num_points, r):\n    '''Create a particle ring!\n\n    :param num_points: Number of points in the ring\n    :param r: Radius of the particle ring.\n    Returns the name of the nParticle\n    '''\n    cmds.undoInfo(openChunk=True)\n    step_size = 1.0/num_points\n    two_pi = 2 * math.pi\n\n    points = []\n    for i in xrange(num_points):\n        x = math.sin((i * step_size) * two_pi) * r\n        y = math.cos((i * step_size) * two_pi) * r\n        points.append((x, y, 0))\n\n    np = cmds.nParticle(p=points)\n    cmds.undoInfo(closeChunk=True)    \n    return np",
+        "autoload": true,
+        "name": "nParticle_ring",
+        "mode": "PY"
+    },
+    "sort_by_distance": {
+        "autoload": true,
+        "command": "import maya.cmds as cmds\nfrom maya.api.OpenMaya import MVector as vect\nfrom functools import partial\n\n\nget_pnt = partial(cmds.xform, query=True, worldSpace=True, rotatePivot=True)\nget_pnt.__doc__ = '''Returns the worldspace position of a nodes rotatePivot.'''\n\n\ndef active_camera():\n    '''Get the active camera.'''\n    current_panel = cmds.getPanel(withFocus=True)\n    if cmds.getPanel(typeOf=current_panel) == \"modelPanel\":\n        return cmds.modelPanel(current_panel, query=True, camera=True)\n    return \"persp\"\n\ndef dist(node, src_pnt):\n    '''Get the distance of a node from a source point. Used by\n    sort_by_distance as the key for sorted.\n\n    :param node: Name of the node.\n    :param src_pnt: OpenMaya.MVector object.'''\n\n    return (vect(get_pnt(node)) - src_pnt).length()\n\n\ndef sort_by_distance(nodes=None, src=None, select=False):\n    '''Sort a bunch of nodes based on their distance from a source.\n    Returns nodes in sorted order.\n\n    :param nodes: A list of node names.(default: current selection)\n    :param src: Source node name.(default: current camera or persp)\n    :param select: Select the sorted nodes before returning.(default: True)'''\n\n    if not nodes:\n        nodes = cmds.ls(sl=True, long=True)\n\n    if not src:\n        src = active_camera()\n\n\n    src_pnt = vect(get_pnt(src))\n    sorted_nodes = sorted(nodes, key=partial(dist, src_pnt=src_pnt))\n\n    if select:\n        cmds.select(sorted_nodes)\n\n    return sorted_nodes",
+        "mode": "PY",
+        "name": "sort_by_distance",
+        "description": "sort_by_distance(nodes=None, src=None, select=False)\n    Sort a bunch of nodes based on their distance from a source.\n    Returns nodes in sorted order.\n\n    :param nodes: A list of node names.(default: current selection)\n    :param src: Source node name.(default: current camera or persp)\n    :param select: Select the sorted nodes before returning.(default: True)"
+    },
+    "Component Copy/Paste Functions": {
+        "autoload": true,
+        "command": "COMPONENT_CLIPBOARD = None\n\ndef copy_component_selection():\n    global COMPONENT_CLIPBOARD\n    COMPONENT_CLIPBOARD = [c.split(\".\")[-1] for c in cmds.ls(sl=True, fl=True)]\n\ndef paste_component_selection():\n    global COMPONENT_CLIPBOARD\n    nodes = cmds.ls(sl=True, fl=True)\n    components = []\n    for node in nodes:\n        for component in COMPONENT_CLIPBOARD:\n            components.append(\"{0}.{1}\".format(node, component))\n    cmds.select(components, replace=True)",
+        "mode": "PY",
+        "name": "Copy/Paste Component Selection",
+        "description": "copy_component_selection()\nStores selected component ids to your component clipboard.\n\npaste_component_selection()\nSelect the components stored in the component clipboard on your currently selected objects."
+    },
+    "get_rot": {
+        "autoload": true,
+        "command": "import maya.cmds as cmds\nfrom functools import partial\n\n\nget_rot = partial(cmds.xform, query=True, worldspace=True, rotate=True)\nget_rot.__doc__ = '''\nReturns the worldspace rotation of a node\n\n:param node: Name of node to query'''",
+        "mode": "PY",
+        "name": "get_rot",
+        "description": "get_rot(node)\n\n    Returns the worldspace rotation of a node."
+    },
+    "Component Copy Selection": {
+        "autoload": false,
+        "command": "copy_component_selection()",
+        "mode": "PY",
+        "name": "Copy Component Selection",
+        "description": "Stores currently selected component ids in your component clipboard."
+    },
+    "multi_constraint": {
+        "autoload": true,
+        "command": "import maya.cmds as cmds\n\ndef multi_constraint(cnstr_type, nodes=None, parent=None, *args, **kwargs):\n    '''Set attribute on multiple nodes.\n\n    :param cnstr_type: Name of constraint type \n        (\"parent\", \"scale\", \"point\", \"orient\")\n    :param nodes: Nodes to set attribute on(default=selection)\n    :param *args, **kargs: Standard constraint args and kwargs'''\n\n    constraint = getattr(cmds, \"{0}Constraint\".format(cnstr_type))\n\n    if not nodes or not parent:\n        selection = cmds.ls(sl=True, long=True)\n    if not nodes:\n        nodes = selection[1:]\n    if not parent:\n        parent = selection[0]\n\n    for node in nodes:\n        constraint(parent, node, *args, **kwargs)",
+        "mode": "PY",
+        "name": "multi_constraint",
+        "description": "multi_constraint(cnstr_type, nodes=None, parent=None, *args, **kwargs)\n    Set attribute on multiple nodes.\n\n    :param cnstr_type: Name of constraint type \n        (\"parent\", \"scale\", \"point\", \"orient\")\n    :param nodes: Nodes to set attribute on(default=selection)\n    :param *args, **kargs: Standard constraint args and kwargs"
+    },
+    "make_stretchy": {
+        "mode": "PY",
+        "command": "def make_stretchy(crv=None, joints=None):\n    '''Given a spline ik curve and it's associated joints,\n    make the joints stretch to the length of the curve.\n\n    :param crv: Name of the curve(default: first in selection)\n    :param joints: Name of the joints(default: rest of selection)'''\n    \n    selection = cmds.ls(sl=True, long=True)\n    if not crv:\n        crv = selection[0]\n    if not joints:\n        joints = selection[1:]\n\n    len = cmds.arclen(crv, ch=True)\n    len_attr = \"{0}.arcLength\".format(len)\n    global_mult = cmds.shadingNode(\n        \"multiplyDivide\", \n        asUtility=True,\n        name=\"{0}_global\".format(len))\n    cmds.setAttr(\n        \"{0}.input1X\".format(global_mult), \n        cmds.getAttr(len_attr))\n\n    jnt_mult = cmds.shadingNode(\n        \"multiplyDivide\",\n        asUtility=True,\n        name=\"jnt_mult\")\n    cmds.connectAttr(\n        \"{0}.outputX\".format(global_mult), \n        \"{0}.input2X\".format(jnt_mult))\n    cmds.connectAttr(len_attr, \"{0}.input1X\".format(jnt_mult))\n    cmds.setAttr(\"{0}.operation\".format(jnt_mult), 2)\n\n    for jnt in joints:\n        cmds.connectAttr(\n            \"{0}.outputX\".format(jnt_mult),\n            \"{0}.scaleX\".format(jnt))",
+        "description": "Given a spline ik curve and it's associated joints, make the joints stretch to the length of the curve.\n\n:param crv: Name of the curve(default: first in selection)\n:param joints: Name of the joints(default: rest of selection)",
+        "name": "make_stretchy",
+        "autoload": true
+    },
+    "multi_setattr": {
+        "autoload": true,
+        "command": "import maya.cmds as cmds\n\ndef multi_setattr(attr, nodes=None, *args, **kwargs):\n    '''Set attribute on multiple nodes.\n\n    :param attr: Name of attribute to set\n    :param nodes: Nodes to set attribute on(default=selection)\n    :param *args, **kargs: Standard setAttr args and kwargs'''\n\n    if not nodes:\n        nodes = cmds.ls(sl=True, long=True)\n\n    for node in nodes:\n        cmds.setAttr(\"{0}.{1}\".format(node, attr), *args, **kwargs)",
+        "mode": "PY",
+        "name": "multi_setattr",
+        "description": "multi_setattr(attr, nodes=None, *args, **kwargs)\n    Set attribute on multiple nodes.\n\n    :param attr: Name of attribute to set\n    :param nodes: Nodes to set attribute on(default=selection)\n    :param *args, **kargs: Standard setAttr args and kwargs"
+    },
+    "Local Axes: On": {
+        "autoload": false,
+        "command": "for node in cmds.ls(transforms=True, long=True):\n    cmds.setAttr(\"{0}.displayLocalAxis\".format(node), 1)",
+        "mode": "PY",
+        "name": "Local Axes: On",
+        "description": "Turns on all local axes."
+    },
+    "get_pnt": {
+        "autoload": true,
+        "command": "import maya.cmds as cmds\nfrom functools import partial\n\n\nget_pnt = partial(cmds.xform, query=True, worldSpace=True, rotatePivot=True)\nget_pnt.__doc__ = '''\nReturns the worldspace position of a nodes rotatePivot.\n\n:param node: Name of node to query'''",
+        "mode": "PY",
+        "name": "get_pnt",
+        "description": "get_pnt(node)\n\n    Returns the worldspace position of a node's rotate pivot."
+    },
+    "locs_at_selected": {
+        "mode": "PY",
+        "command": "@chunk\ndef locs_at_selected():\n    for node in cmds.ls(sl=True, long=True):\n        m = cmds.xform(node, query=True, ws=True, matrix=True)\n        loc = cmds.spaceLocator(name=node.split(\"|\")[-1].split(\":\")[-1] + \"_LOC\")\n        cmds.xform(loc, ws=True, matrix=m)",
+        "description": "Create locators at selected objects.",
+        "name": "locs_at_selected",
+        "autoload": true
+    },
+    "Local Axes: Off": {
+        "autoload": false,
+        "command": "for node in cmds.ls(transforms=True, long=True):\n    cmds.setAttr(\"{0}.displayLocalAxis\".format(node), 0)",
+        "mode": "PY",
+        "name": "Local Axes: Off",
+        "description": "Turns off all local axis."
+    },
+    "Sublime Command Port": {
+        "mode": "PY",
+        "command": "import maya.cmds as cmds\n\ncmds.commandPort(name=\":7002\", stp=\"python\")",
+        "description": "Open port to communicate with Sublime Text.",
+        "name": "Sublime Command Port",
+        "autoload": false
+    },
+    "insert_joints": {
+        "description": "insert_joints(num_joints=1):\nInsert joints into a chain.\n\n:param num_joints: Number of joints to insert. (default=1)",
+        "command": "import maya.cmds as cmds\nfrom maya.api.OpenMaya import MMatrix, MVector\n\n\ndef insert_joints(num_joints=1):\n    \"\"\"Insert joints into a chain.\n\n    :param num_joints: Number of joints to insert (default=1)\n    \"\"\"\n\n    base = cmds.ls(sl=True, type='joint')[0]\n    end = cmds.listRelatives(base, children=True)[0]\n\n    base_matrix = MMatrix(cmds.xform(base, q=True, ws=True, matrix=True))\n    base_vect = MVector(cmds.xform(base, q=True, ws=True, rp=True))\n    end_vect = MVector(cmds.xform(end, q=True, ws=True, rp=True))\n    joint_vect = base_matrix * ((end_vect - base_vect) / (num_joints + 1.0))\n\n    mid_chain = []\n    for i in range(num_joints):\n        mid_chain.append(cmds.joint(relative=True, position=joint_vect))\n    cmds.parent(end, mid_chain[-1])",
+        "autoload": true,
+        "name": "insert_joints",
+        "mode": "PY"
+    },
+    "multi_connect": {
+        "autoload": true,
+        "command": "import maya.cmds as cmds\n\ndef multi_connect(src_attr, dest_attr, src=None, dests=None, *args, **kwargs):\n    '''Connect multiple attributes.\n\n    :param src_attr: Name of source attribute\n    :param dest_attr: Name of destination attr\n    :param src: Name of source object(default: first in selection)\n    :param dests: Name of destination objects(default: rest of selection)\n    :param *args, **kargs: Standard connectAttr args and kwargs'''\n\n    if not src:\n        src = cmds.ls(sl=True, long=True)[0]\n    if not dests:\n        dests = cmds.ls(sl=True, long=True)[1:]\n    fmt = \"{0}.{1}\"\n    src_plug = fmt.format(src, src_attr)\n    for dest in dests:\n        dest_plug = fmt.format(dest, dest_attr)\n        cmds.connectAttr(src_plug, dest_plug, *args, **kwargs)",
+        "mode": "PY",
+        "name": "multi_connect",
+        "description": "multi_connect(src_attr, dest_attr, src=None, dests=None, *args, **kwargs):\n    Connect multiple attributes.\n\n    :param src_attr: Name of source attribute\n    :param dest_attr: Name of destination attr\n    :param src: Name of source object(default: first in selection)\n    :param dests: Name of destination objects(default: rest of selection)\n    :param *args, **kargs: Standard connectAttr args and kwargs"
+    },
+    "override_color": {
+        "autoload": true,
+        "command": "def override_color(color=None, list_colors=False): \n    \"\"\"Sets override color for transform or shape.\n\n    :param color: The name of a color or an int(0-31)\"\"\"\n\n    colors = {\n        \"blue\": 6,\n        \"red\": 13,\n        \"yellow\": 17,\n        \"light yellow\": 22,\n        \"green\": 26,\n        \"light green\": 27,\n        \"light blue\": 29,\n    }\n    if color in colors:\n        color = colors[color]\n    else:\n        print colors\n\n    nodes = cmds.ls(sl=True, long=True)\n    for node in nodes:\n        cmds.setAttr(node + \".overrideEnabled\", 1)\n        cmds.setAttr(node + \".overrideColor\", color)",
+        "mode": "PY",
+        "name": "override_color",
+        "description": "Sets override color for transform or shape.\n\n:param color: The name of a color or an int(0-31)\n\nPrints named colors if no color parameter is passed."
+    }
+}

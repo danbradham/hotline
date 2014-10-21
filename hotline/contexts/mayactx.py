@@ -9,15 +9,7 @@ Place in your maya scripts directory and bind a key to:
     hotline.show()
 '''
 
-#Get wrapinstance from PyQt or PySide
-try:
-    import shiboken
-    wrapinstance = shiboken.wrapInstance
-    from PySide import QtGui, QtCore
-except ImportError:
-    import sip
-    wrapinstance = sip.wrapinstance
-    from PyQt4 import QtGui, QtCore
+from qt import QtCore, QtGui, wrapinstance
 import re
 import inspect
 from functools import partial

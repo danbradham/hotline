@@ -1,10 +1,6 @@
 import os
 import json
-#Try PyQt then PySide imports
-try:
-    from PySide import QtGui, QtCore
-except ImportError:
-    from PyQt4 import QtGui, QtCore
+from qt import QtCore, QtGui
 
 
 def rel_path(path, check=True):
