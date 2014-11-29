@@ -1,13 +1,12 @@
 '''
-settings.py
-===========
+settings
+========
 '''
 
-from .utils import json_load, json_encode, rel_path
-try:
-    from PySide import QtGui
-except ImportError:
-    from PyQt4 import QtGui
+from .utils import rel_path
+from PySide import QtGui
+import json
+import os
 
 
 class Settings(object):
@@ -50,7 +49,8 @@ class KeySettings(Settings):
     '''Settings object that encodes key strings to QKeySequences'''
 
     def __init__(self, combine_user_defaults=True):
-        super(KeySettings, self).__init__("key.settings",combine_user_defaults)
+        super(KeySettings, self).__init__(
+            "key.hotline-settings", combine_user_defaults)
 
     def post_load(self, keys):
         for mode, key_shortcuts in keys.iteritems():
@@ -88,3 +88,17 @@ def load_settings(which, combine_user_defaults=True):
     else:
         settings = user if user else defaults
     return settings
+
+
+def json_load(path):
+    if os.path.exists(path):
+        with open(path) as f:
+            try:
+                return json.load(f)
+            except ValueError:
+                print "JSON ERROR: " + path
+    return {}
+
+
+def json_encode(data):
+    return json.dumps(data, indent=4)

@@ -4,9 +4,9 @@ help.py
 Generate a help string for HotLine.
 '''
 
-from .utils import load_settings
+from .settings import Settings
 
-keys = load_settings('key.settings')
+keys = Settings("key.hotline-settings")
 
 #Generate hotkey table
 col1_max = max([len(key) for key in keys["standard"].keys()]) + 1

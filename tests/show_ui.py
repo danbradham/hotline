@@ -1,6 +1,6 @@
 from hotline import ui
-from hotline.qt import QtCore, QtGui
 import sys
+
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
