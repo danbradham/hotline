@@ -1,1 +1,1 @@
-from .hotline import HotLine, show
+from .app import HotLine, show

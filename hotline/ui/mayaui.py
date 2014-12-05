@@ -1,24 +1,24 @@
-from PySide import QtCore, QtGui
-import shiboken
-import maya.OpenMayaUI as OpenMayaUI
+from PySide import QtGui
 from .ui import UI
 
 
-def getMayaWindow():
-    #Get the maya main window as a QMainWindow instance
-    ptr = long(OpenMayaUI.MQtUtil.mainWindow())
-    if "shiboken" in globals():
-        return shiboken.wrapInstance(ptr, QtGui.QWidget)
-    return shiboken.wrapInstance(ptr, QtCore.QObject)
+def get_maya_window():
+    '''Grabs Maya's MainWindow QWidget instance. I feel enough software
+    has sufficiently switched over to PySide to simplify this function and
+    stop supporting both PyQt and PySide. Little lazy with the maya import,
+    allowing this module to be imported to a standard python interpreter.'''
+
+    import shiboken
+    import maya.OpenMayaUI as mui
+
+    ptr = long(mui.MQtUtil.mainWindow())
+    return shiboken.wrapInstance(ptr, QtGui.QWidget)
 
 
 class MayaUI(UI):
+    '''Context overriding :func:`create` parenting the UI to Autodesk Maya.'''
 
     @classmethod
-    def show(cls):
-        '''Show HotLine ui.'''
-
-        if not cls.instance:
-            #Instantiate HotLine as child of Maya Window
-            cls.instance = cls(parent=getMayaWindow())
-        cls.instance.enter()
+    def create(cls, app):
+        maya_window = get_maya_window()
+        return cls(app, parent=maya_window)

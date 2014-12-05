@@ -5,7 +5,7 @@ from ..messages import (ToggleMultiline, ToggleAutocomplete, TogglePin,
                        ToggleToolbar, Execute, NextHistory, NextMode,
                        PrevHistory, PrevMode, ShowDock, ShowHelp,
                        ClearOutput, AdjustSize, Store_Run, Store_Save,
-                       Store_Load, Store_Delete, Store_Refresh)
+                       Store_Load, Store_Delete, Store_Refresh, WriteOutput)
 from PySide import QtCore, QtGui
 from functools import partial
 import os
@@ -21,12 +21,8 @@ STYLE = None
 def get_style():
     global STYLE
     if not STYLE:
-        try:
-            with open(rel_path('settings/user/style.css')) as f:
-                STYLE = f.read() % ({"rel": REL})
-        except:
-            with open(rel_path('settings/defaults/style.css')) as f:
-                STYLE = f.read() % ({"rel": REL})
+        with open(os.path.join(REL, './style.css')) as f:
+            STYLE = f.read() % ({"rel": REL})
     return STYLE
 
 
@@ -49,6 +45,7 @@ class Configurator(QtGui.QWidget):
         pass
 
 
+@has_ears
 class Output(QtGui.QWidget):
 
     def __init__(self, parent=None):
@@ -62,12 +59,12 @@ class Output(QtGui.QWidget):
 
         self.text_area = QtGui.QTextEdit(self)
         self.help_button = Button(
-            message=ShowHelp,
+            connect=partial(shout, ShowHelp),
             name="help",
             tooltip="Show Help.",
             parent=self)
         self.clear_button = Button(
-            message=ClearOutput,
+            connect=partial(shout, ClearOutput),
             name="clear",
             tooltip="Clear Output.",
             parent=self)
@@ -76,12 +73,14 @@ class Output(QtGui.QWidget):
         grid.addWidget(self.help_button, 1, 1)
         grid.addWidget(self.clear_button, 1, 2)
 
+    @hears(WriteOutput)
     def write(self, text):
         self.text_area.clear()
         self.buffer.append(text)
         for line in self.buffer:
             self.text_area.append(line)
 
+    @hears(ClearOutput)
     def clear(self):
         self.buffer = []
         self.text_area.clear()
@@ -98,29 +97,29 @@ class Store(QtGui.QWidget):
 
         self.filter = EditLine("Input Store Filter", self)
         self.refr_button = Button(
-            message=Store_Refresh,
+            connect=partial(shout, Store_Refresh),
             name="refresh",
             tooltip="Refresh all stores",
             parent=self)
         self.store_list = QtGui.QListWidget(self)
         self.store_info = QtGui.QTextEdit(self)
         self.run_button = Button(
-            message=Store_Run,
+            connect=partial(shout, Store_Run),
             name="run",
             tooltip="Run selected script",
             parent=self)
         self.save_button = Button(
-            message=Store_Save,
+            connect=partial(shout, Store_Save),
             name="save",
             tooltip="Save current hotline command.",
             parent=self)
         self.load_button = Button(
-            message=Store_Load,
+            connect=partial(shout, Store_Load),
             name="load",
             tooltip="Load current hotline command into editor.",
             parent=self)
         self.del_button = Button(
-            message=Store_Delete,
+            connect=partial(shout, Store_Delete),
             name="delete",
             tooltip="Delete selected command.",
             parent=self)
@@ -319,16 +318,20 @@ class Editor(QtGui.QTextEdit):
 
         #Setup Hotkeys
         self.key_methods = {
-            "Toggle Multiline": partial(shout, ToggleMultiline),
-            "Next Mode": partial(shout, NextMode),
-            "Prev Mode": partial(shout, PrevMode),
-            "Execute": partial(shout, Execute),
-            "Previous in History": partial(shout, PrevHistory),
-            "Next in History": partial(shout, NextHistory),
-            "Pin": partial(shout, TogglePin),
+            "Toggle Multiline": self.parent.app.toggle_multiline,
+            "Next Mode": self.parent.app.next_mode,
+            "Prev Mode": self.parent.app.prev_mode,
+            "Execute": self.key_execute,
+            "Previous in History": self.parent.app.next_hist,
+            "Next in History": self.parent.app.prev_hist,
+            "Pin": self.parent.app.toggle_pin,
             "Toggle Toolbar": partial(shout, ToggleToolbar),
-            "Toggle Autocomplete": partial(shout, ToggleAutocomplete),
+            "Toggle Autocomplete": self.parent.app.toggle_autocomplete,
             "Show Output": partial(shout, ShowDock)}
+
+    def key_execute(self):
+        input_str = self.toPlainText()
+        self.parent.app.run(input_str)
 
     def set_completer_model(self, completer_list):
         self.completer_model.setStringList(completer_list)
@@ -374,11 +377,11 @@ class Editor(QtGui.QTextEdit):
             self.parent.focusOutEvent(event)
 
     def keyPressEvent(self, event):
-        keysettings = self.parent.ctx.keysettings
+        keysettings = self.parent.app.config['KEYS']
         completer_popup = self.completer.popup()
         is_completing = completer_popup.isVisible()
-        is_multiline = self.parent.ctx.multiline
-        is_auto = self.parent.ctx.autocomplete
+        is_multiline = self.parent.app.multiline
+        is_auto = self.parent.app.autocomplete
         key = event.key()
         mod = event.modifiers()
         key_seq = self.to_key_sequence(key, mod)
@@ -442,23 +445,22 @@ class Editor(QtGui.QTextEdit):
 
 class Button(QtGui.QPushButton):
 
-    def __init__(self, message, name, tooltip, size=(24, 24),
+    def __init__(self, connect, name, tooltip, size=(24, 24),
                  checkable=False, parent=None):
         super(Button, self).__init__(parent)
         self.setObjectName(name)
         self.setToolTip(tooltip)
         self.setFixedSize(*size)
         self.setCheckable(checkable)
-        self.clicked.connect(partial(shout, message))
+        self.clicked.connect(connect)
 
 
+@has_ears
 class UI(QtGui.QWidget):
 
-    instance = None
-
-    def __init__(self, ctx, parent=None):
+    def __init__(self, app, parent=None):
         super(UI, self).__init__(parent)
-        self.ctx = ctx
+        self.app = app
 
         grid = QtGui.QGridLayout()
         grid.setContentsMargins(0, 0, 2, 2)
@@ -468,30 +470,30 @@ class UI(QtGui.QWidget):
 
         self.tools = Tools(self)
         self.pin_button = Button(
-            message=TogglePin,
+            connect=self.app.toggle_pin,
             name="pin",
             tooltip="Pin HotLine.",
             checkable=True,
             parent=self.tools)
         self.multi_button = Button(
-            message=ToggleMultiline,
+            connect=self.app.toggle_multiline,
             name="multiline",
             tooltip="Toggle Multiline.",
             checkable=True,
             parent=self.tools)
         self.auto_button = Button(
-            message=ToggleAutocomplete,
+            connect=self.app.toggle_autocomplete,
             name="auto",
             tooltip="Toggle Autocomplete.",
             checkable=True,
             parent=self.tools)
         self.dock_button = Button(
-            message=ShowDock,
+            connect=partial(shout, ShowDock),
             name="output",
             tooltip="Show HotLine's Dock.",
             parent=self.tools)
         self.mode_button = Button(
-            message=NextMode,
+            connect=self.app.next_mode,
             name="mode",
             tooltip="Change HotLine mode",
             size=(40, 24),
@@ -536,13 +538,13 @@ class UI(QtGui.QWidget):
     def adjust_size(self):
         doc_height = self.editor.document().size().height()
         doc_width = self.editor.document().idealWidth()
-        if doc_width > 346 and self.ctx.multiline:
+        if doc_width > 346 and self.app.multiline:
             self.editor.setFixedWidth(doc_width)
             self.setFixedWidth(doc_width + 54)
         else:
             self.editor.setFixedWidth(346)
             self.setFixedWidth(400)
-        if self.ctx.multiline and doc_height > 30:
+        if self.app.multiline and doc_height > 30:
             self.editor.setFixedHeight(doc_height)
             height = (doc_height + 28 if self.tools.isVisible()
                       else doc_height + 4)
@@ -551,8 +553,86 @@ class UI(QtGui.QWidget):
             self.editor.setFixedHeight(24)
             self.setFixedHeight(28 if not self.tools.isVisible() else 52)
 
+
+    @hears(ShowDock)
+    def show_dock(self):
+        self.dock.show()
+
+    @hears(ToggleAutocomplete)
+    def toggle_autocomplete(self):
+        self.auto_button.setChecked(self.app.autocomplete)
+
+    @hears(ToggleMultiline)
+    def toggle_multiline(self):
+        self.multi_button.setChecked(self.app.multiline)
+        self.adjust_size()
+
+    @hears(TogglePin)
+    def toggle_pinned(self):
+        self.pin_button.setChecked(self.app.pinned)
+
+    @hears(NextMode, PrevMode)
+    def setup_mode(self, mode):
+        self.mode_button.setText(mode.name)
+        self.highlighter.set_rules(mode.patterns, mode.multiline_patterns)
+        self.editor.set_completer_model(mode.completer_list)
+
+    @hears(Execute)
+    def key_execute(self, result):
+        if result:
+            self.editor.clear()
+        else:
+            self.dock.show()
+            self.dock.widget.setCurrentIndex(0)
+        self.exit()
+
+    @hears(ShowHelp)
+    def show_help(self):
+        self.output.write(self.format_help())
+
+    @hears(ClearOutput)
+    def clear_output(self):
+        self.output.clear()
+
+    @hears(NextHistory, PrevHistory)
+    def history_changed(self, text):
+        self.editor.setText(text)
+
+    @hears(ToggleToolbar)
+    def key_toggletoolbar(self):
+        if self.tools.isVisible():
+            self.tools.hide()
+        else:
+            self.tools.show()
+
+    def format_help(self):
+        keys = self.app.config['KEYS']
+        #Generate hotkey table
+        col1_max = max([len(key) for key in keys["standard"].keys()]) + 1
+        col2_max = max([len(value) for value in keys["standard"].values()]) + 2
+        col3_max = max([len(value) for value in keys["multiline"].values()]) + 1
+        row_template = "| {0:<{col1_max}}| {1:<{col2_max}}| {2:<{col3_max}}|"
+        hotkey_table = []
+        for command, hotkey in keys["standard"].iteritems():
+            row = row_template.format(
+                command,
+                hotkey,
+                keys["multiline"][command],
+                col1_max=col1_max,
+                col2_max=col2_max,
+                col3_max=col3_max)
+            hotkey_table.append(row)
+
+        help_string = (
+            "|        Hotkey       | singleline |   multiline    |"
+            "| ------------------- | ---------- | -------------- |"
+            "{hotkeys}"
+        ).format(hotkeys="\n".join(hotkey_table))
+        return help_string
+
+
     def focusOutEvent(self, event):
-        if self.ctx.pinned:
+        if self.app.pinned:
             super(UI, self).focusOutEvent(event)
             return
         if not self.editor.hasFocus():
@@ -561,10 +641,10 @@ class UI(QtGui.QWidget):
     def enter(self):
         pos = QtGui.QCursor.pos()
         self.move(pos.x(), pos.y())
-        super(UI, self).show()
+        self.show()
         self.adjust_size()
         self.editor.setFocus()
 
     def exit(self):
-        if not self.ctx.pinned:
+        if not self.app.pinned:
             self.close()

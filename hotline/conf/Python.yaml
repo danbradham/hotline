@@ -1,0 +1,62 @@
+name: Python
+patterns:
+  class.name:
+    captures: 1
+    match: \bclass\b\s*(\w+)\(
+  comment.line:
+    captures: 0
+    match: '#[^\n]*'
+  constants:
+    captures: 0
+    match: \b(None|True|False|Ellipsis|NotImplemented)\b
+  declaritives:
+    captures: 1
+    match: \b(class|def)\b\s*(\w+)\(
+  delimiters:
+    captures: 0
+    match: \(|\)|[|]|{|}
+  func.name:
+    captures: 1
+    match: \bdef\b\s*(\w+)\(
+  keywords:
+    captures: 0
+    match: \b(and|assert|break|continue|del|elif|else|except|exec|finally|for|from|global|if|import|in|is|lambda|not|or|pass|print|raise|return|try|while|yield)\b
+  multiline.double:
+    end: '"""'
+    start: '"""'
+  multiline.single:
+    end: ''''''''
+    start: ''''''''
+  numeric.complex:
+    captures: 0
+    match: \b(?i:(((\d+(\.(?=[^a-zA-Z_])\d*)?|(?<=[^0-9a-zA-Z_])\.\d+)(e[\-\+]?\d+)?))J)
+  numeric.decimal:
+    captures: 0
+    match: \b([1-9]+[0-9]*|0)
+  numeric.float:
+    captures: 0
+    match: \b(?i:(\d+e[\-\+]?\d+))
+  numeric.hexadecimal:
+    captures: 0
+    match: \b(?i:(0x\h*))
+  numeric.long.decimal:
+    captures: 0
+    match: \b(?i:([1-9]+[0-9]*|0)L)
+  numeric.long.hexadecimal:
+    captures: 0
+    match: \b(?i:(0x\h*)L)
+  numeric.long.octal:
+    captures: 0
+    match: \b(?i:(0[0-7]+)L)
+  numeric.octal:
+    captures: 0
+    match: \b(0[0-7]+)
+  operators:
+    captures: 0
+    match: \+|\-|\*|\*\*|/|//|%|<<|>>|&|\||\^|~|\+\=|-\=|\*\=|/\=|//\=|%\=|&\=|\|\=|\^\=|>>\=|<<\=|\*\*\=|\=|<\=|>\=|\=\=|<|>|\!\=
+  string.double:
+    captures: 0
+    match: '"[^"\\]*(\\.[^"\\]*)*"'
+  string.single:
+    captures: 0
+    match: '''[^''\\]*(\\.[^''\\]*)*'''

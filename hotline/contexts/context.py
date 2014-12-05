@@ -1,10 +1,9 @@
 from collections import deque
 from types import MethodType
 from ..ui.highlighter import PatternFactory
-from ..settings import Settings, KeySettings
-from ..history import History
-
-PATTERN_FACTORY = PatternFactory()
+from ..shout import shout
+from ..messages import ModeChanged
+from ..config import Config
 
 
 def add_mode(name=None, completer_fn=None, completer_list=None, syntax=None):
@@ -50,35 +49,35 @@ class Mode(object):
         self.handler = handler
         self.patterns = []
         self.multiline_patterns = []
-        if syntax:
-            self.set_syntax(syntax)
+        self.syntax = syntax
 
     def set_syntax(self, syntax):
         '''Generates modes patterns and multline patterns from a syntax
         json file
         '''
 
-        syntax_data = Settings(syntax + '.syntax', combine_user_defaults=False)
+        syntax_data = Config('./conf/{}.json'.format(syntax))
+        pattern_factory = PatternFactory(self.app.config['COLORS'])
         if syntax_data:
             syntax_name = syntax_data['name']
             for pattern_name, pattern in syntax_data['patterns'].iteritems():
                 if pattern_name.startswith('multiline'):
                     self.multiline_patterns.append(
-                        PATTERN_FACTORY.create(
+                        pattern_factory.create(
                             syntax_name, pattern_name, pattern))
                 else:
                     self.patterns.append(
-                        PATTERN_FACTORY.create(
+                        pattern_factory.create(
                             syntax_name, pattern_name, pattern))
 
-    def setup(self, hotline):
+    def setup(self):
         '''Called by HotLine instance when modes are cycled.'''
+
+        if self.syntax and not self.patterns and not self.multiline_patterns:
+            self.set_syntax(self.syntax)
 
         if self.completer_fn:
             self.completer_list = self.completer_fn()
-        hotline.mode_button.setText(self.name)
-        hotline.highlighter.set_rules(self.patterns, self.multiline_patterns)
-        hotline.editor.set_completer_model(self.completer_list)
 
 
 class MetaContext(type):
@@ -114,14 +113,10 @@ class Context(object):
 
     __metaclass__ = MetaContext
 
-    def __init__(self):
-        self.hotline = None
-        self.multiline = False
-        self.autocomplete = False
-        self.pinned = False
-        self.history = History()
-        self.keysettings = KeySettings()
-        self.store = Settings("store.hotline-settings")
+    def __init__(self, app):
+        self.app = app
+        for mode in self._modes:
+            mode.app = app
 
     @property
     def modes(self):
@@ -139,8 +134,8 @@ class Context(object):
 
     def prev_mode(self):
         self._modes.rotate(1)
-        self.mode.setup(self.hotline)
+        self.mode.setup()
 
     def next_mode(self):
         self._modes.rotate(-1)
-        self.mode.setup(self.hotline)
+        self.mode.setup()

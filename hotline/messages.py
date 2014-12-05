@@ -25,6 +25,10 @@ class PrevMode(Message):
     '''Shout to go to previous mode'''
 
 
+class ModeChanged(Message):
+    '''Shouted after mode changes'''
+
+
 class NextHistory(Message):
     '''Shout to go to next in history'''
 
@@ -43,6 +47,10 @@ class ShowDock(Message):
 
 class ShowHelp(Message):
     '''Shout to show help'''
+
+
+class WriteOutput(Message):
+    '''Shout to write output'''
 
 
 class ClearOutput(Message):
@@ -71,3 +79,7 @@ class Store_Delete(Message):
 
 class Store_Refresh(Message):
     '''Shout to refresh store'''
+
+
+class Started(Message):
+    '''Shouted on Started'''

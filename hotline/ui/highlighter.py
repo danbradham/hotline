@@ -4,14 +4,13 @@ highlighter
 '''
 
 from PySide import QtCore, QtGui
-from ..settings import Settings
 
 
 class PatternFactory(object):
     '''Create patterns for Highlighter.'''
 
-    def __init__(self, color_settings="color.hotline-settings"):
-        self.colors = Settings(color_settings)
+    def __init__(self, colors):
+        self.colors = colors
 
     def format_text(self, r, g, b, a=255, style=''):
         '''Create a QTextCharFormat for Highlighter.'''

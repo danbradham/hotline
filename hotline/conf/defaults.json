@@ -1,0 +1,87 @@
+{
+    "COLORS": {
+        "Python": {
+            "class.name": [
+                255, 
+                255, 
+                255
+            ], 
+            "comment": [
+                117, 
+                113, 
+                94
+            ], 
+            "constants": [
+                132, 
+                129, 
+                255
+            ], 
+            "declaritives": [
+                102, 
+                217, 
+                239
+            ], 
+            "delimiters": [
+                255, 
+                255, 
+                255
+            ], 
+            "func.name": [
+                166, 
+                226, 
+                46
+            ], 
+            "keywords": [
+                246, 
+                38, 
+                114
+            ], 
+            "multiline": [
+                230, 
+                219, 
+                116
+            ], 
+            "numeric": [
+                132, 
+                129, 
+                255
+            ], 
+            "operators": [
+                246, 
+                38, 
+                114
+            ], 
+            "string": [
+                230, 
+                219, 
+                116
+            ]
+        }
+    }, 
+    "KEYS": {
+        "multiline": {
+            "Execute": "Ctrl+Enter", 
+            "Next Mode": "Ctrl+Tab", 
+            "Next in History": "Ctrl+Down", 
+            "Pin": "Ctrl+4", 
+            "Prev Mode": "Ctrl+Shift+Tab", 
+            "Previous in History": "Ctrl+Up", 
+            "Show Output": "Ctrl+1", 
+            "Toggle Autocomplete": "Ctrl+2", 
+            "Toggle Multiline": "Ctrl+3", 
+            "Toggle Toolbar": "Ctrl+T"
+        }, 
+        "standard": {
+            "Execute": "Enter", 
+            "Next Mode": "Tab", 
+            "Next in History": "Down", 
+            "Pin": "Ctrl+4", 
+            "Prev Mode": "Shift+Tab", 
+            "Previous in History": "Up", 
+            "Show Output": "Ctrl+1", 
+            "Toggle Autocomplete": "Ctrl+2", 
+            "Toggle Multiline": "Ctrl+3", 
+            "Toggle Toolbar": "Ctrl+T"
+        }
+    }
+}
