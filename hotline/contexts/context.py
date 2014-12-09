@@ -4,6 +4,7 @@ from ..ui.highlighter import PatternFactory
 from ..shout import shout
 from ..messages import ModeChanged
 from ..config import Config
+from ..utils import config_path
 
 
 def add_mode(name=None, completer_fn=None, completer_list=None, syntax=None):
@@ -56,7 +57,7 @@ class Mode(object):
         json file
         '''
 
-        syntax_data = Config('./conf/{}.json'.format(syntax))
+        syntax_data = Config(config_path('{}.json'.format(syntax)))
         pattern_factory = PatternFactory(self.app.config['COLORS'])
         if syntax_data:
             syntax_name = syntax_data['name']

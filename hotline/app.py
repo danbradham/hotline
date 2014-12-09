@@ -1,6 +1,9 @@
 from __future__ import division
+import os
+import shutil
 import sys
 import traceback
+from .utils import rel_path, config_path
 from .config import Config, Store
 from .contexts import CTX
 from .ui import UI
@@ -15,17 +18,22 @@ from .shout import shout
 import logging
 logger = logging.getLogger("hotline.hotline")
 
+HL_HOME = os.environ.get(
+    "HOTLINE_CFG",
+    os.path.join(os.path.expanduser("~"), "hotline")
+)
+
 
 class HotLine(object):
 
     instance = None
 
-    def __init__(self, cfg_file=None):
+    def __init__(self):
 
-        if not cfg_file:
-            cfg_file = "./conf/defaults.json"
+        if not os.path.exists(HL_HOME):
+            shutil.copytree(rel_path("conf"), HL_HOME)
 
-        self.config = Config(cfg_file)
+        self.config = Config(config_path("config.json"))
 
         if self.config.get('debug', None):
             logger.setLevel(logging.DEBUG)
@@ -36,7 +44,7 @@ class HotLine(object):
         self.autocomplete = False
         self.pinned = False
         self.history = History()
-        self.store = Store("./conf/store.json")
+        self.store = Store(config_path("store.json"))
         shout(Started)
 
     def toggle_multiline(self):
@@ -93,10 +101,10 @@ class HotLine(object):
         shout(NextMode, self.ctx.mode)
 
 
-def show():
+def show(*args, **kwargs):
     '''Convenience method to show one instance of a HotLine ui.'''
 
     if not HotLine.instance:
-        HotLine.instance = HotLine()
+        HotLine.instance = HotLine(*args, **kwargs)
 
     HotLine.instance.show()

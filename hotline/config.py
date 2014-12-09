@@ -1,21 +1,18 @@
 import os
 from PySide import QtGui
 from collections import defaultdict
-from .utils import rel_path
 
 
-class Config(dict):
+class ConfigBase(dict):
 
     def __init__(self, cfg_file=None, defaults=None):
-        super(Config, self).__init__(defaults or {})
+        super(ConfigBase, self).__init__(defaults or {})
         self.cfg_file = cfg_file
 
         if cfg_file:
             self.from_file(cfg_file)
 
     def from_file(self, f):
-        if f.startswith("."):
-            f = rel_path(f)
 
         ext = f.split(".")[-1]
 
@@ -37,16 +34,10 @@ class Config(dict):
         self.cfg_file = f
 
     def post_load(self):
-        '''Convert any Key Strings to QKeySequences after loading config.'''
+        pass
 
-        keys = self.get('KEYS', {})
-        if keys:
-            key_sequences = defaultdict(dict)
-            for mode, key_shortcuts in keys.iteritems():
-                for name, seq_str in key_shortcuts.iteritems():
-                    seq = QtGui.QKeySequence.fromString(seq_str)
-                    key_sequences[mode][name] = seq
-            self['KEYS'] = key_sequences
+    def pre_save(self):
+        pass
 
     def save(self, ext=None):
         if not ext:
@@ -67,6 +58,27 @@ class Config(dict):
         cfg_savers[ext](f, data)
         self.cfg_file = f
 
+
+class Store(ConfigBase):
+    '''No pre save or post load. Just reads and writes config files.'''
+
+
+class Config(ConfigBase):
+    '''HotLine's Main Configuration Class. Converts keys between strings and
+    QKeySequences on loading and saving.'''
+
+    def post_load(self):
+        '''Convert any Key Strings to QKeySequences after loading config.'''
+
+        keys = self.get('KEYS', {})
+        if keys:
+            key_sequences = defaultdict(dict)
+            for mode, key_shortcuts in keys.iteritems():
+                for name, seq_str in key_shortcuts.iteritems():
+                    seq = QtGui.QKeySequence.fromString(seq_str)
+                    key_sequences[mode][name] = seq
+            self['KEYS'] = key_sequences
+
     def pre_save(self):
         '''Convert any QtGui.QKeySequences to Strings before saving config.'''
 
@@ -79,25 +91,6 @@ class Config(dict):
                     key_strings[mode][name] = seq.toString()
             data['KEYS'] = key_strings
         return data
-
-
-class Store(Config):
-
-    def from_file(self, f):
-        if f.startswith("."):
-            try:
-                f = rel_path(f)
-            except OSError:
-                return
-
-        if os.path.exists(f):
-            super(Store, self).from_file(f)
-
-    def post_load(self):
-        pass
-
-    def pre_save(self):
-        pass
 
 
 def load_yaml(yml_filepath):
