@@ -90,6 +90,14 @@ class HotLine(object):
         text = self.history.prev()
         shout(PrevHistory, text)
 
+    def store_evaluate(self):
+        for mode in self.ctx.modes:
+            for name, data in self.store.iteritems():
+                if data["mode"] == mode.name:
+                    self.store_add_item(name)
+                    if data["autoload"]:
+                        mode.handler(data["command"])
+
     def show(self):
         '''Shows a PySide UI to control the app. Parenting of the UI is handled
         by different subclasses of :class:`UI`. You can set the context using

@@ -46,10 +46,10 @@ class Configurator(QtGui.QWidget):
 
 
 @has_ears
-class Output(QtGui.QWidget):
+class OutputWidget(QtGui.QWidget):
 
     def __init__(self, parent=None):
-        super(Output, self).__init__(parent)
+        super(OutputWidget, self).__init__(parent)
 
         grid = QtGui.QGridLayout()
         grid.setColumnStretch(0, 1)
@@ -86,10 +86,10 @@ class Output(QtGui.QWidget):
         self.text_area.clear()
 
 
-class Store(QtGui.QWidget):
+class StoreWidget(QtGui.QWidget):
 
     def __init__(self, parent=None):
-        super(Store, self).__init__(parent)
+        super(StoreWidget, self).__init__(parent)
 
         grid = QtGui.QGridLayout()
         grid.setColumnStretch(0, 1)
@@ -134,10 +134,10 @@ class Store(QtGui.QWidget):
         grid.addWidget(self.del_button, 3, 4)
 
 
-class Save(QtGui.QDialog):
+class StoreDialog(QtGui.QDialog):
 
     def __init__(self, mode, options, parent=None):
-        super(Save, self).__init__(parent)
+        super(StoreDialog, self).__init__(parent)
 
         self.setWindowTitle("Save current command?")
 
@@ -177,13 +177,7 @@ class Save(QtGui.QDialog):
 
         self.setLayout(grid)
 
-        try:
-            with open(rel_path('settings/user/style.css')) as f:
-                style = f.read() % ({"rel": REL})
-        except:
-            with open(rel_path('settings/defaults/style.css')) as f:
-                style = f.read() % ({"rel": REL})
-        self.setStyleSheet(style)
+        self.setStyleSheet(get_style())
 
     def data(self):
         data = {
@@ -197,19 +191,19 @@ class Save(QtGui.QDialog):
 
 class Dock(QtGui.QDockWidget):
 
-    def __init__(self, out=Output, store=Store, conf=Configurator, **kwargs):
+    def __init__(self, **kwargs):
         super(Dock, self).__init__(**kwargs)
 
         self.widget = QtGui.QTabWidget()
         self.setWidget(self.widget)
 
-        self.output = Output()
-        self.store = Store()
-        self.conf = Configurator()
+        self.output_tab = OutputWidget()
+        self.store = StoreWidget()
+        # self.conf = Configurator()
 
-        self.widget.addTab(self.output, "Output")
+        self.widget.addTab(self.output_tab, "Output")
         self.widget.addTab(self.store, "Store")
-        self.widget.addTab(self.conf, "Configuration")
+        # self.widget.addTab(self.conf, "Configuration")
 
         self.setFeatures(
             QtGui.QDockWidget.DockWidgetClosable|
@@ -513,9 +507,9 @@ class UI(QtGui.QWidget):
         self.dock = Dock(parent=parent)
         self.dock.hide()
 
-        self.output = self.dock.output
-        self.store = self.dock.store
-        self.conf = self.dock.conf
+        self.output_tab = self.dock.output_tab
+        self.store_tab = self.dock.store_tab
+        # self.conf = self.dock.conf
 
         self.setWindowFlags(
             QtCore.Qt.Window|
@@ -588,11 +582,11 @@ class UI(QtGui.QWidget):
 
     @hears(ShowHelp)
     def show_help(self):
-        self.output.write(self.format_help())
+        self.output_tab.write(self.format_help())
 
     @hears(ClearOutput)
     def clear_output(self):
-        self.output.clear()
+        self.output_tab.clear()
 
     @hears(NextHistory, PrevHistory)
     def history_changed(self, text):
