@@ -1,11 +1,11 @@
 from .highlighter import Highlighter
-from ..utils import rel_path
 from ..shout import has_ears, shout, hears
 from ..messages import (ToggleMultiline, ToggleAutocomplete, TogglePin,
                        ToggleToolbar, Execute, NextHistory, NextMode,
                        PrevHistory, PrevMode, ShowDock, ShowHelp,
                        ClearOutput, AdjustSize, Store_Run, Store_Save,
-                       Store_Load, Store_Delete, Store_Refresh, WriteOutput)
+                       Store_Load, Store_Delete, Store_Refresh, WriteOutput,
+                       Store_Evaluate)
 from PySide import QtCore, QtGui
 from functools import partial
 import os
@@ -48,8 +48,10 @@ class Configurator(QtGui.QWidget):
 @has_ears
 class OutputWidget(QtGui.QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, app, parent=None):
         super(OutputWidget, self).__init__(parent)
+        self.app = app
+        self.parent = parent
 
         grid = QtGui.QGridLayout()
         grid.setColumnStretch(0, 1)
@@ -86,52 +88,172 @@ class OutputWidget(QtGui.QWidget):
         self.text_area.clear()
 
 
+class RightLabel(QtGui.QLabel):
+
+    def __init__(self, *args, **kwargs):
+        super(RightLabel, self).__init__(*args, **kwargs)
+        self.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.setFixedHeight(12)
+
+
+@has_ears
 class StoreWidget(QtGui.QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, app, parent=None):
         super(StoreWidget, self).__init__(parent)
+        self.app = app
+        self.parent = parent
 
         grid = QtGui.QGridLayout()
-        grid.setColumnStretch(0, 1)
+        grid.setColumnStretch(1, 1)
+        grid.setRowStretch(1, 1)
         self.setLayout(grid)
 
         self.filter = EditLine("Input Store Filter", self)
+        self.filter.text_changed.connect(self.filter_list)
         self.refr_button = Button(
-            connect=partial(shout, Store_Refresh),
+            connect=self.refresh,
             name="refresh",
             tooltip="Refresh all stores",
             parent=self)
         self.store_list = QtGui.QListWidget(self)
-        self.store_info = QtGui.QTextEdit(self)
+        self.store_list.currentTextChanged.connect(self.item_changed)
+        self.store_list.itemChanged.connect(self.item_name_changed)
+        mode_label = RightLabel("Mode")
+        self.item_mode = QtGui.QLabel()
+        name_label = RightLabel("Name")
+        self.item_name = QtGui.QLabel()
+        desc_label = RightLabel("Description")
+        self.item_desc = QtGui.QLabel()
+        auto_label = RightLabel("Autoload")
+        self.item_auto = QtGui.QCheckBox()
+        self.item_auto.stateChanged.connect(self.auto_load_changed)
         self.run_button = Button(
-            connect=partial(shout, Store_Run),
+            connect=self.run,
             name="run",
             tooltip="Run selected script",
             parent=self)
         self.save_button = Button(
-            connect=partial(shout, Store_Save),
+            connect=self.save,
             name="save",
             tooltip="Save current hotline command.",
             parent=self)
         self.load_button = Button(
-            connect=partial(shout, Store_Load),
+            connect=self.load,
             name="load",
             tooltip="Load current hotline command into editor.",
             parent=self)
         self.del_button = Button(
-            connect=partial(shout, Store_Delete),
+            connect=self.delete,
             name="delete",
             tooltip="Delete selected command.",
             parent=self)
 
-        grid.addWidget(self.filter, 0, 0, 1, 4)
-        grid.addWidget(self.refr_button, 0, 4)
-        grid.addWidget(self.store_list, 1, 0, 1, 5)
-        grid.addWidget(self.store_info, 2, 0, 1, 5)
-        grid.addWidget(self.run_button, 3, 1)
-        grid.addWidget(self.save_button, 3, 2)
-        grid.addWidget(self.load_button, 3, 3)
-        grid.addWidget(self.del_button, 3, 4)
+        grid.addWidget(self.filter, 0, 0, 1, 5)
+        grid.addWidget(self.refr_button, 0, 5)
+        grid.addWidget(self.store_list, 1, 0, 1, 6)
+        grid.addWidget(mode_label, 2, 0)
+        grid.addWidget(self.item_mode, 2, 1, 5)
+        grid.addWidget(name_label, 3, 0)
+        grid.addWidget(self.item_name, 3, 1, 5)
+        grid.addWidget(desc_label, 4, 0)
+        grid.addWidget(self.item_desc, 4, 1, 5)
+        grid.addWidget(auto_label, 5, 0)
+        grid.addWidget(self.item_auto, 5, 1, 5)
+        grid.addWidget(self.run_button, 6, 2)
+        grid.addWidget(self.save_button, 6, 3)
+        grid.addWidget(self.load_button, 6, 4)
+        grid.addWidget(self.del_button, 6, 5)
+
+    def auto_load_changed(self):
+        list_item = self.store_list.currentItem()
+        if not list_item:
+            return
+        data = self.app.store[list_item.text()]
+        data.update({'autoload': self.item_auto.isChecked()})
+        self.app.store.save()
+
+    def item_name_changed(self, list_item):
+        new_name = list_item.text()
+        old_name = list_item.data(QtCore.Qt.UserRole)
+        self.app.store[new_name] = self.app.store.pop(old_name)
+
+    def filter_list(self, text):
+        num_items = self.store_list.count()
+        for i in xrange(num_items):
+            item = self.store_list.item(i)
+            if not text or text in item.text():
+                item.show()
+                continue
+            item.hide()
+
+    def item_changed(self):
+        list_item = self.store_list.currentItem()
+        if not list_item:
+            return
+        name = list_item.text()
+        data = self.app.store[name]
+        self.item_mode.setText(data['mode'])
+        self.item_name.setText(name)
+        self.item_desc.setText(data['description'])
+        self.item_auto.setChecked(data['autoload'])
+
+    def refresh(self):
+        self.store_list.clear()
+        self.app.store.refresh()
+        self.app.store.evaluate(self.app.ctx.modes)
+
+    def save(self):
+
+        options = [m.name for m in self.app.ctx.modes]
+        save_diag = StoreDialog(self.app.ctx.mode.name, options, self)
+
+        if save_diag.exec_():
+            data = save_diag.data()
+            name = data["name"]
+            if not name in self.app.store:
+                self.new_store_item(name)
+            else:
+                overwrite_it = QtGui.QMessageBox.question(
+                    self,
+                    name,
+                    "Overwrite {0}?".format(name),
+                    QtGui.QMessageBox.Yes|QtGui.QMessageBox.No,
+                    QtGui.QMessageBox.No)
+                if overwrite_it == QtGui.QMessageBox.No:
+                    return
+            data["command"] = self.parent.editor.toPlainText()
+            self.app.store[name] = data
+            self.app.store.save()
+        self.store_list.sortItems()
+
+    def run(self):
+        list_item = self.store_list.currentItem()
+        if not list_item:
+            return
+        name = list_item.text()
+        data = self.app.store[name]
+        self.app.store.run(data)
+
+    def delete(self):
+        list_item = self.store_list.currentItem()
+        if not list_item:
+            return
+        self.app.store.delete(list_item.text())
+        self.store_list.takeAt(self.store_list.currentRow())
+
+    def load(self):
+        list_item = self.store_list.currentItem()
+        if not list_item:
+            return
+        data = self.app.store[list_item.text()]
+        self.parent.editor.setText(data['command'])
+
+    @hears(Store_Evaluate)
+    def new_store_item(self, name):
+        list_item = QtGui.QListWidgetItem(name)
+        list_item.setFlags(list_item.flags() | QtCore.Qt.ItemIsEditable)
+        self.store_list.addItem(list_item)
 
 
 class StoreDialog(QtGui.QDialog):
@@ -196,14 +318,6 @@ class Dock(QtGui.QDockWidget):
 
         self.widget = QtGui.QTabWidget()
         self.setWidget(self.widget)
-
-        self.output_tab = OutputWidget()
-        self.store = StoreWidget()
-        # self.conf = Configurator()
-
-        self.widget.addTab(self.output_tab, "Output")
-        self.widget.addTab(self.store, "Store")
-        # self.widget.addTab(self.conf, "Configuration")
 
         self.setFeatures(
             QtGui.QDockWidget.DockWidgetClosable|
@@ -287,8 +401,9 @@ class EditLine(QtGui.QLineEdit):
 
 class Editor(QtGui.QTextEdit):
 
-    def __init__(self, parent=None):
+    def __init__(self, app, parent=None):
         super(Editor, self).__init__(parent)
+        self.app = app
         self.parent = parent
 
         self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
@@ -312,20 +427,20 @@ class Editor(QtGui.QTextEdit):
 
         #Setup Hotkeys
         self.key_methods = {
-            "Toggle Multiline": self.parent.app.toggle_multiline,
-            "Next Mode": self.parent.app.next_mode,
-            "Prev Mode": self.parent.app.prev_mode,
+            "Toggle Multiline": self.app.toggle_multiline,
+            "Next Mode": self.app.next_mode,
+            "Prev Mode": self.app.prev_mode,
             "Execute": self.key_execute,
-            "Previous in History": self.parent.app.next_hist,
-            "Next in History": self.parent.app.prev_hist,
-            "Pin": self.parent.app.toggle_pin,
+            "Previous in History": self.app.next_hist,
+            "Next in History": self.app.prev_hist,
+            "Pin": self.app.toggle_pin,
             "Toggle Toolbar": partial(shout, ToggleToolbar),
-            "Toggle Autocomplete": self.parent.app.toggle_autocomplete,
+            "Toggle Autocomplete": self.app.toggle_autocomplete,
             "Show Output": partial(shout, ShowDock)}
 
     def key_execute(self):
         input_str = self.toPlainText()
-        self.parent.app.run(input_str)
+        self.app.run(input_str)
 
     def set_completer_model(self, completer_list):
         self.completer_model.setStringList(completer_list)
@@ -371,11 +486,11 @@ class Editor(QtGui.QTextEdit):
             self.parent.focusOutEvent(event)
 
     def keyPressEvent(self, event):
-        keysettings = self.parent.app.config['KEYS']
+        keysettings = self.app.config['KEYS']
         completer_popup = self.completer.popup()
         is_completing = completer_popup.isVisible()
-        is_multiline = self.parent.app.multiline
-        is_auto = self.parent.app.autocomplete
+        is_multiline = self.app.multiline
+        is_auto = self.app.autocomplete
         key = event.key()
         mod = event.modifiers()
         key_seq = self.to_key_sequence(key, mod)
@@ -498,7 +613,7 @@ class UI(QtGui.QWidget):
         self.tools.addWidget(self.multi_button, 0, 3)
         self.tools.addWidget(self.pin_button, 0, 4)
 
-        self.editor = Editor(self)
+        self.editor = Editor(self.app, self)
         self.highlighter = Highlighter(self.editor)
         grid.addWidget(self.tools, 0, 0, 1, 2)
         grid.addWidget(self.mode_button, 1, 0)
@@ -507,9 +622,10 @@ class UI(QtGui.QWidget):
         self.dock = Dock(parent=parent)
         self.dock.hide()
 
-        self.output_tab = self.dock.output_tab
-        self.store_tab = self.dock.store_tab
-        # self.conf = self.dock.conf
+        self.output_tab = OutputWidget(self.app, self)
+        self.store_tab = StoreWidget(self.app, self)
+        self.dock.widget.addTab(self.output_tab, "Output")
+        self.dock.widget.addTab(self.store_tab, "Store")
 
         self.setWindowFlags(
             QtCore.Qt.Window|

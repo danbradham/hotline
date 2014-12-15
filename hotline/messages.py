@@ -61,6 +61,10 @@ class AdjustSize(Message):
     '''Shout to adjust size'''
 
 
+class Store_Evaluate(Message):
+    '''Shouted when evaluating a store item'''
+
+
 class Store_Run(Message):
     '''Shout to run selected item in store'''
 

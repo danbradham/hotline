@@ -1,10 +1,9 @@
 from __future__ import division
-import os
-import shutil
 import sys
 import traceback
-from .utils import rel_path, config_path
-from .config import Config, Store
+from .config import config_path
+from .config import Config
+from .store import Store
 from .contexts import CTX
 from .ui import UI
 from .history import History
@@ -13,15 +12,10 @@ from .messages import (ToggleMultiline, ToggleAutocomplete, TogglePin,
                        PrevHistory, PrevMode, ShowDock, ShowHelp,
                        ClearOutput, AdjustSize, Store_Run, Store_Save,
                        Store_Load, Store_Delete, Store_Refresh, Started,
-                       WriteOutput)
+                       Store_Evaluate, WriteOutput)
 from .shout import shout
 import logging
 logger = logging.getLogger("hotline.hotline")
-
-HL_HOME = os.environ.get(
-    "HOTLINE_CFG",
-    os.path.join(os.path.expanduser("~"), "hotline")
-)
 
 
 class HotLine(object):
@@ -29,9 +23,6 @@ class HotLine(object):
     instance = None
 
     def __init__(self):
-
-        if not os.path.exists(HL_HOME):
-            shutil.copytree(rel_path("conf"), HL_HOME)
 
         self.config = Config(config_path("config.json"))
 
@@ -44,7 +35,7 @@ class HotLine(object):
         self.autocomplete = False
         self.pinned = False
         self.history = History()
-        self.store = Store(config_path("store.json"))
+        self.store = Store(self, config_path("store.json"))
         shout(Started)
 
     def toggle_multiline(self):
@@ -74,6 +65,9 @@ class HotLine(object):
             shout(WriteOutput, exc)
             shout(Execute, False)
 
+    def set_mode(self, name):
+        self.ctx.set_mode(name)
+
     def next_mode(self):
         self.ctx.next_mode()
         shout(NextMode, self.ctx.mode)
@@ -90,14 +84,6 @@ class HotLine(object):
         text = self.history.prev()
         shout(PrevHistory, text)
 
-    def store_evaluate(self):
-        for mode in self.ctx.modes:
-            for name, data in self.store.iteritems():
-                if data["mode"] == mode.name:
-                    self.store_add_item(name)
-                    if data["autoload"]:
-                        mode.handler(data["command"])
-
     def show(self):
         '''Shows a PySide UI to control the app. Parenting of the UI is handled
         by different subclasses of :class:`UI`. You can set the context using
@@ -106,6 +92,7 @@ class HotLine(object):
         if not self.ui:
             self.ui = UI.create(self)
         self.ui.enter()
+        self.store.evaluate(self.ctx.modes)
         shout(NextMode, self.ctx.mode)
 
 

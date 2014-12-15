@@ -1,10 +1,7 @@
 from collections import deque
 from types import MethodType
 from ..ui.highlighter import PatternFactory
-from ..shout import shout
-from ..messages import ModeChanged
-from ..config import Config
-from ..utils import config_path
+from ..config import Config, config_path
 
 
 def add_mode(name=None, completer_fn=None, completer_list=None, syntax=None):
@@ -132,6 +129,11 @@ class Context(object):
     def run(self):
         '''Returns current handler'''
         return self.mode.handler
+
+    def get_mode(self, name):
+        for mode in self._modes:
+            if mode.name == name:
+                return mode
 
     def prev_mode(self):
         self._modes.rotate(1)

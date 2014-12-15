@@ -1,16 +1,34 @@
 import os
+import shutil
 from PySide import QtGui
 from collections import defaultdict
+from .utils import rel_path
+
+
+HL_HOME = os.environ.get(
+    "HOTLINE_CFG",
+    os.path.join(os.path.expanduser("~"), "hotline")
+)
+
+
+def config_path(path, check=True):
+    fullpath = os.path.abspath(os.path.join(HL_HOME, path))
+    if check and not os.path.exists(fullpath):
+        raise OSError("Path {0} does not exist.".format(fullpath))
+    return fullpath.replace("\\", "/")
 
 
 class ConfigBase(dict):
 
     def __init__(self, cfg_file=None, defaults=None):
         super(ConfigBase, self).__init__(defaults or {})
-        self.cfg_file = cfg_file
 
-        if cfg_file:
-            self.from_file(cfg_file)
+        if not os.path.exists(HL_HOME):
+            shutil.copytree(rel_path("conf"), HL_HOME)
+
+        self.cfg_file = cfg_file
+        if self.cfg_file:
+            self.from_file(self.cfg_file)
 
     def from_file(self, f):
 
@@ -57,10 +75,6 @@ class ConfigBase(dict):
         data = self.pre_save()
         cfg_savers[ext](f, data)
         self.cfg_file = f
-
-
-class Store(ConfigBase):
-    '''No pre save or post load. Just reads and writes config files.'''
 
 
 class Config(ConfigBase):
