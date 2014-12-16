@@ -2,19 +2,19 @@
 A pop-up input field with customizable settings. Supporting multiple modes, syntax highlighting, and inline autocompletion.</br>
 
 ![hotline-header][hotline-header]
-HotLine is like a supped up version of Nuke's node creator.  Best of all, it works *anywhere* through the use of context modules.  These modules make use of the HotLine api to add Modes and parent HotLine to any existing PyQt application. One prepackaged context is for Autodesk Maya.
+HotLine is like a supped up version of Nuke's node creator.  Best of all, it works *anywhere* through the use of context modules.  These modules make use of the HotLine api to add Modes and parent HotLine to an existing PySide application. Currently HotLine comes with a pre-packaged Context for Autodesk Maya.
 
 #HotLine's Maya Context
 There are five different modes in HotLine's Maya context.
 
 | Mode       | Usage                                                      | Auto-Completes   |
 | ---------- | ---------------------------------------------------------- | ---------------- |
-| **PY**thon | execute python script                                      | maya.cmds module |
+| **PY**     | execute python script                                      | maya.cmds module |
 | **MEL**    | execute mel script                                         | mel commands     |
-| **SEL**ect | select scene nodes using standard Maya selection wildcards | scene nodes      |
-| **REN**ame | rename selected nodes using a mini token language          | N/A              |
+| **SEL**    | select scene nodes using standard Maya selection wildcards | scene nodes      |
+| **REN**    | rename selected nodes using a mini token language          | N/A              |
 | **NODE**   | create scene nodes                                         | Maya scene nodes |
-| **CNCT**   | connect attributes                                         | Maya scene nodes |
+| **CNCT**   | connect attributes                                         | N/A |
 
 
 ##Node Mode
@@ -64,7 +64,6 @@ python setup.py install
 If you're looking to use the Autodesk Maya context bind a key to the following python script:
 ```python
 import hotline
-import hotline.contexts.mayactx
 hotline.show()
 ```
 
