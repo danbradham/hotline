@@ -98,7 +98,7 @@ class Message(MetaMetaMsg):
                 return self
         if not self.response:
             self.exc = UserWarning("No listeners in: {0}".format(self.rooms))
-            logger.warning(self.exc)
+            logger.debug(self.exc)
             return self
 
         self.success = True

@@ -4,19 +4,21 @@ history
 Maintains history for hotline.
 '''
 
+
 class History(object):
     '''Maintains input history for HotLine'''
-    _history = ['']
+    _history = [(None, '')]
     _history_index = 0
 
-    def add(self, input_str):
+    def add(self, mode, input_str):
+        command = (mode, input_str)
         if input_str:
             try:
-                ind = self._history.index(input_str)
+                ind = self._history.index(command)
                 if ind != 1:
-                    self._history.insert(1, input_str)
+                    self._history.insert(1, command)
             except ValueError:
-                self._history.insert(1, input_str)
+                self._history.insert(1, command)
         self._history_index = 0
 
     def next(self):

@@ -135,6 +135,17 @@ class Context(object):
             if mode.name == name:
                 return mode
 
+    def set_mode(self, name):
+        stop = self.mode
+        while True:
+            if self.mode.name == name:
+                break
+
+            self.next_mode()
+
+            if stop == self.mode:
+                break
+
     def prev_mode(self):
         self._modes.rotate(1)
         self.mode.setup()

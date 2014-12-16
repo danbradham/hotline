@@ -31,24 +31,48 @@ class HotLine(object):
 
         self.ui = None
         self.ctx = CTX(self)
-        self.multiline = False
-        self.autocomplete = False
-        self.pinned = False
+        self._multiline = False
+        self._autocomplete = False
+        self._pinned = False
         self.history = History()
         self.store = Store(self, config_path("store.json"))
         shout(Started)
 
-    def toggle_multiline(self):
-        self.multiline = False if self.multiline else True
+    @property
+    def multiline(self):
+        return self._multiline
+
+    @multiline.setter
+    def multiline(self, value):
+        self._multiline = value
         shout(ToggleMultiline)
 
-    def toggle_autocomplete(self):
-        self.autocomplete = False if self.autocomplete else True
+    def toggle_multiline(self):
+        self.multiline = not self.multiline
+
+    @property
+    def autocomplete(self):
+        return self._autocomplete
+
+    @autocomplete.setter
+    def autocomplete(self, value):
+        self._autocomplete = value
         shout(ToggleAutocomplete)
 
-    def toggle_pin(self):
-        self.pinned = False if self.pinned else True
+    def toggle_autocomplete(self):
+        self.autocomplete = not self.autocomplete
+
+    @property
+    def pinned(self):
+        return self._pinned
+
+    @pinned.setter
+    def pinned(self, value):
+        self._pinned = value
         shout(TogglePin)
+
+    def toggle_pin(self):
+        self.pinned = not self.pinned
 
     def toggle_toolbar(self):
         shout(ToggleToolbar)
@@ -59,6 +83,7 @@ class HotLine(object):
 
         try:
             self.ctx.run(input_str)
+            self.history.add(self.ctx.mode, input_str)
             shout(Execute, True)
         except:
             exc = "".join(traceback.format_exception(*sys.exc_info()))
@@ -67,6 +92,7 @@ class HotLine(object):
 
     def set_mode(self, name):
         self.ctx.set_mode(name)
+        shout(NextMode, self.ctx.mode)
 
     def next_mode(self):
         self.ctx.next_mode()
@@ -77,12 +103,12 @@ class HotLine(object):
         shout(PrevMode, self.ctx.mode)
 
     def next_hist(self):
-        text = self.history.next()
-        shout(NextHistory, text)
+        mode, text = self.history.next()
+        shout(NextHistory, mode, text)
 
     def prev_hist(self):
-        text = self.history.prev()
-        shout(PrevHistory, text)
+        mode, text = self.history.prev()
+        shout(PrevHistory, mode, text)
 
     def show(self):
         '''Shows a PySide UI to control the app. Parenting of the UI is handled
@@ -91,8 +117,8 @@ class HotLine(object):
 
         if not self.ui:
             self.ui = UI.create(self)
+            self.store.evaluate(self.ctx.modes)
         self.ui.enter()
-        self.store.evaluate(self.ctx.modes)
         shout(NextMode, self.ctx.mode)
 
 

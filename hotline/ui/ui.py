@@ -208,6 +208,14 @@ class StoreWidget(QtGui.QWidget):
         options = [m.name for m in self.app.ctx.modes]
         save_diag = StoreDialog(self.app.ctx.mode.name, options, self)
 
+        list_item = self.store_list.currentItem()
+        if list_item:
+            name = list_item.text()
+            data = self.app.store[name]
+            save_diag.name.setText(name)
+            save_diag.autoload.setChecked(data['autoload'])
+            save_diag.desc.append(data['description'])
+
         if save_diag.exec_():
             data = save_diag.data()
             name = data["name"]
@@ -248,6 +256,8 @@ class StoreWidget(QtGui.QWidget):
             return
         data = self.app.store[list_item.text()]
         self.parent.editor.setText(data['command'])
+        self.app.multiline = '\n' in data['command']
+        self.app.set_mode(data['mode'])
 
     @hears(Store_Evaluate)
     def new_store_item(self, name):
@@ -318,6 +328,7 @@ class Dock(QtGui.QDockWidget):
 
         self.widget = QtGui.QTabWidget()
         self.setWidget(self.widget)
+        self.setWindowTitle("HotLine")
 
         self.setFeatures(
             QtGui.QDockWidget.DockWidgetClosable|
@@ -431,8 +442,8 @@ class Editor(QtGui.QTextEdit):
             "Next Mode": self.app.next_mode,
             "Prev Mode": self.app.prev_mode,
             "Execute": self.key_execute,
-            "Previous in History": self.app.next_hist,
-            "Next in History": self.app.prev_hist,
+            "Previous in History": self.app.prev_hist,
+            "Next in History": self.app.next_hist,
             "Pin": self.app.toggle_pin,
             "Toggle Toolbar": partial(shout, ToggleToolbar),
             "Toggle Autocomplete": self.app.toggle_autocomplete,
@@ -618,6 +629,8 @@ class UI(QtGui.QWidget):
         grid.addWidget(self.tools, 0, 0, 1, 2)
         grid.addWidget(self.mode_button, 1, 0)
         grid.addWidget(self.editor, 1, 1)
+        grid.setAlignment(self.mode_button, QtCore.Qt.AlignVCenter)
+        grid.setAlignment(self.editor, QtCore.Qt.AlignVCenter)
 
         self.dock = Dock(parent=parent)
         self.dock.hide()
@@ -644,7 +657,7 @@ class UI(QtGui.QWidget):
         vect = event.globalPos() - self.start_pos
         self.move(vect.x(), vect.y())
 
-    @hears(AdjustSize)
+    @hears(AdjustSize, ToggleToolbar)
     def adjust_size(self):
         doc_height = self.editor.document().size().height()
         doc_width = self.editor.document().idealWidth()
@@ -661,7 +674,7 @@ class UI(QtGui.QWidget):
             self.setFixedHeight(height)
         else:
             self.editor.setFixedHeight(24)
-            self.setFixedHeight(28 if not self.tools.isVisible() else 52)
+            self.setFixedHeight(30 if not self.tools.isVisible() else 52)
 
 
     @hears(ShowDock)
@@ -705,7 +718,9 @@ class UI(QtGui.QWidget):
         self.output_tab.clear()
 
     @hears(NextHistory, PrevHistory)
-    def history_changed(self, text):
+    def history_changed(self, mode, text):
+        if mode:
+            self.app.set_mode(mode.name)
         self.editor.setText(text)
 
     @hears(ToggleToolbar)
