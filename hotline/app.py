@@ -26,7 +26,7 @@ class HotLine(object):
 
         self.config = Config(config_path("config.json"))
 
-        if self.config.get('debug', None):
+        if self.config.get('DEBUG', False):
             logger.setLevel(logging.DEBUG)
 
         self.ui = None
