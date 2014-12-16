@@ -14,6 +14,7 @@ There are five different modes in HotLine's Maya context.
 | **SEL**ect | select scene nodes using standard Maya selection wildcards | scene nodes      |
 | **REN**ame | rename selected nodes using a mini token language          | N/A              |
 | **NODE**   | create scene nodes                                         | Maya scene nodes |
+| **CNCT**   | connect attributes                                         | Maya scene nodes |
 
 
 ##Node Mode

@@ -1,0 +1,6 @@
+include README.md
+include LICENSE
+include hotline/conf/config.json
+include hotline/conf/store.json
+include hotline/conf/Python.json
+include requirements.txt

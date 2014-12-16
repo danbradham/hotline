@@ -1,29 +1,55 @@
 try:
-    from distutils.core import setup
-except ImportError:
     from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+import os
+import sys
+import cleanfreak
 
-with open("Readme.md") as f:
-    readme = f.read()
 
-with open("LICENSE") as f:
-    license = f.read()
+if sys.argv[-1] == 'cheeseit!':
+    os.system('python setup.py sdist upload')
+    sys.exit()
+
+
+packages = [
+    'hotline',
+    'hotline.contexts',
+    'hotline.ui'
+]
 
 package_data = {
-    "": ["LICENSE"],
-    "hotline": ["settings/defaults/*.*", "settings/user/*.*", "icons/*.*"]}
+    '': ['LICENSE', 'README'],
+    'hotline': ['conf/*.*']
+}
+
+
+with open('README.rst') as f:
+    readme = f.read()
+
 
 setup(
-    name="hotline",
-    version="0.3.1",
-    description="A customizable popup input field.",
+    name='cleanfreak',
+    version=cleanfreak.__version__,
+    description=cleanfreak.__description__,
     long_description=readme,
-    author="Dan Bradham",
-    author_email="danielbradham@gmail.com",
-    url="http://www.danbradham.com",
-    packages=["hotline", "hotline.contexts"],
-    package_dir={"hotline": "hotline"},
+    author=cleanfreak.__author__,
+    author_email=cleanfreak.__email__,
+    url=cleanfreak.__url__,
+    license='MIT',
+    packages=packages,
     package_data=package_data,
+    package_dir={'hotline': 'hotline'},
     include_package_data=True,
-    license=license,
-    zip_safe=False)
+    classifiers=(
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ),
+)
