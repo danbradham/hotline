@@ -248,16 +248,16 @@ class StoreWidget(QtGui.QWidget):
         if not list_item:
             return
         self.app.store.delete(list_item.text())
-        self.store_list.takeAt(self.store_list.currentRow())
+        self.store_list.takeItem(self.store_list.currentRow())
 
     def load(self):
         list_item = self.store_list.currentItem()
         if not list_item:
             return
         data = self.app.store[list_item.text()]
+        self.app.set_mode(data['mode'])
         self.parent.editor.setText(data['command'])
         self.app.multiline = '\n' in data['command']
-        self.app.set_mode(data['mode'])
 
     @hears(Store_Evaluate)
     def new_store_item(self, name):
