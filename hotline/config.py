@@ -12,6 +12,10 @@ HL_HOME = os.environ.get(
 
 
 def config_path(path, check=True):
+
+    if not os.path.exists(HL_HOME):
+        shutil.copytree(rel_path("conf"), HL_HOME)
+
     fullpath = os.path.abspath(os.path.join(HL_HOME, path))
     if check and not os.path.exists(fullpath):
         raise OSError("Path {0} does not exist.".format(fullpath))
@@ -23,8 +27,6 @@ class ConfigBase(dict):
     def __init__(self, cfg_file=None, defaults=None):
         super(ConfigBase, self).__init__(defaults or {})
 
-        if not os.path.exists(HL_HOME):
-            shutil.copytree(rel_path("conf"), HL_HOME)
 
         self.cfg_file = cfg_file
         if self.cfg_file:

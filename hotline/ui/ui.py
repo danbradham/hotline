@@ -6,6 +6,7 @@ from ..messages import (ToggleMultiline, ToggleAutocomplete, TogglePin,
                        ClearOutput, AdjustSize, Store_Run, Store_Save,
                        Store_Load, Store_Delete, Store_Refresh, WriteOutput,
                        Store_Evaluate)
+from ..utils import rel_path
 from PySide import QtCore, QtGui
 from functools import partial
 import os
@@ -14,15 +15,14 @@ import logging
 logger = logging.getLogger("hotline.views")
 
 
-REL = os.path.dirname(__file__)
 STYLE = None
 
 
 def get_style():
     global STYLE
     if not STYLE:
-        with open(os.path.join(REL, './style.css')) as f:
-            STYLE = f.read() % ({"rel": REL})
+        with open(rel_path('ui/style.css')) as f:
+            STYLE = f.read() % ({"rel": rel_path('ui')})
     return STYLE
 
 
@@ -657,7 +657,7 @@ class UI(QtGui.QWidget):
         vect = event.globalPos() - self.start_pos
         self.move(vect.x(), vect.y())
 
-    @hears(AdjustSize, ToggleToolbar)
+    @hears(AdjustSize)
     def adjust_size(self):
         doc_height = self.editor.document().size().height()
         doc_width = self.editor.document().idealWidth()
@@ -729,6 +729,7 @@ class UI(QtGui.QWidget):
             self.tools.hide()
         else:
             self.tools.show()
+        self.adjustSize()
 
     def format_help(self):
         keys = self.app.config['KEYS']

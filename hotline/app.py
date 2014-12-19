@@ -13,7 +13,7 @@ from .messages import (ToggleMultiline, ToggleAutocomplete, TogglePin,
                        ClearOutput, AdjustSize, Store_Run, Store_Save,
                        Store_Load, Store_Delete, Store_Refresh, Started,
                        Store_Evaluate, WriteOutput)
-from .shout import shout
+from .shout import shout, shout_logging
 import logging
 logger = logging.getLogger("hotline.hotline")
 
@@ -26,8 +26,9 @@ class HotLine(object):
 
         self.config = Config(config_path("config.json"))
 
-        if self.config.get('debug', None):
+        if self.config.get('DEBUG', False):
             logger.setLevel(logging.DEBUG)
+            shout_logging(True)
 
         self.ui = None
         self.ctx = CTX(self)
