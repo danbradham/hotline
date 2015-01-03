@@ -15,8 +15,12 @@ from .messages import (ToggleMultiline, ToggleAutocomplete, TogglePin,
                        Store_Evaluate, WriteOutput)
 from .shout import shout
 import logging
+
+
 logger = logging.getLogger("hotline.hotline")
+logger.setLevel(logging.CRITICAL)
 shout_logger = logging.getLogger("Shout!")
+shout_logger.setLevel(logging.CRITICAL)
 
 
 class HotLine(object):
@@ -30,9 +34,6 @@ class HotLine(object):
         if self.config.get('DEBUG', False):
             logger.setLevel(logging.DEBUG)
             shout_logger.setLevel(logging.DEBUG)
-        else:
-            logger.setLevel(logging.CRITICAL)
-            shout_logger.setLevel(logging.CRITICAL)
 
         self.ui = None
         self.ctx = CTX(self)

@@ -1,7 +1,34 @@
 '''
-=====
 Shout
 =====
+
+**Loud Python messaging.**
+
+Shout is a single module providing simple messaging vocabulary for small applications. Shout is NOT a distributed messaging framework.
+
+::
+
+    from shout import Message, hears, shout
+
+    class WhoAreYou(Message):
+        pass
+
+    @hears(WhoAreYou)
+    def lucky_day():
+        return "We are..."
+
+    @hears(WhoAreYou)
+    def dusty_bottoms():
+        return "The threeee..."
+
+    @hears(WhoAreYou)
+    def ned_nederlander():
+        return "Amigos!!"
+
+    msg = shout(WhoAreYou)
+    print("".join(msg.results))
+
+    # We are...The threeee...Amigos!!
 '''
 
 from __future__ import unicode_literals
@@ -9,17 +36,17 @@ from __future__ import unicode_literals
 
 __author__ = "Dan Bradham"
 __email__ = "danieldbradham@gmail.com"
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 __license__ = "MIT"
 __description__ = "Loud python messaging!"
 __url__ = "http://github.com/danbradham/shout"
-__all__ = ["Message", "has_ears", "hears", "shout", "shout_logging"]
+__all__ = ["Message", "has_ears", "hears", "shout"]
 
 
 import inspect
 import sys
-from collections import Sequence, defaultdict
-from itertools import chain
+import collections
+import itertools
 import logging
 
 
@@ -28,9 +55,10 @@ DFMT = '%Y-%m-%d %H:%M:%S'
 FMT = logging.Formatter(LFMT, DFMT)
 shandler = logging.StreamHandler()
 shandler.setFormatter(FMT)
-shandler.setLevel(logging.CRITICAL)
 logger = logging.getLogger('Shout!')
 logger.addHandler(shandler)
+logger.setLevel(logging.CRITICAL)
+
 
 ROOM_DEFL = "void"
 
@@ -42,7 +70,7 @@ class MetaMsg(type):
     def __new__(kls, name, bases, members):
 
         cls = super(MetaMsg, kls).__new__(kls, name, bases, members)
-        cls.listeners = defaultdict(set)
+        cls.listeners = collections.defaultdict(set)
         logger.debug('New Message type: %s', name)
         return cls
 
@@ -86,7 +114,7 @@ class Message(MetaMetaMsg):
         logger.debug("Shouting {0}!".format(self.__class__.__name__))
 
         rooms = (self.listeners[r] for r in self.rooms)
-        listeners = chain.from_iterable(rooms)
+        listeners = itertools.chain.from_iterable(rooms)
 
         for listener in listeners:
             try:
@@ -98,7 +126,7 @@ class Message(MetaMetaMsg):
                 return self
         if not self.response:
             self.exc = UserWarning("No listeners in: {0}".format(self.rooms))
-            logger.debug(self.exc)
+            logger.warning(self.exc)
             return self
 
         self.success = True
@@ -152,7 +180,7 @@ def has_ears(cls):
 
 def typecheck_args(args):
     '''Ensures all args are of type Message.'''
-    if isinstance(args, Sequence):
+    if isinstance(args, collections.Sequence):
         for item in args:
             if not item in Message.__subclasses__():
                 raise TypeError(
@@ -167,10 +195,10 @@ def typecheck_args(args):
 
 def hears(*args, **kwargs):
     '''Decorates functions and methods, adding them as listeners to the
-    specified :class:`Message`s.
+    specified :class:`Message` s.
 
-    :param args: A tuple of :class:`Message` objects to hear.
-    :param inside: A tuple of rooms to hear.'''
+    :param args: :class:`Message` s this function will hear.
+    :param inside: Tuple of rooms this function will hear.'''
     def wrapper(fn):
 
         typecheck_args(args) # Make sure all our args are Message Subclasses
@@ -202,15 +230,3 @@ def shout(msg_type, *args, **kwargs):
     :param kwargs: The kwargs to pass to the :class:`Message`.
     :param inside: The rooms to shout inside.'''
     return msg_type(*args, **kwargs).shout()
-
-
-def shout_logging(debug, stream=True, filename=None):
-    if debug:
-        logger.setLevel(logging.DEBUG)
-    if filename:
-        fhandler = logging.FileHandler(filename)
-        fhandler.setFormatter(FMT)
-        fhandler.setLevel(logging.DEBUG)
-        logger.addHandler(fhandler)
-    if not stream:
-        logger.removeHandler(shandler)
