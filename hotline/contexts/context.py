@@ -1,7 +1,8 @@
-from collections import deque
-from types import MethodType
+import os
+import collections
+import types
 from ..ui.highlighter import PatternFactory
-from ..config import Config, config_path
+from ..config import LOADERS, SUPPORTED_TYPES
 
 
 def add_mode(name=None, completer_fn=None, completer_list=None, syntax=None):
@@ -49,13 +50,11 @@ class Mode(object):
         self.multiline_patterns = []
         self.syntax = syntax
 
-    def set_syntax(self, syntax):
+    def set_syntax(self, pattern_factory, syntax_data):
         '''Generates modes patterns and multline patterns from a syntax
         json file
         '''
 
-        syntax_data = Config(config_path('{}.json'.format(syntax)))
-        pattern_factory = PatternFactory(self.app.config['COLORS'])
         if syntax_data:
             syntax_name = syntax_data['name']
             for pattern_name, pattern in syntax_data['patterns'].iteritems():
@@ -68,11 +67,18 @@ class Mode(object):
                         pattern_factory.create(
                             syntax_name, pattern_name, pattern))
 
-    def setup(self):
+    def setup(self, app):
         '''Called by HotLine instance when modes are cycled.'''
 
         if self.syntax and not self.patterns and not self.multiline_patterns:
-            self.set_syntax(self.syntax)
+            for typ in SUPPORTED_TYPES:
+                syntax_filename = '{}.{}'.format(self.syntax, typ)
+                syntax_path = app.config.relative_path(syntax_filename)
+                if os.path.exists(syntax_path):
+                    syntax_data = LOADERS[typ](syntax_path)
+
+            pattern_factory = PatternFactory(app.config['COLORS'])
+            self.set_syntax(pattern_factory, syntax_data)
 
         if self.completer_fn:
             self.completer_list = self.completer_fn()
@@ -92,7 +98,7 @@ class MetaContext(type):
             is_handler = getattr(v, "is_handler", False)
             if is_handler:
                 m = Mode(
-                    handler=MethodType(v, self),
+                    handler=types.MethodType(v, self),
                     name=v.name.upper(),
                     completer_fn=v.completer_fn,
                     completer_list=v.completer_list,
@@ -101,7 +107,7 @@ class MetaContext(type):
 
                 modes.append(m)
 
-        self._modes = deque(modes)
+        self._modes = collections.deque(modes)
 
         return self
 
@@ -113,8 +119,6 @@ class Context(object):
 
     def __init__(self, app):
         self.app = app
-        for mode in self._modes:
-            mode.app = app
 
     @property
     def modes(self):
@@ -148,8 +152,8 @@ class Context(object):
 
     def prev_mode(self):
         self._modes.rotate(1)
-        self.mode.setup()
+        self.mode.setup(self.app)
 
     def next_mode(self):
         self._modes.rotate(-1)
-        self.mode.setup()
+        self.mode.setup(self.app)

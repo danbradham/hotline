@@ -5,8 +5,9 @@ from .messages import (Store_Delete, Store_Evaluate, Store_Load,
 import sys
 import traceback
 
+
 class Store(ConfigBase):
-    '''No pre save or post load. Just reads and writes config files.'''
+    '''No encode or decode. Just reads and writes config files.'''
 
     def __init__(self, app, *args, **kwargs):
         self.app = app
@@ -18,12 +19,12 @@ class Store(ConfigBase):
             if data["autoload"]:
                 self.run(data)
 
-    def pre_save(self):
-        shout(Store_Save, self.cfg_file)
+    def encode(self):
+        shout(Store_Save, self.path)
         return self
 
-    def post_load(self):
-        shout(Store_Load, self.cfg_file)
+    def decode(self):
+        shout(Store_Load, self.path)
 
     def delete(self, name):
         self.pop(name, None)
@@ -32,7 +33,7 @@ class Store(ConfigBase):
 
     def refresh(self):
         shout(Store_Refresh)
-        self.from_file(self.cfg_file)
+        self.from_file(self.path)
 
     def run(self, data):
 

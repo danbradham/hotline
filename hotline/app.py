@@ -1,7 +1,9 @@
 from __future__ import division
 import sys
+import os
 import traceback
-from .config import config_path
+import shutil
+from .utils import rel_path
 from .config import Config
 from .store import Store
 from .contexts import CTX
@@ -17,7 +19,7 @@ from .shout import shout
 import logging
 
 
-logger = logging.getLogger("hotline.hotline")
+logger = logging.getLogger("Hotline")
 logger.setLevel(logging.CRITICAL)
 shout_logger = logging.getLogger("Shout!")
 shout_logger.setLevel(logging.CRITICAL)
@@ -28,21 +30,36 @@ class HotLine(object):
     instance = None
 
     def __init__(self):
+        # Setup config file using environment variable HOTLINE_CFG
+        self.config = Config()
 
-        self.config = Config(config_path("config.json"))
+        cfg_root = os.environ.setdefault(
+            'HOTLINE_CFG',
+            os.path.expanduser('~/hotline'))
+        if not os.path.exists(cfg_root):
+            shutil.copytree(rel_path('conf'), cfg_root)
+
+        self.config.from_env('HOTLINE_CFG')
 
         if self.config.get('DEBUG', False):
             logger.setLevel(logging.DEBUG)
             shout_logger.setLevel(logging.DEBUG)
 
-        self.ui = None
+        # Setup store using path relative to config
+        self.store = Store(self)
+        self.store.from_file(self.config.relative_path('store.json'))
+
+        self.history = History()
         self.ctx = CTX(self)
+        self.ui = None
         self._multiline = False
         self._autocomplete = False
         self._pinned = False
-        self.history = History()
-        self.store = Store(self, config_path("store.json"))
         shout(Started)
+
+    @property
+    def logger(self):
+        return logger
 
     @property
     def multiline(self):

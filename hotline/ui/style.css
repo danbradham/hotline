@@ -12,113 +12,113 @@ QPushButton#mode:pressed {
 
 QPushButton#multiline {
     border: 0;
-    image: url(%(rel)s/icons/multiline.png);
+    image: url(":icons/multiline.png");
 }
 
 QPushButton#multiline:checked {
     border: 0;
-    image: url(%(rel)s/icons/multiline_pressed.png);
+    image: url(":icons/multiline_pressed.png");
 }
 
 QPushButton#save {
     border: 0;
-    image: url(%(rel)s/icons/save.png);
+    image: url(":icons/save.png");
 }
 
 QPushButton#save:pressed {
     border: 0;
-    image: url(%(rel)s/icons/save_pressed.png);
+    image: url(":icons/save_pressed.png");
 }
 
 QPushButton#run {
     border: 0;
-    image: url(%(rel)s/icons/run.png);
+    image: url(":icons/run.png");
 }
 
 QPushButton#run:pressed {
     border: 0;
-    image: url(%(rel)s/icons/run_pressed.png);
+    image: url(":icons/run_pressed.png");
 }
 
 QPushButton#load {
     border: 0;
-    image: url(%(rel)s/icons/load.png);
+    image: url(":icons/load.png");
 }
 
 QPushButton#load:pressed {
     border: 0;
-    image: url(%(rel)s/icons/load_pressed.png);
+    image: url(":icons/load_pressed.png");
 }
 
 QPushButton#auto {
     border: 0;
-    image: url(%(rel)s/icons/auto.png);
+    image: url(":icons/auto.png");
 }
 
 QPushButton#auto:checked {
     border: 0;
-    image: url(%(rel)s/icons/auto_pressed.png);
+    image: url(":icons/auto_pressed.png");
 }
 
 QPushButton#delete {
     border: 0;
-    image: url(%(rel)s/icons/delete.png);
+    image: url(":icons/delete.png");
 }
 
 QPushButton#delete:pressed,
 QPushButton#delete:hover{
     border: 0;
-    image: url(%(rel)s/icons/delete_pressed.png);
+    image: url(":icons/delete_pressed.png");
 }
 
 QPushButton#pin {
     border: 0;
-    image: url(%(rel)s/icons/pin.png);
+    image: url(":icons/pin.png");
 }
 
 QPushButton#pin:checked {
     border: 0;
-    image: url(%(rel)s/icons/pin_pressed.png);
+    image: url(":icons/pin_pressed.png");
 }
 
 QPushButton#clear {
     border: 0;
-    image: url(%(rel)s/icons/clear.png);
+    image: url(":icons/clear.png");
 }
 
 QPushButton#clear:pressed {
     border: 0;
-    image: url(%(rel)s/icons/clear_pressed.png);
+    image: url(":icons/clear_pressed.png");
 }
 
 QPushButton#help {
     border: 0;
-    image: url(%(rel)s/icons/help.png);
+    image: url(":icons/help.png");
 }
 
 QPushButton#help:pressed {
     border: 0;
-    image: url(%(rel)s/icons/help_pressed.png);
+    image: url(":icons/help_pressed.png");
 }
 
 QPushButton#output {
     border: 0;
-    image: url(%(rel)s/icons/output.png);
+    image: url(":icons/output.png");
 }
 
 QPushButton#output:pressed {
     border: 0;
-    image: url(%(rel)s/icons/output_pressed.png);
+    image: url(":icons/output_pressed.png");
 }
 
 QPushButton#refresh {
     border: 0;
-    image: url(%(rel)s/icons/refresh.png);
+    image: url(":icons/refresh.png");
 }
 
 QPushButton#refresh:pressed {
     border: 0;
-    image: url(%(rel)s/icons/refresh_pressed.png);
+    image: url(":icons/refresh_pressed.png");
 }
 
 QLineEdit,

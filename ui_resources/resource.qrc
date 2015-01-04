@@ -1,0 +1,26 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>icons/auto.png</file>
+    <file>icons/auto_pressed.png</file>
+    <file>icons/clear.png</file>
+    <file>icons/clear_pressed.png</file>
+    <file>icons/delete.png</file>
+    <file>icons/delete_pressed.png</file>
+    <file>icons/help.png</file>
+    <file>icons/help_pressed.png</file>
+    <file>icons/load.png</file>
+    <file>icons/load_pressed.png</file>
+    <file>icons/multiline.png</file>
+    <file>icons/multiline_pressed.png</file>
+    <file>icons/output.png</file>
+    <file>icons/output_pressed.png</file>
+    <file>icons/pin.png</file>
+    <file>icons/pin_pressed.png</file>
+    <file>icons/refresh.png</file>
+    <file>icons/refresh_pressed.png</file>
+    <file>icons/run.png</file>
+    <file>icons/run_pressed.png</file>
+    <file>icons/save.png</file>
+    <file>icons/save_pressed.png</file>
+</qresource>
+</RCC>

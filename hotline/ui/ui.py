@@ -6,23 +6,21 @@ from ..messages import (ToggleMultiline, ToggleAutocomplete, TogglePin,
                        ClearOutput, AdjustSize, Store_Run, Store_Save,
                        Store_Load, Store_Delete, Store_Refresh, WriteOutput,
                        Store_Evaluate)
-from ..utils import rel_path
 from PySide import QtCore, QtGui
 from functools import partial
 import os
 import logging
+import resource
 
-logger = logging.getLogger("hotline.views")
-
-
+logger = logging.getLogger("hotline.ui")
 STYLE = None
 
 
 def get_style():
     global STYLE
     if not STYLE:
-        with open(rel_path('ui/style.css')) as f:
-            STYLE = f.read() % ({"rel": rel_path('ui')})
+        with open(os.path.join(os.path.dirname(__file__), 'style.css')) as f:
+            STYLE = f.read()
     return STYLE
 
 
@@ -356,6 +354,7 @@ class Tools(QtGui.QWidget):
         grid = QtGui.QGridLayout()
         grid.setColumnStretch(0, 1)
         grid.setContentsMargins(0, 0, 0, 0)
+        self.setObjectName('Tools')
         self.setLayout(grid)
         self.addWidget = grid.addWidget
 
@@ -583,12 +582,15 @@ class UI(QtGui.QWidget):
         self.app = app
 
         grid = QtGui.QGridLayout()
-        grid.setContentsMargins(0, 0, 2, 2)
-        grid.setSpacing(0)
+        grid.setContentsMargins(2, 2, 2, 2)
+        grid.setVerticalSpacing(2)
+        grid.setHorizontalSpacing(0)
         grid.setColumnStretch(1, 1)
+        grid.setRowStretch(1, 1)
         self.setLayout(grid)
 
         self.tools = Tools(self)
+        self.tools.setFixedHeight(24)
         self.pin_button = Button(
             connect=self.app.toggle_pin,
             name="pin",
@@ -659,22 +661,26 @@ class UI(QtGui.QWidget):
 
     @hears(AdjustSize)
     def adjust_size(self):
+        '''Adjusts size based on multiline attribute and toolbar visibility'''
+
         doc_height = self.editor.document().size().height()
         doc_width = self.editor.document().idealWidth()
+
         if doc_width > 346 and self.app.multiline:
             self.editor.setFixedWidth(doc_width)
             self.setFixedWidth(doc_width + 54)
         else:
             self.editor.setFixedWidth(346)
             self.setFixedWidth(400)
-        if self.app.multiline and doc_height > 30:
+
+        if doc_height > 28 and self.app.multiline:
             self.editor.setFixedHeight(doc_height)
-            height = (doc_height + 28 if self.tools.isVisible()
-                      else doc_height + 4)
-            self.setFixedHeight(height)
+            height = (doc_height + 30 if self.tools.isVisible()
+                      else doc_height + 2)
+            self.setFixedHeight(min(height, 600))
         else:
             self.editor.setFixedHeight(24)
-            self.setFixedHeight(30 if not self.tools.isVisible() else 52)
+            self.setFixedHeight(54 if self.tools.isVisible() else 28)
 
 
     @hears(ShowDock)
@@ -725,11 +731,15 @@ class UI(QtGui.QWidget):
 
     @hears(ToggleToolbar)
     def key_toggletoolbar(self):
+        pos = self.pos()
         if self.tools.isVisible():
             self.tools.hide()
+            self.adjust_size()
+            self.move(pos.x(), pos.y() + 26)
         else:
             self.tools.show()
-        self.adjustSize()
+            self.adjust_size()
+            self.move(pos.x(), pos.y() - 26)
 
     def format_help(self):
         keys = self.app.config['KEYS']
