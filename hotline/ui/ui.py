@@ -418,9 +418,9 @@ class Editor(QtGui.QTextEdit):
 
         self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         self.setFixedHeight(24)
-        self.setFixedWidth(346)
+        self.setFixedWidth(354)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.setWordWrapMode(QtGui.QTextOption.NoWrap)
 
         font = QtGui.QFont()
@@ -666,15 +666,15 @@ class UI(QtGui.QWidget):
         doc_height = self.editor.document().size().height()
         doc_width = self.editor.document().idealWidth()
 
-        if doc_width > 346 and self.app.multiline:
+        if doc_width > 354 and self.app.multiline:
             self.editor.setFixedWidth(doc_width)
-            self.setFixedWidth(doc_width + 54)
+            self.setFixedWidth(doc_width + 46)
         else:
-            self.editor.setFixedWidth(346)
+            self.editor.setFixedWidth(354)
             self.setFixedWidth(400)
 
         if doc_height > 28 and self.app.multiline:
-            self.editor.setFixedHeight(doc_height)
+            self.editor.setFixedHeight(min(doc_height, 570))
             height = (doc_height + 30 if self.tools.isVisible()
                       else doc_height + 2)
             self.setFixedHeight(min(height, 600))
