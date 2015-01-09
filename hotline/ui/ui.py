@@ -92,6 +92,7 @@ class RightLabel(QtGui.QLabel):
         super(RightLabel, self).__init__(*args, **kwargs)
         self.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.setFixedHeight(12)
+        self.setWordWrap(True)
 
 
 @has_ears
