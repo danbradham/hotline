@@ -6,6 +6,7 @@ __license__ = "MIT"
 __description__ = "A pop-up input field with customizable settings."
 
 
+
 from .app import HotLine, show
 from .store import Store
 from .config import ConfigBase, Config
