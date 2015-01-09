@@ -4,7 +4,6 @@ Basic Context
 '''
 
 from .context import Context, add_mode
-from PySide import QtGui
 import sys
 
 
@@ -15,6 +14,8 @@ class BasicContext(Context):
         exec(input_str)
 
     def show(self, hotline_cls):
+        from PySide import QtGui
+
         app = QtGui.QApplication(sys.argv)
         if not self.hotline:
             self.hotline = hotline_cls(self)

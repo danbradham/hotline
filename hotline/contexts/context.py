@@ -1,7 +1,6 @@
 import os
 import collections
 import types
-from ..ui.highlighter import PatternFactory
 from ..config import LOADERS, SUPPORTED_TYPES
 
 
@@ -69,6 +68,7 @@ class Mode(object):
 
     def setup(self, app):
         '''Called by HotLine instance when modes are cycled.'''
+        from ..ui.highlighter import PatternFactory
 
         if self.syntax and not self.patterns and not self.multiline_patterns:
             for typ in SUPPORTED_TYPES:
