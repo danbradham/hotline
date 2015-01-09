@@ -125,6 +125,7 @@ class StoreWidget(QtGui.QWidget):
         self.item_name = QtGui.QLabel()
         self.item_name.setWordWrap(True)
         desc_label = RightLabel("Description")
+        desc_label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTop)
         self.item_desc = QtGui.QLabel()
         self.item_desc.setWordWrap(True)
         auto_label = RightLabel("Autoload")
