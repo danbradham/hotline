@@ -7,7 +7,6 @@ from .utils import rel_path
 from .config import Config
 from .store import Store
 from .contexts import CTX
-from .ui import UI
 from .history import History
 from .messages import (ToggleMultiline, ToggleAutocomplete, TogglePin,
                        ToggleToolbar, Execute, NextHistory, NextMode,
@@ -137,6 +136,7 @@ class HotLine(object):
         '''Shows a PySide UI to control the app. Parenting of the UI is handled
         by different subclasses of :class:`UI`. You can set the context using
         the "CONTEXT" key of your configuration.'''
+        from .ui import UI
 
         if not self.ui:
             self.ui = UI.create(self)

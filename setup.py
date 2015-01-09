@@ -10,6 +10,9 @@ import hotline
 if sys.argv[-1] == 'cheeseit!':
     os.system('python setup.py sdist upload')
     sys.exit()
+elif sys.argv[-1] == 'cheeseit':
+    os.system('python setup.py sdist upload -r pypitest')
+    sys.exit()
 
 
 packages = [
@@ -19,7 +22,7 @@ packages = [
 ]
 
 package_data = {
-    '': ['LICENSE', 'README'],
+    '': ['LICENSE', 'README.rst'],
     'hotline': ['conf/*.*']
 }
 
@@ -36,7 +39,7 @@ setup(
     author=hotline.__author__,
     author_email=hotline.__email__,
     url=hotline.__url__,
-    license='MIT',
+    license=hotline.__license__,
     packages=packages,
     package_data=package_data,
     package_dir={'hotline': 'hotline'},
@@ -51,5 +54,8 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
         "Topic :: Software Development :: Libraries :: Python Modules",
+    ),
+    install_requires=(
+        "PySide",
     ),
 )
