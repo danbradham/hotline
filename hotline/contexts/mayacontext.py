@@ -8,18 +8,116 @@ import re
 import inspect
 from functools import partial
 import maya.cmds as cmds
-from maya.utils import executeInMainThreadWithResult as execInMain
 import maya.mel as mel
+import maya.OpenMaya as OpenMaya
+from maya.utils import executeInMainThreadWithResult as execInMain
+import sys
 import __main__
-
 from .context import Context, add_mode
+from ..messages import WriteOutput
+from ..shout import shout
 
 
 setattr(__main__, "execInMain", execInMain)
 CMDS_CALLABLES = [name for name, data in inspect.getmembers(cmds, callable)]
 
 
+class MayaOutputPipe(object):
+
+    callback_id = None
+    stream = sys.__stdout__
+    redirect = False
+    filters = (
+        OpenMaya.MCommandMessage.kDisplay,
+        OpenMaya.MCommandMessage.kError,
+        OpenMaya.MCommandMessage.kResult,
+        OpenMaya.MCommandMessage.kStackTrace,
+        OpenMaya.MCommandMessage.kWarning,
+        OpenMaya.MCommandMessage.kInfo,
+    )
+    filter_prefix = {
+        OpenMaya.MCommandMessage.kDisplay: '',
+        OpenMaya.MCommandMessage.kError: '[Error] ',
+        OpenMaya.MCommandMessage.kResult: '',
+        OpenMaya.MCommandMessage.kStackTrace: '',
+        OpenMaya.MCommandMessage.kWarning: '[Warning] ',
+        OpenMaya.MCommandMessage.kInfo: '[Info] ',
+        OpenMaya.MCommandMessage.kHistory: '[History] '
+    }
+
+    @classmethod
+    def set_stream(cls, stream):
+        '''Defaults to sys.__stdout__. Stream must have a write and flush
+        methods.
+        '''
+
+        cls.stream = stream
+
+    @classmethod
+    def set_filters(cls, *msg_types):
+        '''MCommandMessage types to filter.
+
+        OpenMaya.MCommandMessage.kDisplay
+        OpenMaya.MCommandMessage.kError
+        OpenMaya.MCommandMessage.kResult
+        OpenMaya.MCommandMessage.kStackTrace
+        OpenMaya.MCommandMessage.kWarning
+        OpenMaya.MCommandMessage.kHistory
+        OpenMaya.MCommandMessage.kInfo
+        '''
+
+        cls.filters = msg_types
+
+    @classmethod
+    def set_redirect(cls, value):
+        '''True redirects all output away from the script editor.'''
+
+        cls.redirect = value
+
+    @classmethod
+    def activate(cls):
+        '''Setup the MCommandMessage callback.'''
+
+        if not cls.callback_id:
+            cid = OpenMaya.MCommandMessage.addCommandOutputFilterCallback(
+                cls.callback)
+            cls.callback_id = cid
+
+    @classmethod
+    def deactivate(cls):
+        '''Remove the MCommandMessage callback'''
+
+        if cls.callback_id:
+            OpenMaya.MMessage.removeCallback(cls.callback_id)
+        cls.callback_id = None
+
+    @staticmethod
+    def callback(msg, msg_type, filter_output, user_data):
+        '''Write command output to MayaOutputPipe stream object.'''
+
+        OpenMaya.MScriptUtil.setBool(filter_output, MayaOutputPipe.redirect)
+
+        if msg_type in MayaOutputPipe.filters:
+            prefix = MayaOutputPipe.filter_prefix[msg_type]
+            MayaOutputPipe.stream.write(prefix + str(msg) + '\n')
+            MayaOutputPipe.stream.flush()
+
+
+class MayaOutStream(object):
+
+    def write(self, message):
+        shout(WriteOutput, message)
+
+    def flush(self):
+        pass
+
+
 class MayaContext(Context):
+
+    def __init__(self, app):
+        super(MayaContext, self).__init__(app)
+        MayaOutputPipe.set_stream(MayaOutStream())
+        MayaOutputPipe.activate()
 
     @add_mode("PY", completer_list=CMDS_CALLABLES, syntax="Python")
     def py_handler(self, input_str):

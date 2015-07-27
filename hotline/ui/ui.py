@@ -1,5 +1,6 @@
 from .highlighter import Highlighter
 from ..shout import has_ears, shout, hears
+from .. import __version__
 from ..messages import (ToggleMultiline, ToggleAutocomplete, TogglePin,
                        ToggleToolbar, Execute, NextHistory, NextMode,
                        PrevHistory, PrevMode, ShowDock, ShowHelp,
@@ -331,7 +332,7 @@ class Dock(QtGui.QDockWidget):
 
         self.widget = QtGui.QTabWidget()
         self.setWidget(self.widget)
-        self.setWindowTitle("HotLine")
+        self.setWindowTitle("HotLine " + __version__)
 
         self.setFeatures(
             QtGui.QDockWidget.DockWidgetClosable|
@@ -446,12 +447,15 @@ class Editor(QtGui.QTextEdit):
             "Next Mode": self.app.next_mode,
             "Prev Mode": self.app.prev_mode,
             "Execute": self.key_execute,
-            "Previous in History": self.app.prev_hist,
+            "Previous in History": self.key_prev_hist,
             "Next in History": self.app.next_hist,
             "Pin": self.app.toggle_pin,
             "Toggle Toolbar": partial(shout, ToggleToolbar),
             "Toggle Autocomplete": self.app.toggle_autocomplete,
             "Show Output": partial(shout, ShowDock)}
+
+    def key_prev_hist(self):
+        self.app.prev_hist(self.toPlainText())
 
     def key_execute(self):
         input_str = self.toPlainText()
@@ -732,7 +736,8 @@ class UI(QtGui.QWidget):
     def history_changed(self, mode, text):
         if mode:
             self.app.set_mode(mode.name)
-        self.editor.setText(text)
+        self.editor.clear()
+        self.editor.insertPlainText(text)
 
     @hears(ToggleToolbar)
     def key_toggletoolbar(self):

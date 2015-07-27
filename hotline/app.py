@@ -128,8 +128,8 @@ class HotLine(object):
         mode, text = self.history.next()
         shout(NextHistory, mode, text)
 
-    def prev_hist(self):
-        mode, text = self.history.prev()
+    def prev_hist(self, input_str=None):
+        mode, text = self.history.prev(self.ctx.mode, input_str)
         shout(PrevHistory, mode, text)
 
     def show(self):
