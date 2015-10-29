@@ -7,7 +7,7 @@ import hotline
 if sys.argv[-1] == 'cheeseit!':
     os.system('python setup.py sdist upload')
     sys.exit()
-elif sys.argv[-1] == 'cheeseit':
+elif sys.argv[-1] == 'testit!':
     os.system('python setup.py sdist upload -r pypitest')
     sys.exit()
 
@@ -39,6 +39,5 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         'Programming Language :: Python :: 2',
-        "Topic :: Software Development :: Libraries :: Python Modules",
     ),
 )
