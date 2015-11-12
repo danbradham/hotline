@@ -17,7 +17,7 @@ with open('README.rst') as f:
 
 
 setup(
-    name='hotline',
+    name=hotline.__title__,
     version=hotline.__version__,
     description=hotline.__description__,
     long_description=readme,

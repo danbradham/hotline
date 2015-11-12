@@ -1,0 +1,4 @@
+include README.rst
+include LICENSE
+recursive-include hotline *.json *.css
+include requirements.txt
