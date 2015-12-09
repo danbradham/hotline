@@ -56,8 +56,6 @@ class OutputWidget(QtGui.QWidget):
         grid.setColumnStretch(0, 1)
         self.setLayout(grid)
 
-        self.buffer = []
-
         self.text_area = QtGui.QTextEdit(self)
         self.help_button = Button(
             connect=partial(shout, ShowHelp),
@@ -76,14 +74,10 @@ class OutputWidget(QtGui.QWidget):
 
     @hears(WriteOutput)
     def write(self, text):
-        self.text_area.clear()
-        self.buffer.append(text)
-        for line in self.buffer:
-            self.text_area.append(line)
+        self.text_area.append(text)
 
     @hears(ClearOutput)
     def clear(self):
-        self.buffer = []
         self.text_area.clear()
 
 
