@@ -29,7 +29,7 @@ setup(
         '': ['LICENSE', 'README.rst'],
         'hotline': ['conf/*.*', 'ui/style.css'],
     },
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests']),
     include_package_data=True,
     classifiers=(
         "Development Status :: 3 - Alpha",
