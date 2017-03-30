@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
-__all__ = ['Executor', 'execute_in_main_thread', 'new_process', 'redirect_stream']
+__all__ = [
+    'Executor', 'execute_in_main_thread', 'new_process', 'redirect_stream',
+    'wait_for', 'qt_sleep', 'sleep_until'
+]
+
 import sys
 from contextlib import contextmanager
 from Queue import Queue
 from functools import partial
-from Qt import QtCore, QtGui
+from Qt import QtCore, QtGui, QtWidgets
 import subprocess
 from timeit import default_timer
 
@@ -104,3 +108,63 @@ def execute_in_main_thread(fn, *args, **kwargs):
     '''
 
     Executor.execute(fn, *args, **kwargs)
+
+
+@contextmanager
+def event_loop(conditions=None, timeout=None):
+
+    loop = QtCore.QEventLoop()
+
+    if timeout:
+        QtCore.QTimer.singleShot(timeout, loop.quit)
+
+    if conditions:
+        ctimer = QtCore.QTimer()
+        def check_conditions():
+            for condition in conditions:
+                if condition():
+                    ctimer.stop()
+                    loop.quit()
+        ctimer.timeout.connect(check_conditions)
+        ctimer.start()
+
+    try:
+        yield loop
+    finally:
+        print 'waiting for event loop'
+        loop.exec_()
+
+
+def qt_sleep(secs=0):
+    '''Non-blocking sleep for Qt'''
+
+    start = default_timer()
+    app = QtWidgets.QApplication.instance()
+
+    while True:
+        app.processEvents()
+        if default_timer() - start > secs:
+            return
+
+
+def sleep_until(wake_condition, timeout=None, sleep=qt_sleep):
+    '''
+    Process QApplication events until the wake_condition returns True or
+    the timeout is reached...
+
+    :param wake_condition: callable returning True or False
+    :param timeout: Number of seconds to wait before returning
+    '''
+
+    start = default_timer()
+
+    while True:
+
+        if timeout:
+            if default_timer() - start > timeout:
+                return
+
+        if wake_condition():
+            return
+
+        sleep(0.1)

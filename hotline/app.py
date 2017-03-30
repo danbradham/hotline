@@ -77,9 +77,18 @@ class Hotline(object):
         self.ui.mode_button.clicked.connect(self.on_next_mode)
         self.ui.hk_tab.activated.connect(self.on_next_mode)
         self.ui.hk_shift_tab.activated.connect(self.on_prev_mode)
-        self.ui.accept.connect(self.on_accept)
-        self.ui.reject.connect(self.on_reject)
+        self.ui.hk_alt_f4.activated.connect(self.exit)
+        self.ui.accepted.connect(self.on_accept)
+        self.ui.rejected.connect(self.on_reject)
         self.refresh()
+
+    def exit(self):
+        if self._standalone:
+            self._event_loop.setQuitOnLastWindowClosed(True)
+            self._event_loop.quit()
+            return
+
+        self.ui._hide()
 
     def _show_args(self):
         try:
@@ -103,6 +112,7 @@ class Hotline(object):
         self._standalone = QtWidgets.QApplication.instance() is None
         if self._standalone:
             self._event_loop = QtWidgets.QApplication([])
+            self._event_loop.setQuitOnLastWindowClosed(False)
         else:
             self._event_loop = QtWidgets.QApplication.instance()
 
@@ -119,7 +129,6 @@ class Hotline(object):
         self.ui.input_field.clear()
         self.ui.mode_button.setText(mode.short_name)
         self.ui.commandlist.items = [c.name for c in mode.commands]
-        self.ui.commandlist.filter(self.ui.input_field.text())
 
     def on_prev_mode(self):
         self.prev_mode()
@@ -130,13 +139,11 @@ class Hotline(object):
         self.refresh()
 
     def on_accept(self):
+        result = self.execute(self.ui.text())
+        self.ui.input_field.clear()
 
-        with self.ui.pin():
-            result = self.execute(self.ui.get_result())
-            self.ui.input_field.clear()
-
-            if result:
-                self.ui.console.show()
+        if result:
+            self.ui.console.show()
 
         if result is flags.DontHide:
             return
@@ -152,18 +159,16 @@ class Hotline(object):
 
         self.ui._hide()
         pos = self.ui.pos()
-        dialog = Dialog(self.context.parent)
+        dialog = Dialog()
         dialog.setStyleSheet(self.context.style)
         if prompt:
             dialog.input_field.placeholder = prompt
             dialog.input_field.clear()
         if options:
             dialog.commandlist.items = options
-        dialog.focus_out.connect(dialog.on_reject)
-        dialog.show(self.context.animation, (pos.x(), pos.y()))
-        result = dialog.await_result()
-        dialog._hide()
-        return result
+        accepted = dialog.exec_(self.context.animation, (pos.x(), pos.y()))
+        if accepted:
+            return dialog.text()
 
     def execute(self, command):
         '''Execute a command using the current mode'''

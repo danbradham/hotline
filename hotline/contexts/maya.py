@@ -353,6 +353,18 @@ class MayaContext(Context):
             'graphEditor\dGraphEdImpl',
         ]
 
+        panel = active_panel_widget()
+        if 'modelPanel' in panel.path:
+            widget = active_m3dview_widget()
+            pos = top_center(widget.widget)
+            return pos.x() - 480, pos.y()
+
+        for name in ok_names:
+            widgets = find_child(panel.widget, name)
+            if widgets:
+                pos = top_center(widgets[0].widget)
+                return pos.x() - 480, pos.y()
+
         try:
             widget = maya_widget_under_cursor()
         except TypeError as e:
@@ -365,18 +377,6 @@ class MayaContext(Context):
                 if match:
                     pos = top_center(widget.widget)
                     return pos.x() - 480, pos.y()
-
-        panel = active_panel_widget()
-        if 'modelPanel' in panel.path:
-            widget = active_m3dview_widget()
-            pos = top_center(widget.widget)
-            return pos.x() - 480, pos.y()
-
-        for name in ok_names:
-            widgets = find_child(panel.widget, name)
-            if widgets:
-                pos = top_center(widgets[0].widget)
-                return pos.x() - 480, pos.y()
 
     def initialize(self, app):
         self.parent = get_maya_window()

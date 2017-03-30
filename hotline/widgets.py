@@ -4,7 +4,7 @@ import sys
 import time
 from Qt import QtWidgets, QtCore, QtGui
 from contextlib import contextmanager
-from .utils import keys_to_string
+from .utils import keys_to_string, event_loop
 from .anim import *
 
 
@@ -36,6 +36,7 @@ class CommandList(QtWidgets.QListWidget):
             QtCore.Qt.FramelessWindowHint |
             QtCore.Qt.WindowStaysOnTopHint
         )
+        self.setAttribute(QtCore.Qt.WA_ShowWithoutActivating)
         self.setFocusPolicy(QtCore.Qt.NoFocus)
         self.setMinimumSize(1, 1)
         self.setSizePolicy(
@@ -144,19 +145,13 @@ class Console(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(Console, self).__init__(parent)
         self.setWindowTitle('Hotline Console')
+        self.setAttribute(QtCore.Qt.WA_ShowWithoutActivating)
         self.parent = parent
         self.output = QtWidgets.QTextEdit(self)
         self.output.setReadOnly(True)
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.output)
         self.setLayout(self.layout)
-
-    def closeEvent(self, event):
-        self.hide()
-        if event.spontaneous():
-            event.accept()
-        else:
-            event.ignore()
 
     def write(self, message):
         self.output.moveCursor(QtGui.QTextCursor.End)
@@ -173,12 +168,11 @@ class Console(QtWidgets.QDialog):
         height = 960
         self.setGeometry(QtCore.QRect(left, top, width, height))
         super(Console, self).show()
-        self.parent.activate()
 
 
 class InputField(QtWidgets.QLineEdit):
 
-    text_changed = QtCore.Signal(str)
+    focusOut = QtCore.Signal()
 
     def __init__(self, placeholder=None, parent=None):
         super(InputField, self).__init__(parent=parent)
@@ -190,7 +184,10 @@ class InputField(QtWidgets.QLineEdit):
             self.setCursorPosition(0)
         self.cursorPositionChanged.connect(self.onCursorPositionChanged)
         self.textEdited.connect(self.onTextEdited)
-        # self.textChanged.connect(self.onTextChanged)
+
+    def focusOutEvent(self, event):
+        event.ignore()
+        self.focusOut.emit()
 
     def refresh_style(self):
         self.style().unpolish(self)
@@ -238,9 +235,6 @@ class InputField(QtWidgets.QLineEdit):
 
         super(InputField, self).keyPressEvent(event)
 
-    # def onTextChanged(self, text):
-    #     self.text_changed.emit(self.text())
-
     def onTextEdited(self, text):
         if self.placeholder and self.placeholder in text:
             text = text.split(self.placeholder)[0]
@@ -249,21 +243,17 @@ class InputField(QtWidgets.QLineEdit):
             self.refresh_style()
 
 
-class Dialog(QtWidgets.QWidget):
-
-    accept = QtCore.Signal()
-    reject = QtCore.Signal()
-    focus_out = QtCore.Signal()
+class Dialog(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
         super(Dialog, self).__init__(parent)
         self.width = 960
         self.height = 96
         self.pinned = False
-        self.accepted = False
-        self.rejected = False
+        self._alt_f4_pressed = False
         self._animation = 'slide'
         self._position = 'center'
+        self._default_rect = QtCore.QRect(0, -1, 960, 1)
 
         self.setWindowTitle('Hotline')
         self.setWindowFlags(
@@ -277,7 +267,6 @@ class Dialog(QtWidgets.QWidget):
             QtWidgets.QSizePolicy.Ignored
         )
         self.setMinimumSize(1, 1)
-        self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
         self.input_field = InputField(parent=self)
         self.input_field.setFixedHeight(96)
@@ -288,14 +277,6 @@ class Dialog(QtWidgets.QWidget):
         self.commandlist = CommandList([], self.input_field, self)
         self.commandlist.itemClicked.connect(self.accept)
         self.input_field.textChanged.connect(self.commandlist.filter)
-        def focusOutEvent(event):
-            if self.pinned:
-                event.ignore()
-                return
-            self.rejected = True
-            self.focus_out.emit()
-            event.accept()
-        self.input_field.focusOutEvent = focusOutEvent
         self.input_field.setFocusPolicy(QtCore.Qt.StrongFocus)
 
         self.console = Console(self)
@@ -308,30 +289,19 @@ class Dialog(QtWidgets.QWidget):
         self.hk_dn.activated.connect(self.commandlist.select_next)
         self.hk_return = QtWidgets.QShortcut(self)
         self.hk_return.setKey('Return')
-        self.hk_return.activated.connect(self.on_accept)
+        self.hk_return.activated.connect(self.accept)
         self.hk_esc = QtWidgets.QShortcut(self)
         self.hk_esc.setKey('Esc')
-        self.hk_esc.activated.connect(self.on_reject)
+        self.hk_esc.activated.connect(self.reject)
         self.hk_ctrl_p = QtWidgets.QShortcut(self)
         self.hk_ctrl_p.setKey('Ctrl+P')
         self.hk_ctrl_p.activated.connect(self.toggle_pin)
-        self.focus_out.connect(self.hide)
-
+        self.hk_alt_f4 = QtWidgets.QShortcut(self)
         self.layout = QtWidgets.QHBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
         self.layout.addWidget(self.input_field)
         self.setLayout(self.layout)
-
-    def on_accept(self):
-        self.accepted = True
-        self.rejected = False
-        self.accept.emit()
-
-    def on_reject(self):
-        self.accepted = False
-        self.rejected = True
-        self.reject.emit()
 
     def toggle_pin(self):
         self.pinned = not self.pinned
@@ -371,29 +341,43 @@ class Dialog(QtWidgets.QWidget):
         if value not in ('center', 'top'):
             raise ValueError('position must be "center" or "top" not ' + str(value))
 
-    def get_result(self):
+    def text(self):
         item = self.commandlist.selectedItems()
         if item:
             return item[0].text()
         return self.input_field.text()
 
-    def await_result(self):
+    def _start_alt_f4_timer(self):
+        self._alt_f4_pressed = True
+        def _finished():
+            self._alt_f4_pressed = False
+        QtCore.QTimer.singleShot(500, _finished)
 
-        app = QtWidgets.QApplication.instance()
-        while True:
-            time.sleep(0.01)
-            app.processEvents()
-            if self.accepted or self.rejected:
-                break
-
-        if self.accepted:
-            return self.get_result()
-        if self.rejected:
+    def on_focusOut(self):
+        if self.result():
             return
+        self.reject()
 
-    def exec_(self):
-        self.show()
-        return super(Dialog, self).exec_()
+    def keyPressEvent(self, event):
+        if event.modifiers() & QtCore.Qt.AltModifier:
+            self._start_alt_f4_timer()
+        super(Dialog, self).keyPressEvent(event)
+
+    def closeEvent(self, event):
+        if self._alt_f4_pressed:
+            self._alt_f4_pressed = False
+            event.ignore()
+            self.hk_alt_f4.activated.emit()
+            return
+        event.accept()
+
+    def accept(self):
+        self.setResult(QtWidgets.QDialog.Accepted)
+        self.accepted.emit()
+
+    def reject(self):
+        self.setResult(QtWidgets.QDialog.Rejected)
+        self.rejected.emit()
 
     def hide(self):
         if self.pinned:
@@ -403,6 +387,10 @@ class Dialog(QtWidgets.QWidget):
     def _hide(self):
         self.commandlist.hide()
         super(Dialog, self).hide()
+        try:
+            self.input_field.focusOut.disconnect()
+        except RuntimeError:
+            pass # No connections
 
     def get_position(self):
         if self.position == 'top':
@@ -425,7 +413,6 @@ class Dialog(QtWidgets.QWidget):
                 end_value=end,
             ),
         )
-        group.stateChanged.connect(self.animation_handler)
 
         crect = self.commandlist._get_geometry()
         self.commandlist.setGeometry(crect)
@@ -449,43 +436,45 @@ class Dialog(QtWidgets.QWidget):
         self.setGeometry(pos[0], pos[1], self.width, self.height)
         self.commandlist.setGeometry(self.commandlist._get_geometry())
         group = parallel_group(self, fade_in(self), fade_in(self.commandlist))
-        group.stateChanged.connect(self.animation_handler)
         return group
 
-    def animation_handler(self, *state_change):
+    def animation_handler(self, new_state, old_state):
         state = QtCore.QAnimationGroup
         self.pinned = {
-            (state.Stopped, state.Running): False,  # Stopped
-            (state.Running, state.Stopped): True,  # Started
-            (state.Running, state.Paused): True,  # Unpaused
-            (state.Paused, state.Running): False,  # Paused
-        }[state_change]
+            state.Stopped: False,
+            state.Running: True,
+            state.Paused: False,  # Paused
+        }[new_state]
+
+    def exec_(self, anim_type=None, lefttop=None):
+        self.show(anim_type, lefttop)
+        with event_loop(timeout=60000) as loop:
+            self.accepted.connect(loop.quit)
+            self.rejected.connect(loop.quit)
+        self.hide()
+        return self.result()
 
     def activate(self):
         self.raise_()
         self.activateWindow()
         self.input_field.setFocus()
-
-    def closeEvent(self, event):
-        self.on_reject()
-        self._hide()
-        event.accept()
+        try:
+            self.input_field.focusOut.connect(self.on_focusOut)
+        except:
+            pass
 
     def _show(self):
-        self.accepted = False
-        self.rejected = False
-        with self.pin():
-            super(Dialog, self).show()
-            self.commandlist.show()
+        self.commandlist.show()
+        super(Dialog, self).show()
 
-    def show(self, anim_typ=None, lefttop=None):
-        self.setGeometry(QtCore.QRect(0, 0, 960, 1))
+    def show(self, anim_type=None, lefttop=None):
+        self.setGeometry(self._default_rect)
         self._show()
         lefttop = lefttop or self.get_position()
-        anim_typ = anim_typ or self.animation
-        group = getattr(self, anim_typ + '_group')(lefttop)
+        anim_type = anim_type or self.animation
+        group = getattr(self, anim_type + '_group')(lefttop)
+        group.finished.connect(self.activate)
         group.start(group.DeleteWhenStopped)
-        self.activate()
 
 
 class ModesDialog(Dialog):
