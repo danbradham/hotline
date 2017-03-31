@@ -1,5 +1,5 @@
 =======
-hotline
+Hotline
 =======
 Hotline is a pop-up input field written in Python with PyQt/PySide modeled after the command palette from Sublime Text. The API can be used to extend and customize Hotline by using the Context, Mode, and Command objects.
 
@@ -66,6 +66,7 @@ Create a new runtime command with the above code and bind a hotkey to it.
 Install Hotline
 ===============
 ::
+
     pip install hotline
 
 Making use of the Maya Context
