@@ -1,0 +1,121 @@
+/*
+Color Palette:
+         text - #2B2B2B
+text inactive - #A6A6A6
+      primary - #C6C6C6
+       accent - #418EDC
+ list primary - #2B2B2B
+   list hover - #AAAAAA
+*/
+
+QWidget {
+    font-family: Ubuntu Mono;
+    font-size: 14pt;
+    color: #2B2B2B;
+    background-color: #C6C6C6;
+}
+
+QTextEdit {
+    border: 0;
+    font-family: Ubuntu Mono;
+    font-size: 12pt;
+    color: #2B2B2B;
+    background-color: #C6C6C6;
+}
+
+QPushButton {
+    border: none;
+    color: #2B2B2B;
+    background-color: #C6C6C6;
+}
+
+QPushButton:hover {
+    color: #C6C6C6;
+    background-color: #2B2B2B;
+}
+
+
+QPushButton:pressed {
+    background-color: #418EDC;
+}
+
+QLineEdit {
+    outline: none;
+    border: none;
+    margin-left: 0px;
+    padding-left: 20px;
+}
+
+QLineEdit[placeholder=false] {
+    color: #2B2B2B;
+}
+
+QLineEdit[placeholder=true] {
+    color: #A6A6A6;
+}
+
+QListView {
+    border: none;
+    outline: none;
+    color: #C6C6C6;
+    background-color: #2B2B2B;
+}
+
+QListView::item {
+    height: 72;
+    border: 0px;
+    padding-left: 20px;
+}
+
+QListView::item:selected:active {
+    color: #2B2B2B;
+    background-color: #AAAAAA;
+}
+
+QListView::item:selected:!active {
+    color: #2B2B2B;
+    background-color: #AAAAAA;
+}
+
+QListView::item:hover {
+    background-color: #2E2E2E;
+}
+
+QScrollBar:vertical {
+    background: #2B2B2B;
+    width: 6px;
+    margin: 40px 0 40px 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #C6C6C6;
+    min-height: 10px;
+}
+
+QScrollBar::add-line:vertical {
+    border: 0;
+    background: #2B2B2B;
+    height: 40px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    border: 0;
+    background: #2B2B2B;
+    height: 40px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+    border: 0;
+    width: 0;
+    height: 0;
+    background: none;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+    height: 0;
+}

@@ -1,43 +1,70 @@
-from setuptools import setup, find_packages
-import os
+import re
 import sys
-import hotline
+import shutil
+from subprocess import check_call
+from setuptools import setup, find_packages
 
 
 if sys.argv[-1] == 'cheeseit!':
-    os.system('python setup.py sdist upload')
+    check_call('nosetests -v')
+    check_call('python setup.py sdist bdist_wheel')
+    check_call('twine upload dist/*')
+    shutil.rmtree('dist')
     sys.exit()
 elif sys.argv[-1] == 'testit!':
-    os.system('python setup.py sdist upload -r pypitest')
+    check_call('nosetests -v')
+    check_call('python setup.py sdist bdist_wheel upload -r pypitest')
     sys.exit()
 
 
-with open('README.rst') as f:
-    readme = f.read()
+def get_info(pyfile):
+    '''Retrieve dunder values from a pyfile'''
+    info = {}
+    info_re = re.compile(r"^__(\w+)__ = ['\"](.*)['\"]")
+    with open(pyfile, 'r') as f:
+        for line in f.readlines():
+            match = info_re.search(line)
+            if match:
+                info[match.group(1)] = match.group(2)
+    return info
+
+info = get_info('hotline/__init__.py')
+
+with open('README.rst', 'r') as f:
+    long_description = f.read()
 
 
 setup(
-    name=hotline.__title__,
-    version=hotline.__version__,
-    description=hotline.__description__,
-    long_description=readme,
-    author=hotline.__author__,
-    author_email=hotline.__email__,
-    url=hotline.__url__,
-    license=hotline.__license__,
+    name=info['title'],
+    version=info['version'],
+    url=info['url'],
+    license=info['license'],
+    author=info['author'],
+    author_email=info['email'],
+    description=info['description'],
+    long_description=long_description,
+    install_requires=[],
+    packages=find_packages(),
     package_data={
-        '': ['LICENSE', 'README.rst'],
-        'hotline': ['conf/*.*', 'ui/style.css'],
+        'hotline': ['styles/*.*']
     },
-    packages=find_packages(exclude=['tests']),
-    include_package_data=True,
+    entry_points={
+        'console_scripts': [
+            'hotline = hotline.__main__:cli'
+        ]
+    },
     classifiers=(
-        "Development Status :: 3 - Alpha",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Natural Language :: English",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python",
-        'Programming Language :: Python :: 2',
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ),
 )

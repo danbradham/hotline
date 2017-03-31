@@ -1,17 +1,41 @@
-'''
-Selectively import and set CTX based on the python executable path.
-'''
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import sys
+from .maya import MayaContext
+# from .nuke import NukeContext
+from .win import WindowsContext
+# from .linux import LinuxContext
+# from .mac import MacContext
+from .bare import BareContext
 
-PY_EXE = sys.executable.lower()
-CTX = None
+def best_context():
+    '''Return the best possible context'''
 
-if "maya" in PY_EXE:
-    from .mayacontext import MayaContext
-    CTX = MayaContext
-elif "nuke" in PY_EXE:
-    from .nukecontext import NukeContext
-    CTX = NukeContext
-else:
-    from .basiccontext import BasicContext
-    CTX = BasicContext
+    try:
+        import maya.cmds
+    except ImportError:
+        pass
+    else:
+        return MayaContext
+
+    try:
+        import nuke
+    except ImportError:
+        pass
+    else:
+        raise NotImplementedError('Nuke context not implemented')
+
+    platform = sys.platform.rstrip('1234567890')
+
+    if platform == 'darwin':
+        # TODO return MacContext
+        return BareContext
+
+    if platform == 'win':
+        return WindowsContext
+
+    if platform == 'linux':
+        # TODO return LinuxContext
+        return BareContext
+
+    return BareContext

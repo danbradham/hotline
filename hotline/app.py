@@ -1,154 +1,229 @@
-from __future__ import division
+# -*- coding: utf-8 -*-
+import signal
 import sys
-import os
+from Queue import Queue
+from functools import partial
 import traceback
-import shutil
-from .utils import rel_path
-from .config import Config
-from .store import Store
-from .contexts import CTX
-from .history import History
-from .messages import (ToggleMultiline, ToggleAutocomplete, TogglePin,
-                       ToggleToolbar, Execute, NextHistory, NextMode,
-                       PrevHistory, PrevMode, ShowDock, ShowHelp,
-                       ClearOutput, AdjustSize, Store_Run, Store_Save,
-                       Store_Load, Store_Delete, Store_Refresh, Started,
-                       Store_Evaluate, WriteOutput)
-from .shout import shout
-import logging
+from Qt import QtWidgets
+from .command import Command
+from .mode import Mode
+from .contexts import best_context
+from .widgets import Dialog, ModesDialog
+from .utils import execute_in_main_thread, redirect_stream
 
 
-logger = logging.getLogger("Hotline")
-logger.setLevel(logging.CRITICAL)
-shout_logger = logging.getLogger("Shout!")
-shout_logger.setLevel(logging.CRITICAL)
+class flags(object):
+    class DontHide: pass
+    class Hide: pass
+    _list = [DontHide, Hide]
 
 
-class HotLine(object):
+class HotlineMode(Mode):
 
-    instance = None
+    name = 'HotlineMode'
+    short_name = 'HL'
 
-    def __init__(self):
-        # Setup config file using environment variable HOTLINE_CFG
-        self.config = Config()
-
-        cfg_root = os.environ.setdefault(
-            'HOTLINE_CFG',
-            os.path.expanduser('~/hotline'))
-        if not os.path.exists(cfg_root):
-            shutil.copytree(rel_path('conf'), cfg_root)
-
-        self.config.from_env('HOTLINE_CFG')
-
-        if self.config.get('DEBUG', False):
-            logger.setLevel(logging.DEBUG)
-            shout_logger.setLevel(logging.DEBUG)
-
-        # Setup store using path relative to config
-        self.store = Store(self)
-        self.store.from_file(self.config.relative_path('store.json'))
-
-        self.history = History()
-        self.ctx = CTX(self)
-        self.ui = None
-        self._multiline = False
-        self._autocomplete = False
-        self._pinned = False
-        shout(Started)
-
-    @property
-    def logger(self):
-        return logger
-
-    @property
-    def multiline(self):
-        return self._multiline
-
-    @multiline.setter
-    def multiline(self, value):
-        self._multiline = value
-        shout(ToggleMultiline)
-
-    def toggle_multiline(self):
-        self.multiline = not self.multiline
-
-    @property
-    def autocomplete(self):
-        return self._autocomplete
-
-    @autocomplete.setter
-    def autocomplete(self, value):
-        self._autocomplete = value
-        shout(ToggleAutocomplete)
-
-    def toggle_autocomplete(self):
-        self.autocomplete = not self.autocomplete
-
-    @property
-    def pinned(self):
-        return self._pinned
-
-    @pinned.setter
-    def pinned(self, value):
-        self._pinned = value
-        shout(TogglePin)
+    def show_console(self):
+        self.app.ui.console.show()
+        return flags.DontHide
 
     def toggle_pin(self):
-        self.pinned = not self.pinned
+        self.app.ui.pinned = not self.app.ui.pinned
 
-    def toggle_toolbar(self):
-        shout(ToggleToolbar)
+    def gen_command(self):
+        result = self.app.get_user_input('User Input')
+        print result
 
-    def run(self, input_str):
-        output_str = "{}:\n{}\n\n".format(self.ctx.mode.name, input_str)
-        shout(WriteOutput, output_str)
+    @property
+    def commands(self):
+        return [
+            Command('Toggle Pin', self.toggle_pin),
+            Command('Show Console', self.show_console),
+            Command('Show Settings', self.show_console),
+            Command('Multi-Command', self.gen_command)
+        ]
 
+    def execute(self, command):
+        print command
+
+
+class HotlineStream(object):
+
+    def __init__(self, app):
+        self.app = app
+
+    def write(self, message):
+        sys.__stdout__.write(message)
+        if self.app.ui:
+            self.app.ui.console.write(message)
+
+
+class Hotline(object):
+
+    def __init__(self, context=None):
+        context = context or best_context()
+        self.context = context(self)
+        self.stream = HotlineStream(self)
+        self.ui = None
+
+    def init_ui(self):
+        '''Initialize the UI'''
+        if self.ui:
+            raise Exception('UI has already initialized')
+
+        self.add_modes(HotlineMode)
+        self.ui = ModesDialog(self.context.parent)
+        self.ui.setStyleSheet(self.context.style)
+        self.ui.mode_button.clicked.connect(self.on_next_mode)
+        self.ui.hk_tab.activated.connect(self.on_next_mode)
+        self.ui.hk_shift_tab.activated.connect(self.on_prev_mode)
+        self.ui.hk_alt_f4.activated.connect(self.exit)
+        self.ui.accepted.connect(self.on_accept)
+        self.ui.rejected.connect(self.on_reject)
+        self.refresh()
+
+    def exit(self):
+        if self._standalone:
+            self._event_loop.setQuitOnLastWindowClosed(True)
+            self._event_loop.quit()
+            return
+
+        self.ui.force_hide()
+
+    def _show_args(self):
         try:
-            self.ctx.run(input_str)
-            self.history.add(self.ctx.mode, input_str)
-            shout(Execute, True)
-        except:
-            exc = "".join(traceback.format_exception(*sys.exc_info()))
-            shout(WriteOutput, exc)
-            shout(Execute, False)
+            position = self.context.get_position()
+        except NotImplementedError:
+            position = None
 
-    def set_mode(self, name):
-        self.ctx.set_mode(name)
-        shout(NextMode, self.ctx.mode)
+        if position is None:
+            self.ui.position = self.context.position
+            position = self.ui.get_position()
 
-    def next_mode(self):
-        self.ctx.next_mode()
-        shout(NextMode, self.ctx.mode)
-
-    def prev_mode(self):
-        self.ctx.prev_mode()
-        shout(PrevMode, self.ctx.mode)
-
-    def next_hist(self):
-        mode, text = self.history.next()
-        shout(NextHistory, mode, text)
-
-    def prev_hist(self, input_str=None):
-        mode, text = self.history.prev(self.ctx.mode, input_str)
-        shout(PrevHistory, mode, text)
+        return self.context.animation, position
 
     def show(self):
-        '''Shows a PySide UI to control the app. Parenting of the UI is handled
-        by different subclasses of :class:`UI`. You can set the context using
-        the "CONTEXT" key of your configuration.'''
-        from .ui import UI
+        '''Show the HotlineUI'''
 
-        if not self.ui:
-            self.ui = UI.create(self)
-            self.store.evaluate(self.ctx.modes)
-        self.ui.enter()
-        shout(NextMode, self.ctx.mode)
+        if self.ui:
+            execute_in_main_thread(self.ui.show, *self._show_args())
+            return
+
+        self._standalone = QtWidgets.QApplication.instance() is None
+        if self._standalone:
+            self._event_loop = QtWidgets.QApplication([])
+            self._event_loop.setQuitOnLastWindowClosed(False)
+        else:
+            self._event_loop = QtWidgets.QApplication.instance()
+
+        self.init_ui()
+        execute_in_main_thread(self.ui.show, *self._show_args())
+
+        if self._standalone:
+            sys.exit(self._event_loop.exec_())
+
+    def refresh(self):
+        '''Refresh the Hotline UI'''
+        mode = self.get_mode()
+        self.ui.input_field.placeholder = mode.prompt
+        self.ui.input_field.clear()
+        self.ui.mode_button.setText(mode.short_name)
+        self.ui.commandlist.items = [c.name for c in mode.commands]
+
+    def on_prev_mode(self):
+        self.prev_mode()
+        self.refresh()
+
+    def on_next_mode(self):
+        self.next_mode()
+        self.refresh()
+
+    def on_accept(self):
+        result = self.execute(self.ui.text())
+        self.ui.input_field.clear()
+
+        if result:
+            self.ui.console.show()
+
+        if result is flags.DontHide:
+            return
+
+        if not isinstance(result, Exception):
+            self.ui.hide()
+
+    def on_reject(self):
+        self.ui.hide()
+
+    def get_user_input(self, prompt=None, options=None):
+        '''Get input from user using a modeless Hotline Dialog'''
+
+        self.ui.force_hide()
+        pos = self.ui.pos()
+        dialog = Dialog()
+        dialog.setStyleSheet(self.context.style)
+        if prompt:
+            dialog.input_field.placeholder = prompt
+            dialog.input_field.clear()
+        if options:
+            dialog.commandlist.items = options
+        accepted = dialog.exec_(self.context.animation, (pos.x(), pos.y()))
+        if accepted:
+            return dialog.text()
+
+    def execute(self, command):
+        '''Execute a command using the current mode'''
+
+        mode = self.get_mode()
+        result = None
+        with redirect_stream(stdout=self.stream, stderr=self.stream):
+            try:
+                result = mode(command)
+                if result and result not in flags._list:
+                    print(result)
+            except Exception as e:
+                result = e
+                traceback.print_exc()
+        return result
+
+    def get_mode(self, name=None):
+        '''Get active mode'''
+
+        if not name:
+            return self.context.modes[0]
+
+        for mode in self.context.modes:
+            if mode.name == name or mode.short_name == name:
+                return mode
+
+        raise NameError('Can not find mode named: '+ name)
+
+    def set_mode(self, mode):
+        '''Set active mode by name'''
+
+        while True:
+            if mode == self.context.modes[0]:
+                signals.ModeChanged(self.context.modes[0])
+                return
+            self.context.modes.rotate(-1)
 
 
-def show(*args, **kwargs):
-    '''Convenience method to show one instance of a HotLine ui.'''
+    def set_modes(self, *modes):
+        '''Set available self.context.modes'''
 
-    if not HotLine.instance:
-        HotLine.instance = HotLine(*args, **kwargs)
+        self.context.modes.clear()
+        self.context.modes.extend(self.modes)
 
-    HotLine.instance.show()
+    def add_modes(self, *modes):
+        '''Add mode'''
+
+        self.context.modes.extend([m(self) for m in modes])
+
+    def next_mode(self):
+        '''Rotate to the next mode'''
+
+        self.context.modes.rotate(-1)
+
+    def prev_mode(self):
+        '''Rotate to the previous mode'''
+
+        self.context.modes.rotate()
