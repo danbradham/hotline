@@ -48,11 +48,7 @@ setup(
     package_data={
         'hotline': ['styles/*.*']
     },
-    entry_points={
-        'console_scripts': [
-            'hotline = hotline.__main__:cli'
-        ]
-    },
+    entry_points={},
     classifiers=(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
