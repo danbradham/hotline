@@ -47,8 +47,8 @@ Hotline will attempt to use the best available context. You can also specify one
     hl.show()
 
 
-Binding a hotkey in Autodesk Maya
-=================================
+Hotline in Autodesk Maya
+========================
 
 To allow for maximum flexibility hotline doesn't do anything sneaky like use singletons or a cache to maintain instances for you. In Maya this means you'll need to keep track of an instance of the Hotline ui. Here's how I'm doing that currently::
 
@@ -68,13 +68,6 @@ Install Hotline
 ::
 
     pip install hotline
-
-Making use of the Maya Context
-
-If you're looking to use the Autodesk Maya context bind a key to the following python script:
-
-import hotline
-hotline.show()
 
 
 Things to do
