@@ -38,7 +38,7 @@ class Mode(object):
                     if isinstance(step, Command):
                         result = step
                     elif isinstance(step, (list, tuple)) or step is None:
-                        selection = self.app.get_user_input(step)
+                        selection = self.app.get_user_input(options=step)
                     else:
                         raise Exception(
                             'Generator yielded invalid type...'

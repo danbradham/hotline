@@ -105,9 +105,13 @@ class Python(Mode):
     prompt = 'python command'
 
     def execute(self, command):
-        import __main__
-        code = compile(command, '<string>', 'exec')
-        exec code in __main__.__dict__
+        main = sys.modules['__main__'].__dict__
+        try:
+            code = compile(command, '<string>', 'eval')
+            return eval(code, main, main)
+        except SyntaxError:
+            code = compile(command, '<string>', 'exec')
+            exec code in main
 
 
 class Mel(Mode):
@@ -353,18 +357,6 @@ class MayaContext(Context):
             'graphEditor\dGraphEdImpl',
         ]
 
-        panel = active_panel_widget()
-        if 'modelPanel' in panel.path:
-            widget = active_m3dview_widget()
-            pos = top_center(widget.widget)
-            return pos.x() - 480, pos.y()
-
-        for name in ok_names:
-            widgets = find_child(panel.widget, name)
-            if widgets:
-                pos = top_center(widgets[0].widget)
-                return pos.x() - 480, pos.y()
-
         try:
             widget = maya_widget_under_cursor()
         except TypeError as e:
@@ -377,6 +369,18 @@ class MayaContext(Context):
                 if match:
                     pos = top_center(widget.widget)
                     return pos.x() - 480, pos.y()
+
+        panel = active_panel_widget()
+        if 'modelPanel' in panel.path:
+            widget = active_m3dview_widget()
+            pos = top_center(widget.widget)
+            return pos.x() - 480, pos.y()
+
+        for name in ok_names:
+            widgets = find_child(panel.widget, name)
+            if widgets:
+                pos = top_center(widgets[0].widget)
+                return pos.x() - 480, pos.y()
 
     def initialize(self, app):
         self.parent = get_maya_window()

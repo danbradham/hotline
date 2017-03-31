@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+__title__ = 'hotline'
+__author__ = 'Dan Bradham'
+__email__ = 'danielbradham@gmail.com'
+__license__ = 'MIT'
+__url__ = 'https://github.com/danbradham/hotline.git'
+__description__ = 'Opaque Python CLI Wrapper'
+__version__ = '0.6.0'
+
 from __future__ import absolute_import
 import os
 

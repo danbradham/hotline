@@ -12,7 +12,7 @@ from ..utils import new_process
 
 
 def elevated():
-    return new_process(
+    new_process(
         'powershell.exe',
         '-Command',
         "Start-Process powershell.exe -Verb runAs"
@@ -23,6 +23,7 @@ class PowerShell(Mode):
 
     name = 'PowerShell'
     short_name = 'PS'
+    prompt = 'Powershell command'
 
     @property
     def commands(self):
@@ -51,6 +52,7 @@ class Cmd(Mode):
     name = 'Cmd'
     short_name = 'CMD'
     commands = []
+    prompt = 'batch command'
 
     def execute(self, command):
         cmd = ['cmd', '/C', command]
@@ -62,10 +64,16 @@ class Python(Mode):
     name = 'Python'
     short_name = 'PY'
     commands = []
+    prompt = 'python command'
 
     def execute(self, command):
-        code = compile(command, '<string>', 'exec')
-        exec code in sys.modules['__main__'].__dict__
+        main = sys.modules['__main__'].__dict__
+        try:
+            code = compile(command, '<string>', 'eval')
+            return eval(code, main, main)
+        except SyntaxError:
+            code = compile(command, '<string>', 'exec')
+            exec code in main
 
 
 class Run(Mode):

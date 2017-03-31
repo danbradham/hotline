@@ -4,7 +4,7 @@ import sys
 import time
 from Qt import QtWidgets, QtCore, QtGui
 from contextlib import contextmanager
-from .utils import keys_to_string, event_loop
+from .utils import event_loop
 from .anim import *
 
 
@@ -172,10 +172,11 @@ class Console(QtWidgets.QDialog):
 
 class InputField(QtWidgets.QLineEdit):
 
-    focusOut = QtCore.Signal()
+    focusOut = QtCore.Signal(object)
 
     def __init__(self, placeholder=None, parent=None):
         super(InputField, self).__init__(parent=parent)
+        self.parent = parent
         self.setProperty('property', bool(placeholder))
         self.refresh_style()
         self._placeholder = placeholder
@@ -186,8 +187,8 @@ class InputField(QtWidgets.QLineEdit):
         self.textEdited.connect(self.onTextEdited)
 
     def focusOutEvent(self, event):
-        event.ignore()
-        self.focusOut.emit()
+        event.accept()
+        self.focusOut.emit(event)
 
     def refresh_style(self):
         self.style().unpolish(self)
@@ -205,10 +206,14 @@ class InputField(QtWidgets.QLineEdit):
             self.setText(value)
             self.setCursorPosition(0)
 
+    @property
+    def is_placeholder(self):
+        return self._text() == self._placeholder
+
     def clear(self):
         super(InputField, self).clear()
 
-        if self.placeholder:
+        if self._placeholder:
             self.setText(self.placeholder)
             self.setCursorPosition(0)
 
@@ -220,23 +225,23 @@ class InputField(QtWidgets.QLineEdit):
 
     def text(self):
         value = self._text()
-        if value == self.placeholder:
+        if value == self._placeholder:
             value = ''
         return value
 
     def onCursorPositionChanged(self, old_pos, new_pos):
-        if self._text() == self.placeholder:
+        if self.is_placeholder:
             self.setCursorPosition(0)
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Enter and self._text() == self.placeholder:
+        enter_pressed = event.key() == QtCore.Qt.Key_Enter
+        if enter_pressed and self.is_placeholder:
             event.accept()
             return
-
         super(InputField, self).keyPressEvent(event)
 
     def onTextEdited(self, text):
-        if self.placeholder and self.placeholder in text:
+        if self._placeholder and self._placeholder in text:
             text = text.split(self.placeholder)[0]
             self.setText(text)
             self.setProperty('placeholder', False)
@@ -278,6 +283,7 @@ class Dialog(QtWidgets.QDialog):
         self.commandlist.itemClicked.connect(self.accept)
         self.input_field.textChanged.connect(self.commandlist.filter)
         self.input_field.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.input_field.focusOut.connect(self.reject)
 
         self.console = Console(self)
 
@@ -353,10 +359,11 @@ class Dialog(QtWidgets.QDialog):
             self._alt_f4_pressed = False
         QtCore.QTimer.singleShot(500, _finished)
 
-    def on_focusOut(self):
-        if self.result():
-            return
-        self.reject()
+    def accept(self):
+        self.accepted.emit()
+
+    def reject(self):
+        self.rejected.emit()
 
     def keyPressEvent(self, event):
         if event.modifiers() & QtCore.Qt.AltModifier:
@@ -371,26 +378,13 @@ class Dialog(QtWidgets.QDialog):
             return
         event.accept()
 
-    def accept(self):
-        self.setResult(QtWidgets.QDialog.Accepted)
-        self.accepted.emit()
-
-    def reject(self):
-        self.setResult(QtWidgets.QDialog.Rejected)
-        self.rejected.emit()
-
     def hide(self):
-        if self.pinned:
-            return
-        self._hide()
+        if not self.pinned:
+            self.force_hide()
 
-    def _hide(self):
+    def force_hide(self):
         self.commandlist.hide()
         super(Dialog, self).hide()
-        try:
-            self.input_field.focusOut.disconnect()
-        except RuntimeError:
-            pass # No connections
 
     def get_position(self):
         if self.position == 'top':
@@ -438,30 +432,27 @@ class Dialog(QtWidgets.QDialog):
         group = parallel_group(self, fade_in(self), fade_in(self.commandlist))
         return group
 
-    def animation_handler(self, new_state, old_state):
-        state = QtCore.QAnimationGroup
-        self.pinned = {
-            state.Stopped: False,
-            state.Running: True,
-            state.Paused: False,  # Paused
-        }[new_state]
-
     def exec_(self, anim_type=None, lefttop=None):
         self.show(anim_type, lefttop)
-        with event_loop(timeout=60000) as loop:
-            self.accepted.connect(loop.quit)
-            self.rejected.connect(loop.quit)
-        self.hide()
-        return self.result()
+        with event_loop(timeout=120000) as loop:
+            loop.result = None
+            def on_accept():
+                loop.quit()
+                loop.result = QtWidgets.QDialog.Accepted
+            def on_reject():
+                if loop.result is not None:
+                    return # Result already set
+                loop.quit()
+                loop.result = QtWidgets.QDialog.Rejected
+            self.accepted.connect(on_accept)
+            self.rejected.connect(on_reject)
+        self.force_hide()
+        return loop.result
 
     def activate(self):
         self.raise_()
         self.activateWindow()
         self.input_field.setFocus()
-        try:
-            self.input_field.focusOut.connect(self.on_focusOut)
-        except:
-            pass
 
     def _show(self):
         self.commandlist.show()

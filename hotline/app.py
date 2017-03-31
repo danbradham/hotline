@@ -30,9 +30,9 @@ class HotlineMode(Mode):
     def toggle_pin(self):
         self.app.ui.pinned = not self.app.ui.pinned
 
-    def stepped_command(self):
-        result = self.app.get_user_input('Hello')
-        print 'User input: ', result
+    def gen_command(self):
+        result = self.app.get_user_input('User Input')
+        print result
 
     @property
     def commands(self):
@@ -40,7 +40,7 @@ class HotlineMode(Mode):
             Command('Toggle Pin', self.toggle_pin),
             Command('Show Console', self.show_console),
             Command('Show Settings', self.show_console),
-            Command('Stepped Command', self.stepped_command)
+            Command('Multi-Command', self.gen_command)
         ]
 
     def execute(self, command):
@@ -88,7 +88,7 @@ class Hotline(object):
             self._event_loop.quit()
             return
 
-        self.ui._hide()
+        self.ui.force_hide()
 
     def _show_args(self):
         try:
@@ -157,7 +157,7 @@ class Hotline(object):
     def get_user_input(self, prompt=None, options=None):
         '''Get input from user using a modeless Hotline Dialog'''
 
-        self.ui._hide()
+        self.ui.force_hide()
         pos = self.ui.pos()
         dialog = Dialog()
         dialog.setStyleSheet(self.context.style)
