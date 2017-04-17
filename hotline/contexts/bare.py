@@ -9,7 +9,7 @@ from .. import styles
 class Python(Mode):
 
     name = 'Python'
-    short_name = 'PY'
+    label = 'PY'
     commands = []
     prompt = 'python command'
 

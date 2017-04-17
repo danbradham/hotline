@@ -12,10 +12,13 @@ class Mode(object):
         self.app = app
 
     def __str__(self):
-        return self.short_name
+        return self.label
 
     def __hash__(self):
-        return hash(self.name)
+        return hash(self.label)
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
 
     def __call__(self, command):
         cmd = self.get_command(command)
@@ -59,8 +62,8 @@ class Mode(object):
         return
 
     @abstractproperty
-    def short_name(self):
-        '''return a short name up to 4 characters'''
+    def label(self):
+        '''Name of context'''
         return
 
     @property

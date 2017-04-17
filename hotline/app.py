@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-import signal
 import sys
-from Queue import Queue
-from functools import partial
 import traceback
 from Qt import QtWidgets
 from .command import Command
@@ -10,7 +7,7 @@ from .mode import Mode
 from .contexts import best_context
 from .widgets import Dialog, ModesDialog
 from .utils import execute_in_main_thread, redirect_stream
-
+from .history import History, ModeCommand
 
 class flags(object):
     class DontHide: pass
@@ -21,7 +18,7 @@ class flags(object):
 class HotlineMode(Mode):
 
     name = 'HotlineMode'
-    short_name = 'HL'
+    label = 'HL'
 
     def show_console(self):
         self.app.ui.console.show()
@@ -64,6 +61,7 @@ class Hotline(object):
         context = context or best_context()
         self.context = context(self)
         self.stream = HotlineStream(self)
+        self.history = History()
         self.ui = None
 
     def init_ui(self):
@@ -78,6 +76,8 @@ class Hotline(object):
         self.ui.hk_tab.activated.connect(self.on_next_mode)
         self.ui.hk_shift_tab.activated.connect(self.on_prev_mode)
         self.ui.hk_alt_f4.activated.connect(self.exit)
+        self.ui.hk_ctrl_up.activated.connect(self.on_history_prev)
+        self.ui.hk_ctrl_dn.activated.connect(self.on_history_next)
         self.ui.accepted.connect(self.on_accept)
         self.ui.rejected.connect(self.on_reject)
         self.refresh()
@@ -127,8 +127,31 @@ class Hotline(object):
         mode = self.get_mode()
         self.ui.input_field.placeholder = mode.prompt
         self.ui.input_field.clear()
-        self.ui.mode_button.setText(mode.short_name)
+        self.ui.mode_button.setText(mode.label)
         self.ui.commandlist.items = [c.name for c in mode.commands]
+
+    def on_history_prev(self):
+
+        text = self.ui.text()
+        is_partial_command = self.history.index == 0 and text
+        if is_partial_command:
+            self.history.insert(1, ModeCommand(self.get_mode(), text))
+
+        item = self.history.prev()
+        if item is None:
+            return
+        self.set_mode(item.mode)
+        self.refresh()
+        self.ui.input_field.setText(item.command)
+
+    def on_history_next(self):
+        item = self.history.next()
+        if item is None:
+            self.ui.input_field.setText('')
+            return
+        self.set_mode(item.mode)
+        self.refresh()
+        self.ui.input_field.setText(item.command)
 
     def on_prev_mode(self):
         self.prev_mode()
@@ -140,15 +163,17 @@ class Hotline(object):
 
     def on_accept(self):
         result = self.execute(self.ui.text())
-        self.ui.input_field.clear()
+        success = not isinstance(result, Exception)
+        hide = success and result is not flags.DontHide
 
         if result:
             self.ui.console.show()
 
-        if result is flags.DontHide:
-            return
+        if success:
+            self.history.add(ModeCommand(self.get_mode(), self.ui.text()))
+            self.ui.input_field.clear()
 
-        if not isinstance(result, Exception):
+        if hide:
             self.ui.hide()
 
     def on_reject(self):
@@ -192,26 +217,32 @@ class Hotline(object):
             return self.context.modes[0]
 
         for mode in self.context.modes:
-            if mode.name == name or mode.short_name == name:
+            if mode.name == name or mode.label == name:
                 return mode
 
         raise NameError('Can not find mode named: '+ name)
 
     def set_mode(self, mode):
-        '''Set active mode by name'''
+        '''Set active mode by name or Mode object'''
 
-        while True:
+        start = self.context.modes[0]
+        if mode == start:
+            return
+
+        self.context.modes.rotate(-1)
+        while not self.context.modes[0] == start:
             if mode == self.context.modes[0]:
-                signals.ModeChanged(self.context.modes[0])
+                self.refresh()
                 return
             self.context.modes.rotate(-1)
 
+        raise Exception('Could not find: {}'.format(mode))
 
     def set_modes(self, *modes):
         '''Set available self.context.modes'''
 
         self.context.modes.clear()
-        self.context.modes.extend(self.modes)
+        self.add_modes(*modes)
 
     def add_modes(self, *modes):
         '''Add mode'''

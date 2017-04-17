@@ -100,7 +100,7 @@ def top_center(widget):
 class Python(Mode):
 
     name = 'Python'
-    short_name = 'PY'
+    label = 'PY'
     commands = []
     prompt = 'python command'
 
@@ -117,7 +117,7 @@ class Python(Mode):
 class Mel(Mode):
 
     name = 'Mel'
-    short_name = 'MEL'
+    label = 'MEL'
     commands = [
         Command('Attribute Editor', 'AttributeEditor'),
         Command('ConnectionEditor', 'ConnectionEditor'),
@@ -186,7 +186,7 @@ class Mel(Mode):
 class Rename(Mode):
 
     name = 'Rename'
-    short_name = 'REN'
+    label = 'REN'
     commands = []
     prompt = 'rename tokens'
 
@@ -207,7 +207,7 @@ class Rename(Mode):
 class Connect(Mode):
 
     name = 'Connect'
-    short_name = 'CNCT'
+    label = 'CNCT'
     commands = []
     prompt = 'source destination'
 
@@ -241,7 +241,7 @@ class Connect(Mode):
 class Node(Mode):
 
     name = 'Node'
-    short_name = 'NODE'
+    label = 'NODE'
     prompt = 'node type'
 
     @property
@@ -307,7 +307,7 @@ def select(nodes, add=False):
 class Select(Mode):
 
     name = 'Select'
-    short_name = 'SEL'
+    label = 'SEL'
     prompt = 'glob pattern'
 
     def regex_select(self):

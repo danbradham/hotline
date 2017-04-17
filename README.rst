@@ -69,21 +69,16 @@ Install Hotline
 
     pip install hotline
 
-Making use of the Maya Context
 
-If you're looking to use the Autodesk Maya context bind a key to the following python script:
+To Do List
+==========
 
-import hotline
-hotline.show()
-
-
-Things to do
-============
-
- - Implement input history
  - Adjust Context API to make it easier to extend existing contexts
  - Add additional dialogs to make multi-stage commands more rich
  - Create settings dialog that can be used to adjust context settings
  - Persist history and settings
- - Syntax Highlighting?
- - Multiline mode?
+
+completed
+=========
+
+ - **Implement input history**

@@ -22,7 +22,7 @@ def elevated():
 class PowerShell(Mode):
 
     name = 'PowerShell'
-    short_name = 'PS'
+    label = 'PS'
     prompt = 'Powershell command'
 
     @property
@@ -50,7 +50,7 @@ class PowerShell(Mode):
 class Cmd(Mode):
 
     name = 'Cmd'
-    short_name = 'CMD'
+    label = 'CMD'
     commands = []
     prompt = 'batch command'
 
@@ -62,7 +62,7 @@ class Cmd(Mode):
 class Python(Mode):
 
     name = 'Python'
-    short_name = 'PY'
+    label = 'PY'
     commands = []
     prompt = 'python command'
 
@@ -79,7 +79,7 @@ class Python(Mode):
 class Run(Mode):
 
     name = 'Run'
-    short_name = 'RUN'
+    label = 'RUN'
 
     @property
     def commands(self):

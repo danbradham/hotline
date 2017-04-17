@@ -229,6 +229,11 @@ class InputField(QtWidgets.QLineEdit):
             value = ''
         return value
 
+    def setText(self, text):
+        super(InputField, self).setText(text)
+        self.setProperty('placeholder', text == self._placeholder)
+        self.refresh_style()
+
     def onCursorPositionChanged(self, old_pos, new_pos):
         if self.is_placeholder:
             self.setCursorPosition(0)
@@ -302,6 +307,10 @@ class Dialog(QtWidgets.QDialog):
         self.hk_ctrl_p = QtWidgets.QShortcut(self)
         self.hk_ctrl_p.setKey('Ctrl+P')
         self.hk_ctrl_p.activated.connect(self.toggle_pin)
+        self.hk_ctrl_up = QtWidgets.QShortcut(self)
+        self.hk_ctrl_up.setKey('Ctrl+Up')
+        self.hk_ctrl_dn = QtWidgets.QShortcut(self)
+        self.hk_ctrl_dn.setKey('Ctrl+Down')
         self.hk_alt_f4 = QtWidgets.QShortcut(self)
         self.layout = QtWidgets.QHBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)

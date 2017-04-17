@@ -38,7 +38,13 @@ class Context(object):
 
     @abstractmethod
     def initialize(self, app):
-        '''This function must set self.parent to a QWidget or QMainWindow instance. If hotline is to be run within an existing QApplication then you can set self.parent to the QApplications top level QMainWindow instance. If hotline is to be the main application this method must instantiate a QApplication, create a top level widget and set it to self.parent, then start the QApplications event loop. You will also want to bind a hotkey to app.show.
+        '''This function must set self.parent to a QWidget or QMainWindow
+        instance. If hotline is to be run within an existing QApplication then
+        you can set self.parent to the QApplications top level QMainWindow
+        instance. If hotline is to be the main application this method must
+        instantiate a QApplication, create a top level widget and set it to
+        self.parent, then start the QApplications event loop. You will also want
+        to bind a hotkey to app.show.
 
         :param app: Hotline application instance'''
         return
