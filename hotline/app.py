@@ -5,9 +5,10 @@ from Qt import QtWidgets
 from .command import Command
 from .mode import Mode
 from .contexts import best_context
-from .widgets import Dialog, ModesDialog
+from .widgets import Dialog
 from .utils import execute_in_main_thread, redirect_stream
 from .history import History, ModeCommand
+
 
 class flags(object):
     class DontHide: pass
@@ -65,12 +66,12 @@ class Hotline(object):
         self.ui = None
 
     def init_ui(self):
-        '''Initialize the UI'''
         if self.ui:
             raise Exception('UI has already initialized')
 
         self.add_modes(HotlineMode)
-        self.ui = ModesDialog(self.context.parent)
+        self.ui = Dialog(self.context.parent)
+        self.ui.mode_button.show()
         self.ui.setStyleSheet(self.context.style)
         self.ui.mode_button.clicked.connect(self.on_next_mode)
         self.ui.hk_tab.activated.connect(self.on_next_mode)
@@ -103,8 +104,6 @@ class Hotline(object):
         return self.context.animation, position
 
     def show(self):
-        '''Show the HotlineUI'''
-
         if self.ui:
             execute_in_main_thread(self.ui.show, *self._show_args())
             return
@@ -123,7 +122,6 @@ class Hotline(object):
             sys.exit(self._event_loop.exec_())
 
     def refresh(self):
-        '''Refresh the Hotline UI'''
         mode = self.get_mode()
         self.ui.input_field.placeholder = mode.prompt
         self.ui.input_field.clear()
@@ -131,7 +129,6 @@ class Hotline(object):
         self.ui.commandlist.items = [c.name for c in mode.commands]
 
     def on_history_prev(self):
-
         text = self.ui.text()
         is_partial_command = self.history.index == 0 and text
         if is_partial_command:
@@ -154,29 +151,34 @@ class Hotline(object):
         self.ui.input_field.setText(item.command)
 
     def on_prev_mode(self):
+
         self.prev_mode()
         self.refresh()
 
     def on_next_mode(self):
+
         self.next_mode()
         self.refresh()
 
     def on_accept(self):
+
         result = self.execute(self.ui.text())
         success = not isinstance(result, Exception)
         hide = success and result is not flags.DontHide
 
-        if result:
+        if not success:
             self.ui.console.show()
 
         if success:
             self.history.add(ModeCommand(self.get_mode(), self.ui.text()))
             self.ui.input_field.clear()
+            self.ui.commandlist.filter('')
 
         if hide:
             self.ui.hide()
 
     def on_reject(self):
+
         self.ui.hide()
 
     def get_user_input(self, prompt=None, options=None):
@@ -184,7 +186,7 @@ class Hotline(object):
 
         self.ui.force_hide()
         pos = self.ui.pos()
-        dialog = Dialog()
+        dialog = Dialog(self.context.parent)
         dialog.setStyleSheet(self.context.style)
         if prompt:
             dialog.input_field.placeholder = prompt

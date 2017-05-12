@@ -2,10 +2,7 @@
 from __future__ import absolute_import
 import sys
 from .maya import MayaContext
-# from .nuke import NukeContext
 from .win import WindowsContext
-# from .linux import LinuxContext
-# from .mac import MacContext
 from .bare import BareContext
 
 def best_context():

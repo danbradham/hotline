@@ -111,9 +111,9 @@ def execute_in_main_thread(fn, *args, **kwargs):
 
 
 @contextmanager
-def event_loop(conditions=None, timeout=None):
+def event_loop(conditions=None, timeout=None, parent=None):
 
-    loop = QtCore.QEventLoop()
+    loop = QtCore.QEventLoop(parent)
 
     if timeout:
         QtCore.QTimer.singleShot(timeout, loop.quit)

@@ -1,5 +1,5 @@
+# -*- coding: utf-8 -*-
 import sys
-import keyboard
 from ..mode import Mode
 from ..command import Command
 from ..context import Context
@@ -23,7 +23,6 @@ class Python(Mode):
             exec code in main
 
 
-
 class BareContext(Context):
 
     name = 'BareContext'
@@ -34,4 +33,5 @@ class BareContext(Context):
     animation = 'slide'
 
     def initialize(self, app):
+        import keyboard
         keyboard.add_hotkey('ctrl + space', app.show)

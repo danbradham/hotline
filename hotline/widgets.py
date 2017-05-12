@@ -8,6 +8,12 @@ from .utils import event_loop
 from .anim import *
 
 
+def get_unit(style):
+    label = QtWidgets.QLabel('UNIT')
+    label.setStyleSheet(style)
+    return label.sizeHint().height()
+
+
 class ActiveScreen(object):
 
     @staticmethod
@@ -37,7 +43,6 @@ class CommandList(QtWidgets.QListWidget):
             QtCore.Qt.WindowStaysOnTopHint
         )
         self.setAttribute(QtCore.Qt.WA_ShowWithoutActivating)
-        self.setFocusPolicy(QtCore.Qt.NoFocus)
         self.setMinimumSize(1, 1)
         self.setSizePolicy(
             QtWidgets.QSizePolicy.Ignored,
@@ -160,12 +165,14 @@ class Console(QtWidgets.QDialog):
         self.output.repaint()
 
     def show(self):
+        if self.isVisible():
+            return
         r = self.parent.rect()
         pos = self.parent.mapToGlobal(QtCore.QPoint(r.right(), r.bottom()))
         width = r.width()
         left = pos.x() - width + 1
         top = pos.y() + 72 * 6
-        height = 960
+        height = width
         self.setGeometry(QtCore.QRect(left, top, width, height))
         super(Console, self).show()
 
@@ -257,19 +264,18 @@ class Dialog(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
         super(Dialog, self).__init__(parent)
-        self.width = 960
-        self.height = 96
-        self.pinned = False
+
+        self.parent = parent
+        self._set_sizes()
         self._alt_f4_pressed = False
         self._animation = 'slide'
         self._position = 'center'
-        self._default_rect = QtCore.QRect(0, -1, 960, 1)
+        self.pinned = False
 
         self.setWindowTitle('Hotline')
         self.setWindowFlags(
             QtCore.Qt.Window |
-            QtCore.Qt.FramelessWindowHint |
-            QtCore.Qt.WindowStaysOnTopHint
+            QtCore.Qt.FramelessWindowHint
         )
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         self.setSizePolicy(
@@ -278,16 +284,24 @@ class Dialog(QtWidgets.QDialog):
         )
         self.setMinimumSize(1, 1)
 
+        self.mode_button = QtWidgets.QPushButton(self)
+        self.mode_button.setFixedHeight(self._height)
+        self.mode_button.setMinimumWidth(self._height)
+        self.mode_button.setSizePolicy(
+            QtWidgets.QSizePolicy.Minimum,
+            QtWidgets.QSizePolicy.Fixed,
+        )
+        self.mode_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.mode_button.hide()
+
         self.input_field = InputField(parent=self)
-        self.input_field.setFixedHeight(96)
         self.input_field.setSizePolicy(
             QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Expanding,
         )
         self.commandlist = CommandList([], self.input_field, self)
         self.commandlist.itemClicked.connect(self.accept)
         self.input_field.textChanged.connect(self.commandlist.filter)
-        self.input_field.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.input_field.focusOut.connect(self.reject)
 
         self.console = Console(self)
@@ -312,11 +326,27 @@ class Dialog(QtWidgets.QDialog):
         self.hk_ctrl_dn = QtWidgets.QShortcut(self)
         self.hk_ctrl_dn.setKey('Ctrl+Down')
         self.hk_alt_f4 = QtWidgets.QShortcut(self)
+        self.hk_tab = QtWidgets.QShortcut(self)
+        self.hk_tab.setKey('Tab')
+        self.hk_shift_tab = QtWidgets.QShortcut(self)
+        self.hk_shift_tab.setKey('Shift+Tab')
         self.layout = QtWidgets.QHBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
+        self.layout.addWidget(self.mode_button)
         self.layout.addWidget(self.input_field)
         self.setLayout(self.layout)
+
+    def _get_font_unit(self):
+        label = QtWidgets.QLabel('UNIT')
+        label.setStyleSheet(self.styleSheet())
+        return label.sizeHint().height()
+
+    def _set_sizes(self):
+        self._font_unit = self._get_font_unit()
+        self._height = self._font_unit * 2.4
+        self._width = self._height * 10
+        self._default_rect = QtCore.QRect(0, -1, self._width, 1)
 
     def toggle_pin(self):
         self.pinned = not self.pinned
@@ -398,14 +428,14 @@ class Dialog(QtWidgets.QDialog):
     def get_position(self):
         if self.position == 'top':
             pos = ActiveScreen.top()
-            return pos[0] - self.width * 0.5, pos[1]
+            return pos[0] - self._width * 0.5, pos[1]
 
         pos = ActiveScreen.center()
-        return pos[0] - self.width * 0.5, pos[1] - self.height * 0.5
+        return pos[0] - self._width * 0.5, pos[1] - self._height * 0.5
 
     def slide_group(self, pos):
-        start = (pos[0], pos[1], self.width, 0)
-        end = (pos[0], pos[1], self.width, self.height)
+        start = (pos[0], pos[1], self._width, 0)
+        end = (pos[0], pos[1], self._width, self._height)
         self.setGeometry(*start)
         group = parallel_group(
             self,
@@ -425,7 +455,7 @@ class Dialog(QtWidgets.QDialog):
 
         start = (crect.left(), start[1], crect.width(), 0)
         self.commandlist.setGeometry(*start)
-        end = (crect.left(), end[1] + self.height, crect.width(), crect.height())
+        end = (crect.left(), end[1] + self._height, crect.width(), crect.height())
         group.addAnimation(
             resize(
                 self.commandlist,
@@ -436,21 +466,27 @@ class Dialog(QtWidgets.QDialog):
         return group
 
     def fade_in_group(self, pos):
-        self.setGeometry(pos[0], pos[1], self.width, self.height)
+        self.setGeometry(pos[0], pos[1], self._width, self._height)
         self.commandlist.setGeometry(self.commandlist._get_geometry())
         group = parallel_group(self, fade_in(self), fade_in(self.commandlist))
         return group
 
+    def setStyleSheet(self, style):
+        super(Dialog, self).setStyleSheet(style)
+        self._set_sizes()
+        self.mode_button.setFixedHeight(self._height)
+        self.mode_button.setMinimumWidth(self._height)
+
     def exec_(self, anim_type=None, lefttop=None):
         self.show(anim_type, lefttop)
-        with event_loop(timeout=120000) as loop:
+        with event_loop(timeout=120000, parent=self.parent) as loop:
             loop.result = None
             def on_accept():
                 loop.quit()
                 loop.result = QtWidgets.QDialog.Accepted
             def on_reject():
                 if loop.result is not None:
-                    return # Result already set
+                    return
                 loop.quit()
                 loop.result = QtWidgets.QDialog.Rejected
             self.accepted.connect(on_accept)
@@ -475,24 +511,3 @@ class Dialog(QtWidgets.QDialog):
         group = getattr(self, anim_type + '_group')(lefttop)
         group.finished.connect(self.activate)
         group.start(group.DeleteWhenStopped)
-
-
-class ModesDialog(Dialog):
-
-    def __init__(self, parent=None):
-        super(ModesDialog, self).__init__(parent)
-
-        self.mode_button = QtWidgets.QPushButton(self)
-        self.mode_button.setFixedHeight(96)
-        self.mode_button.setMinimumWidth(96)
-        self.mode_button.setSizePolicy(
-            QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Fixed,
-        )
-        self.mode_button.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.layout.insertWidget(0, self.mode_button)
-
-        self.hk_tab = QtWidgets.QShortcut(self)
-        self.hk_tab.setKey('Tab')
-        self.hk_shift_tab = QtWidgets.QShortcut(self)
-        self.hk_shift_tab.setKey('Shift+Tab')

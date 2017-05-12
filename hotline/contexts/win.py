@@ -3,7 +3,6 @@ import os
 import shlex
 from functools import partial
 import sys
-import keyboard
 from ..mode import Mode
 from ..command import Command
 from ..context import Context
@@ -139,4 +138,5 @@ class WindowsContext(Context):
     parent = None
 
     def initialize(self, app):
+        import keyboard
         keyboard.add_hotkey('ctrl + space', app.show)

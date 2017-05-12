@@ -2,13 +2,13 @@
 from __future__ import absolute_import
 from collections import namedtuple
 import re
+import sys
 from Qt import QtWidgets, QtCore, QtGui
-from functools import partial
 from ..mode import Mode
 from ..command import Command
 from ..context import Context
 from .. import styles
-from ..helpers import new_process
+from ..utils import new_process
 from ..renamer import Renamer
 
 MayaWidget = namedtuple('MayaWidget', 'path widget')
