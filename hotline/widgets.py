@@ -394,8 +394,10 @@ class Dialog(QtWidgets.QDialog):
 
     def _start_alt_f4_timer(self):
         self._alt_f4_pressed = True
+
         def _finished():
             self._alt_f4_pressed = False
+
         QtCore.QTimer.singleShot(500, _finished)
 
     def accept(self):
@@ -481,14 +483,17 @@ class Dialog(QtWidgets.QDialog):
         self.show(anim_type, lefttop)
         with event_loop(timeout=120000, parent=self.parent) as loop:
             loop.result = None
+
             def on_accept():
                 loop.quit()
                 loop.result = QtWidgets.QDialog.Accepted
+
             def on_reject():
                 if loop.result is not None:
                     return
                 loop.quit()
                 loop.result = QtWidgets.QDialog.Rejected
+
             self.accepted.connect(on_accept)
             self.rejected.connect(on_reject)
         self.force_hide()

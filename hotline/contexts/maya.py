@@ -361,26 +361,26 @@ class MayaContext(Context):
             widget = maya_widget_under_cursor()
         except TypeError as e:
             print type(e), e
-            if not 'shiboken-based type' in str(e):
+            if 'shiboken-based type' not in str(e):
                 raise
         else:
             for name in ok_names:
                 match = re.search(widget.path, name)
                 if match:
                     pos = top_center(widget.widget)
-                    return pos.x() - 480, pos.y()
+                    return pos.x() - self.app.ui._width * 0.5, pos.y()
 
         panel = active_panel_widget()
         if 'modelPanel' in panel.path:
             widget = active_m3dview_widget()
             pos = top_center(widget.widget)
-            return pos.x() - 480, pos.y()
+            return pos.x() - self.app.ui._width * 0.5, pos.y()
 
         for name in ok_names:
             widgets = find_child(panel.widget, name)
             if widgets:
                 pos = top_center(widgets[0].widget)
-                return pos.x() - 480, pos.y()
+                return pos.x() - self.app.ui._width * 0.5, pos.y()
 
     def initialize(self, app):
         self.parent = get_maya_window()
