@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-from collections import deque
 
 
 class TokenError(Exception):
@@ -150,7 +149,6 @@ class Renamer(object):
                     parts[0] + ' is not a valid string'
                 )
                 self.tokens = []
-
 
     def rename(self, input_str, index=None):
         if not self.tokens:
