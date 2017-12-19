@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import os
 import shlex
-from functools import partial
 import sys
-from ..mode import Mode
-from ..command import Command
-from ..context import Context
-from .. import styles
-from ..utils import new_process
+from hotline.mode import Mode
+from hotline.command import Command
+from hotline.context import Context
+from hotline import styles
+from hotline.utils import new_process
 
 
 def elevated():

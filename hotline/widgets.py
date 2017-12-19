@@ -1,17 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from collections import deque
-import sys
-import time
-from Qt import QtWidgets, QtCore, QtGui
+from hotline.Qt import QtWidgets, QtCore, QtGui
 from contextlib import contextmanager
-from .utils import event_loop
-from .anim import *
-
-
-def get_unit(style):
-    label = QtWidgets.QLabel('UNIT')
-    label.setStyleSheet(style)
-    return label.sizeHint().height()
+from hotline.utils import event_loop
+from hotline.anim import *
 
 
 class ActiveScreen(object):

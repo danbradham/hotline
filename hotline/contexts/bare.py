@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
-from ..mode import Mode
-from ..command import Command
-from ..context import Context
-from .. import styles
+from hotline.mode import Mode
+from hotline.context import Context
+from hotline import styles
 
 
 class Python(Mode):

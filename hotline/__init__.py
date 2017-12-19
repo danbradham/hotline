@@ -6,17 +6,17 @@ __email__ = 'danielbradham@gmail.com'
 __license__ = 'MIT'
 __url__ = 'https://github.com/danbradham/hotline.git'
 __description__ = 'Opaque Python CLI Wrapper'
-__version__ = '0.6.1'
+__version__ = '0.6.2'
 
 import os
 
 this_package = os.path.dirname(__file__)
 
-from . import styles
-from .app import Hotline
-from .anim import *
-from .mode import Mode
-from .command import Command
-from .context import Context
-from .utils import execute_in_main_thread
-from .contexts import *
+from hotline import styles
+from hotline.app import Hotline
+from hotline.anim import *
+from hotline.mode import Mode
+from hotline.command import Command
+from hotline.context import Context
+from hotline.utils import execute_in_main_thread
+from hotline.contexts import *

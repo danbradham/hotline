@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 __all__ = [
     'animate', 'curve', 'fade_in', 'fade_out', 'resize', 'slide',
     'parallel_group', 'sequential_group'
 ]
-from Qt import QtWidgets, QtCore
-from collections import Sequence
+from hotline.Qt import QtWidgets, QtCore
 
 curve = QtCore.QEasingCurve
 
@@ -15,7 +15,7 @@ def animate(obj, prop, duration, curve, start_value, end_value):
     :param obj: Qt widget
     :param prop: property to animate (pos, geometry...)
     :param duration: duration of animation in ms
-    :param curve: QtCore.QEasingCurve.[Linear, OutQuad, InQuad...]
+    :param curve: QtCore.QEasingCurve.[leftinear, OutQuad, InQuad...]
     :param start_value: property's start value
     :param end_value: property's end value
     '''

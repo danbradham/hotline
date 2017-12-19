@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import re
 
 
@@ -145,10 +146,10 @@ class Renamer(object):
                         parts.pop(0)
 
             if num_parts == len(parts):
+                self.tokens = []
                 raise TokenError(
                     parts[0] + ' is not a valid string'
                 )
-                self.tokens = []
 
     def rename(self, input_str, index=None):
         if not self.tokens:

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import sys
-from .maya import MayaContext
-from .win import WindowsContext
-from .bare import BareContext
+from hotline.contexts.maya import MayaContext
+from hotline.contexts.win import WindowsContext
+from hotline.contexts.bare import BareContext
+
 
 def best_context():
     '''Return the best possible context'''

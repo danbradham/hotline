@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import sys
 import traceback
-from Qt import QtWidgets
-from .command import Command
-from .mode import Mode
-from .contexts import best_context
-from .widgets import Dialog
-from .utils import execute_in_main_thread, redirect_stream
-from .history import History, ModeCommand
+from hotline.Qt import QtWidgets
+from hotline.command import Command
+from hotline.mode import Mode
+from hotline.contexts import best_context
+from hotline.widgets import Dialog
+from hotline.utils import execute_in_main_thread, redirect_stream
+from hotline.history import History, ModeCommand
 
 
 class flags(object):
@@ -194,8 +195,9 @@ class Hotline(object):
         if options:
             dialog.commandlist.items = options
         accepted = dialog.exec_(self.context.animation, (pos.x(), pos.y()))
+        user_input = dialog.text()
         if accepted:
-            return dialog.text()
+            return user_input
 
     def execute(self, command):
         '''Execute a command using the current mode'''

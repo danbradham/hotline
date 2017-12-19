@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from abc import abstractmethod, abstractproperty
-from .command import Command
-import threading
+from hotline.command import Command
 
 
 class Mode(object):

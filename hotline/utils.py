@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-__all__ = [
-    'Executor', 'execute_in_main_thread', 'new_process', 'redirect_stream',
-    'wait_for', 'qt_sleep', 'sleep_until'
-]
-
+from __future__ import absolute_import
 import sys
 from contextlib import contextmanager
 from Queue import Queue
 from functools import partial
-from Qt import QtCore, QtGui, QtWidgets
+from hotline.Qt import QtCore, QtGui, QtWidgets
 import subprocess
 from timeit import default_timer
+__all__ = [
+    'Executor', 'execute_in_main_thread', 'new_process', 'redirect_stream',
+    'wait_for', 'qt_sleep', 'sleep_until'
+]
 
 
 def keys_to_string(key, modifiers):
@@ -131,7 +131,6 @@ def event_loop(conditions=None, timeout=None, parent=None):
     try:
         yield loop
     finally:
-        print 'waiting for event loop'
         loop.exec_()
 
 
