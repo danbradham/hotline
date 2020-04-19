@@ -32,8 +32,7 @@ class CommandList(QtWidgets.QListWidget):
         super(CommandList, self).__init__(parent)
         self.setWindowFlags(
             QtCore.Qt.Window |
-            QtCore.Qt.FramelessWindowHint |
-            QtCore.Qt.WindowStaysOnTopHint
+            QtCore.Qt.FramelessWindowHint
         )
         self.setAttribute(QtCore.Qt.WA_ShowWithoutActivating)
         self.setMinimumSize(1, 1)
@@ -239,10 +238,16 @@ class InputField(QtWidgets.QLineEdit):
             self.setCursorPosition(0)
 
     def keyPressEvent(self, event):
+        if not self.isVisible():
+            self.clearFocus()
+            event.reject()
+            return
+
         enter_pressed = event.key() == QtCore.Qt.Key_Enter
         if enter_pressed and self.is_placeholder:
             event.accept()
             return
+
         super(InputField, self).keyPressEvent(event)
 
     def onTextEdited(self, text):
