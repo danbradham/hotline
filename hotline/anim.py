@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+from Qt import QtWidgets, QtCore
 __all__ = [
-    'animate', 'curve', 'fade_in', 'fade_out', 'resize', 'slide',
-    'parallel_group', 'sequential_group'
+    'animate',
+    'curve',
+    'fade_in',
+    'fade_out',
+    'resize',
+    'slide',
+    'parallel_group',
+    'sequential_group',
 ]
-from hotline.Qt import QtWidgets, QtCore
 
 curve = QtCore.QEasingCurve
 
@@ -19,8 +25,7 @@ def animate(obj, prop, duration, curve, start_value, end_value):
     :param start_value: property's start value
     :param end_value: property's end value
     '''
-
-    anim = QtCore.QPropertyAnimation(obj, prop)
+    anim = QtCore.QPropertyAnimation(obj, QtCore.QByteArray(prop.encode()))
     anim.setDuration(duration)
     anim.setEasingCurve(curve)
     anim.setStartValue(start_value)
@@ -34,7 +39,8 @@ def slide(obj, **kwargs):
     :param prop: default "pos"
     :param duration: default 150
     :param curve: default OutQuad
-    :param start_value: tuple or QPointF containing top, left corner coordinates
+    :param start_value: tuple or QPointF containing top, left corner
+                        coordinates
     :param end_value: tuple or QPointF containing top, left corner coordinates
     '''
 

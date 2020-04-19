@@ -5,8 +5,8 @@ __author__ = 'Dan Bradham'
 __email__ = 'danielbradham@gmail.com'
 __license__ = 'MIT'
 __url__ = 'https://github.com/danbradham/hotline.git'
-__description__ = 'Opaque Python CLI Wrapper'
-__version__ = '0.6.2'
+__description__ = 'Sublime text like Qt Command Palette'
+__version__ = '0.7.0'
 
 import os
 
