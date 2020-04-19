@@ -6,7 +6,7 @@ __email__ = 'danielbradham@gmail.com'
 __license__ = 'MIT'
 __url__ = 'https://github.com/danbradham/hotline.git'
 __description__ = 'Sublime text like Qt Command Palette'
-__version__ = '0.7.0'
+__version__ = '0.7.1'
 
 import os
 

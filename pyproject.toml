@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hotline"
-version = "0.7.0"
+version = "0.7.1"
 description = "Sublime text like Qt Command Palette"
 authors = ["Dan Bradham <danielbradham@gmail.com>"]
 license = "MIT"
