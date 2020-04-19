@@ -426,6 +426,14 @@ class MayaContext(Context):
     style = styles.maya
     parent = None
 
+    def before_execute(self, mode, command):
+        from maya import cmds
+        cmds.undoInfo(openChunk=True)
+
+    def after_execute(self, mode, command, result):
+        from maya import cmds
+        cmds.undoInfo(closeChunk=True)
+
     def get_position(self):
         ok_names = [
             'nodeEditorPanel\dNodeEditorEd',
@@ -439,7 +447,7 @@ class MayaContext(Context):
         try:
             widget = maya_widget_under_cursor()
         except TypeError as e:
-            print type(e), e
+            print(type(e), e)
             if 'shiboken-based type' not in str(e):
                 raise
         else:
