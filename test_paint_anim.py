@@ -21,12 +21,12 @@ class ClickBox(QtWidgets.QWidget):
         self.setFixedSize(1000, 200)
         self.colors = {
             'ok': (
-            QtWidgets.QColor.fromRgbF(0, 0.8, 0.3, 0.5),
-            QtWidgets.QColor.fromRgbF(0, 0.8, 0.3, 0)
+            QtGui.QColor.fromRgbF(0, 0.8, 0.3, 0.5),
+            QtGui.QColor.fromRgbF(0, 0.8, 0.3, 0)
             ),
             'not_ok': (
-            QtWidgets.QColor.fromRgbF(0.8, 0, 0.3, 0.5),
-            QtWidgets.QColor.fromRgbF(0.8, 0, 0.3, 0)
+            QtGui.QColor.fromRgbF(0.8, 0, 0.3, 0.5),
+            QtGui.QColor.fromRgbF(0.8, 0, 0.3, 0)
             )
         }
 
@@ -59,13 +59,13 @@ class ClickBox(QtWidgets.QWidget):
             radius = self.property('circle_radius')
             color = self.property('circle_color')
 
-            painter = QtWidgets.QPainter(self)
+            painter = QtGui.QPainter(self)
 
-            pen = QtWidgets.QPen()
+            pen = QtGui.QPen()
             pen.setStyle(QtCore.Qt.PenStyle.NoPen)
             painter.setPen(pen)
 
-            brush = QtWidgets.QBrush()
+            brush = QtGui.QBrush()
             brush.setColor(color)
             brush.setStyle(QtCore.Qt.BrushStyle.SolidPattern)
 

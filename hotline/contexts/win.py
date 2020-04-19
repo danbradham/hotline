@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import os
 import shlex
 import sys
@@ -27,9 +27,6 @@ class PowerShell(Mode):
     @property
     def commands(self):
         return [
-            Command('Use Python 27', 'sudo usepython 27'),
-            Command('Use Python 35', 'sudo usepython 35'),
-            Command('Use Python 36', 'sudo usepython 36'),
             Command('Launch Elevated PowerShell', elevated),
         ]
 
@@ -43,7 +40,7 @@ class PowerShell(Mode):
             cmd.append('-Command')
             cmd.append(command)
 
-        print new_process(*cmd)
+        print(new_process(*cmd))
 
 
 class Cmd(Mode):
@@ -55,7 +52,7 @@ class Cmd(Mode):
 
     def execute(self, command):
         cmd = ['cmd', '/C', command]
-        print new_process(cmd, shell=True)
+        print(new_process(cmd, shell=True))
 
 
 class Python(Mode):
@@ -72,7 +69,7 @@ class Python(Mode):
             return eval(code, main, main)
         except SyntaxError:
             code = compile(command, '<string>', 'exec')
-            exec code in main
+            eval(code, main, main)
 
 
 class Run(Mode):
@@ -134,7 +131,6 @@ class WindowsContext(Context):
 
     name = 'WindowsContext'
     modes = [Run, Python, PowerShell, Cmd]
-    style = styles.light
     parent = None
 
     def initialize(self, app):

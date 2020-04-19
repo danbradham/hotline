@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from collections import namedtuple
 import re
 import sys
-from hotline.Qt import QtWidgets, QtCore, QtGui
+from Qt import QtWidgets, QtCore, QtGui
 from hotline.mode import Mode
 from hotline.command import Command
 from hotline.context import Context
 from hotline import styles
-from hotline.utils import new_process
 from hotline.renamer import Renamer
 
 MayaWidget = namedtuple('MayaWidget', 'path widget')
@@ -111,7 +110,7 @@ class Python(Mode):
             return eval(code, main, main)
         except SyntaxError:
             code = compile(command, '<string>', 'exec')
-            exec code in main
+            exec(code, main, main)
 
 
 class Mel(Mode):

@@ -1,15 +1,25 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-import sys
 from contextlib import contextmanager
-from Queue import Queue
 from functools import partial
-from hotline.Qt import QtCore, QtGui, QtWidgets
-import subprocess
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
 from timeit import default_timer
+import subprocess
+import sys
+from Qt import QtCore, QtGui, QtWidgets
+
+
 __all__ = [
-    'Executor', 'execute_in_main_thread', 'new_process', 'redirect_stream',
-    'wait_for', 'qt_sleep', 'sleep_until'
+    'Executor',
+    'execute_in_main_thread',
+    'new_process',
+    'redirect_stream',
+    'wait_for',
+    'qt_sleep',
+    'sleep_until',
 ]
 
 
@@ -44,9 +54,18 @@ def new_process(*args, **kwargs):
     '''
 
     timeout = kwargs.pop('timeout', 2)
+
+    if sys.platform == 'win32':
+        create_new_process_group = 0x00000200
+        detached_process = 0x00000008
+        creation_flags = detached_process | create_new_process_group
+        kwargs.setdefault('creationflags', creation_flags)
+
     kwargs.setdefault('stdin', subprocess.PIPE)
     kwargs.setdefault('stdout', subprocess.PIPE)
     kwargs.setdefault('stderr', subprocess.PIPE)
+    kwargs.setdefault('shell', True)
+
     p = subprocess.Popen(args, **kwargs)
     s = default_timer()
     while default_timer() - s < timeout:

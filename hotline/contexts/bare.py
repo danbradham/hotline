@@ -19,7 +19,7 @@ class Python(Mode):
             return eval(code, main, main)
         except SyntaxError:
             code = compile(command, '<string>', 'exec')
-            exec code in main
+            exec(code, main, main)
 
 
 class BareContext(Context):
