@@ -210,30 +210,110 @@ class Connect(Mode):
     commands = []
     prompt = 'source destination'
 
-    def execute(self, command):
+    def get_next_attr_index(self, attr):
+        from maya import cmds
+        for i in range(10000):
+            attr_ = '{}[{}]'.format(attr, i)
+            if not cmds.connectionInfo(attr_, sfd=True):
+                return i
+        return 0
+
+    def connect_pairs(self):
+        command = self.app.get_user_input(self.prompt)
+        if not command:
+            return
+
+        self.validate_command(command)
+
+        from maya import cmds
+        attrs = command.split()
+        sel = cmds.ls(sl=True, long=True)
+        assert len(sel) % 2 == 0, 'Must have an even number of items selected.'
+
+        for src, dest in zip(sel[::2], sel[1::2]):
+            src_attr = src + '.' + attrs[0]
+            dest_attr = dest + '.' + attrs[1]
+            try:
+                cmds.connectAttr(src_attr, dest_attr, force=True)
+            except Exception:
+                pass
+
+    def connect_one_to_many(self):
+        command = self.app.get_user_input(self.prompt)
+        if not command:
+            return
+
+        self.validate_command(command)
+
+        from maya import cmds
+        attrs = command.split()
+        sel = cmds.ls(sl=True, long=True)
+
+        src_attr = sel[0] + '.' + attrs[0]
+        for dest in sel[1:]:
+            dest_attr = dest + '.' + attrs[1]
+            try:
+                cmds.connectAttr(src_attr, dest_attr, force=True)
+            except Exception:
+                pass
+
+    def connect_many_to_one(self):
+        command = self.app.get_user_input(self.prompt)
+        if not command:
+            return
+
+        self.validate_command(command)
+
+        from maya import cmds
+        attrs = command.split()
+        sel = cmds.ls(sl=True, long=True)
+
+        dest_attr = sel[-1] + '.' + attrs[1]
+        inputs = cmds.listConnections(dest_attr) or []
+        idx = self.get_next_attr_index(dest_attr)
+        for i, src in enumerate(sel[:-1]):
+            src_attr = src + '.' + attrs[0]
+            if src in inputs:
+                continue
+            dest_attr_idx = '{}[{}]'.format(dest_attr, idx + i)
+            cmds.connectAttr(src_attr, dest_attr_idx)
+
+    @property
+    def commands(self):
+        return [
+            Command('Pairs', self.connect_pairs),
+            Command('One To Many', self.connect_one_to_many),
+            Command('Many To One', self.connect_many_to_one),
+        ]
+
+    def validate_command(self, command):
         from maya import cmds
 
-        attrs = command.split()
-        if len(attrs) != 2:
+        if len(command.split()) != 2:
             raise Exception(
                 'Input must be a source and destination attribute:\n\n'
                 '   translateX translateY\n'
                 '   scale scale\n'
             )
 
-        sel = cmds.ls(sl=True, long=True)
-        if len(sel) < 2:
+        if len(cmds.ls(sl=True, long=True)) < 2:
             raise Exception(
                 'Must have at least 2 objects selected...'
             )
 
+    def execute(self, command):
+        self.validate_command(command)
+
+        from maya import cmds
+        attrs = command.split()
+        sel = cmds.ls(sl=True, long=True)
+
         src_attr = sel[0] + '.' + attrs[0]
-        nodes = sel[1:]
-        for node in nodes:
-            dest_attr = node + '.' + attrs[1]
+        for dest in sel[1:]:
+            dest_attr = dest + '.' + attrs[1]
             try:
                 cmds.connectAttr(src_attr, dest_attr, force=True)
-            except:
+            except Exception:
                 pass
 
 
