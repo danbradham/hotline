@@ -10,7 +10,7 @@ from hotline.constant import flags
 
 class Context(object):
 
-    animation = 'fade_in'
+    animation = 'slide'
     position = 'center'
 
     def __init__(self, app):
@@ -55,7 +55,7 @@ class Context(object):
     @abstractproperty
     def style(self):
         '''CSS Stylesheet'''
-        return styles.dark
+        return styles.light
 
     def get_position(self):
         '''Override to provide a custom position for the UI.

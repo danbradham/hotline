@@ -273,13 +273,11 @@ class Dialog(QtWidgets.QDialog):
         self.setMinimumSize(1, 1)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
 
-
         self.mode_button = QtWidgets.QPushButton(self)
         self.mode_button.setMinimumWidth(self._height)
-        self.mode_button.setFixedHeight(self._height - 4)
         self.mode_button.setSizePolicy(
             QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Minimum,
         )
         self.mode_button.setFocusPolicy(QtCore.Qt.NoFocus)
         self.mode_button.hide()
@@ -442,17 +440,17 @@ class Dialog(QtWidgets.QDialog):
         self.setGeometry(*start)
         group = parallel_group(
             self,
-            fade_in(self, duration=50),
             resize(
                 self,
                 start_value=start,
                 end_value=end,
+                duration=200,
+                curve=QtCore.QEasingCurve.OutCubic,
             ),
         )
 
         crect = self.commandlist._get_geometry()
         self.commandlist.setGeometry(crect)
-        group.addAnimation(fade_in(self.commandlist, duration=50))
         if crect.height() <= 1:
             return group
 
@@ -460,7 +458,7 @@ class Dialog(QtWidgets.QDialog):
         self.commandlist.setGeometry(*start)
         end = (
             crect.left(),
-            end[1] + self._height - 2,
+            end[1] + end[3] - 2,
             crect.width(),
             crect.height()
         )
@@ -469,6 +467,8 @@ class Dialog(QtWidgets.QDialog):
                 self.commandlist,
                 start_value=start,
                 end_value=end,
+                duration=200,
+                curve=QtCore.QEasingCurve.OutCubic,
             )
         )
         return group
@@ -479,13 +479,16 @@ class Dialog(QtWidgets.QDialog):
         group = parallel_group(self, fade_in(self), fade_in(self.commandlist))
         return group
 
+    def default_show(self, pos):
+        self.setGeometry(pos[0], pos[1], self._width, self._height)
+        self.commandlist.setGeometry(self.commandlist._get_geometry())
+
     def set_style(self, style):
 
         _style = style.replace('${height}', str(int(self._height)))
         self.setStyleSheet(_style)
 
         self._set_sizes()
-        self.mode_button.setFixedHeight(self._height - 4)
         self.mode_button.setMinimumWidth(self._height)
         style = style.replace('${height}', str(int(self._height)))
         self.setStyleSheet(style)
@@ -525,6 +528,10 @@ class Dialog(QtWidgets.QDialog):
         self._show()
         lefttop = lefttop or self.get_position()
         anim_type = anim_type or self.animation
-        group = getattr(self, anim_type + '_group')(lefttop)
-        group.finished.connect(self.activate)
-        group.start(group.DeleteWhenStopped)
+        group = getattr(self, anim_type + '_group', None)
+        if group:
+            group = group(lefttop)
+            group.finished.connect(self.activate)
+            group.start(group.DeleteWhenStopped)
+        else:
+            self.default_show()
