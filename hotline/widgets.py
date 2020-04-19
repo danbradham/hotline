@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from collections import deque
-from hotline.Qt import QtWidgets, QtCore, QtGui
+from Qt import QtWidgets, QtCore, QtGui
 from contextlib import contextmanager
 from hotline.utils import event_loop
 from hotline.anim import *
@@ -50,7 +50,7 @@ class CommandList(QtWidgets.QListWidget):
 
     @property
     def items(self):
-        return (self.item(i) for i in xrange(self.count()))
+        return (self.item(i) for i in range(self.count()))
 
     @items.setter
     def items(self, value):
@@ -127,10 +127,10 @@ class CommandList(QtWidgets.QListWidget):
 
         r = self.parent.rect()
         pos = self.parent.mapToGlobal(QtCore.QPoint(r.right(), r.bottom()))
-        width = self.lineedit.width()
+        width = self.parent.width()
         left = pos.x() - width + 1
-        top = pos.y() + 1
-        height = 72 * min(visible_count, 5)
+        top = pos.y() - 2
+        height = self.parent._height * min(visible_count, 5)
         return QtCore.QRect(left, top, width, height)
 
     def show(self):
@@ -270,16 +270,13 @@ class Dialog(QtWidgets.QDialog):
             QtCore.Qt.Window |
             QtCore.Qt.FramelessWindowHint
         )
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.Ignored,
-            QtWidgets.QSizePolicy.Ignored
-        )
         self.setMinimumSize(1, 1)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+
 
         self.mode_button = QtWidgets.QPushButton(self)
-        self.mode_button.setFixedHeight(self._height)
         self.mode_button.setMinimumWidth(self._height)
+        self.mode_button.setFixedHeight(self._height - 4)
         self.mode_button.setSizePolicy(
             QtWidgets.QSizePolicy.Minimum,
             QtWidgets.QSizePolicy.Fixed,
@@ -296,6 +293,23 @@ class Dialog(QtWidgets.QDialog):
         self.commandlist.itemClicked.connect(self.accept)
         self.input_field.textChanged.connect(self.commandlist.filter)
         self.input_field.focusOut.connect(self.reject)
+
+        self._wrapper = QtWidgets.QWidget(parent=self)
+        self._wrapper.setObjectName('Hotline')
+        self.layout = QtWidgets.QHBoxLayout(self._wrapper)
+        self.layout.setAlignment(
+            QtCore.Qt.AlignLeft |
+            QtCore.Qt.AlignVCenter
+        )
+        self.layout.setContentsMargins(2, 2, 2, 2)
+        self.layout.setSpacing(0)
+        self.layout.addWidget(self.mode_button)
+        self.layout.addWidget(self.input_field)
+        self._layout = QtWidgets.QHBoxLayout(self)
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout.setSpacing(0)
+        self._layout.addWidget(self._wrapper)
+        self.setLayout(self._layout)
 
         self.console = Console(self)
 
@@ -323,12 +337,6 @@ class Dialog(QtWidgets.QDialog):
         self.hk_tab.setKey('Tab')
         self.hk_shift_tab = QtWidgets.QShortcut(self)
         self.hk_shift_tab.setKey('Shift+Tab')
-        self.layout = QtWidgets.QHBoxLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(0)
-        self.layout.addWidget(self.mode_button)
-        self.layout.addWidget(self.input_field)
-        self.setLayout(self.layout)
 
     def _get_font_unit(self):
         label = QtWidgets.QLabel('UNIT')
@@ -450,7 +458,12 @@ class Dialog(QtWidgets.QDialog):
 
         start = (crect.left(), start[1], crect.width(), 0)
         self.commandlist.setGeometry(*start)
-        end = (crect.left(), end[1] + self._height, crect.width(), crect.height())
+        end = (
+            crect.left(),
+            end[1] + self._height - 2,
+            crect.width(),
+            crect.height()
+        )
         group.addAnimation(
             resize(
                 self.commandlist,
@@ -466,11 +479,17 @@ class Dialog(QtWidgets.QDialog):
         group = parallel_group(self, fade_in(self), fade_in(self.commandlist))
         return group
 
-    def setStyleSheet(self, style):
-        super(Dialog, self).setStyleSheet(style)
+    def set_style(self, style):
+
+        _style = style.replace('${height}', str(int(self._height)))
+        self.setStyleSheet(_style)
+
         self._set_sizes()
-        self.mode_button.setFixedHeight(self._height)
+        self.mode_button.setFixedHeight(self._height - 4)
         self.mode_button.setMinimumWidth(self._height)
+        style = style.replace('${height}', str(int(self._height)))
+        self.setStyleSheet(style)
+        self.commandlist.setStyleSheet(style)
 
     def exec_(self, anim_type=None, lefttop=None):
         self.show(anim_type, lefttop)
