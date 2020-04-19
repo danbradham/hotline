@@ -423,7 +423,7 @@ class MayaContext(Context):
 
     name = 'MayaContext'
     modes = [Rename, Select, Node, Connect, Python, Mel]
-    style = styles.light
+    style = styles.maya
     parent = None
 
     def get_position(self):
