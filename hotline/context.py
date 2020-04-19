@@ -55,7 +55,7 @@ class Context(object):
     @abstractproperty
     def style(self):
         '''CSS Stylesheet'''
-        return
+        return styles.dark
 
     def get_position(self):
         '''Override to provide a custom position for the UI.
