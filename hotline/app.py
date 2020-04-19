@@ -25,7 +25,7 @@ class HotlineMode(Mode):
 
     def gen_command(self):
         result = self.app.get_user_input('User Input')
-        print result
+        print(result)
 
     @property
     def commands(self):
@@ -37,7 +37,7 @@ class HotlineMode(Mode):
         ]
 
     def execute(self, command):
-        print command
+        print(command)
 
 
 class HotlineStream(object):
@@ -67,7 +67,7 @@ class Hotline(object):
         self.add_modes(HotlineMode)
         self.ui = Dialog(self.context.parent)
         self.ui.mode_button.show()
-        self.ui.setStyleSheet(self.context.style)
+        self.ui.set_style(self.context.style)
         self.ui.mode_button.clicked.connect(self.on_next_mode)
         self.ui.hk_tab.activated.connect(self.on_next_mode)
         self.ui.hk_shift_tab.activated.connect(self.on_prev_mode)
@@ -182,7 +182,7 @@ class Hotline(object):
         self.ui.force_hide()
         pos = self.ui.pos()
         dialog = Dialog(self.context.parent)
-        dialog.setStyleSheet(self.context.style)
+        dialog.set_style(self.context.style)
         if prompt:
             dialog.input_field.placeholder = prompt
             dialog.input_field.clear()
@@ -193,19 +193,11 @@ class Hotline(object):
         if accepted:
             return user_input
 
-    def execute(self, command):
+    def execute(self, command, mode=None):
         '''Execute a command using the current mode'''
 
-        mode = self.get_mode()
-        result = None
-        with redirect_stream(stdout=self.stream, stderr=self.stream):
-            try:
-                result = mode(command)
-                if result and result not in flags._list:
-                    print(result)
-            except Exception as e:
-                result = e
-                traceback.print_exc()
+        mode = mode or self.get_mode()
+        result = self.context.execute(mode=mode, command=command)
         return result
 
     def get_mode(self, name=None):
@@ -218,7 +210,7 @@ class Hotline(object):
             if mode.name == name or mode.label == name:
                 return mode
 
-        raise NameError('Can not find mode named: '+ name)
+        raise NameError('Can not find mode named: ' + name)
 
     def set_mode(self, mode):
         '''Set active mode by name or Mode object'''
