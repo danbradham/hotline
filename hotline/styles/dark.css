@@ -1,47 +1,51 @@
 /*
 Color Palette:
          text - #C6C6C6
-text inactive - #4B4B4B
-      primary - #2B2B2B
-       accent - #418EDC
- list primary - #AAAAAA
-   list hover - #BBBBBB
+text inactive - #424959
+   background - #1F2430
+ border-color - #191D26
+        hover - #2C3445
 */
 
 QWidget {
     font-family: Ubuntu Mono;
     font-size: 14pt;
     color: #C6C6C6;
-    background-color: #2B2B2B;
+    background-color: #1F2430;
+}
+
+QWidget#Hotline {
+    border: 1 solid #191D26;
+    border-radius: 3;
 }
 
 QTextEdit {
-    border: 0;
     font-family: Ubuntu Mono;
     font-size: 12pt;
     color: #C6C6C6;
-    background-color: #2B2B2B;
+    background-color: #1F2430;
 }
 
 QPushButton {
-    border: none;
+    outline: none;
+    border: 0;
     color: #C6C6C6;
-    background-color: #2B2B2B;
+    background-color: #1F2430;
 }
 
 QPushButton:hover {
-    color: #2B2B2B;
-    background-color: #C6C6C6;
+    color: #C6C6C6;
+    background-color: #2C3445;
 }
 
 
 QPushButton:pressed {
-    background-color: #418EDC;
+    background-color: #2C3445;
 }
 
 QLineEdit {
     outline: none;
-    border: none;
+    border: 0;
     margin-left: 0px;
     padding-left: 20px;
 }
@@ -51,50 +55,60 @@ QLineEdit[placeholder=false] {
 }
 
 QLineEdit[placeholder=true] {
-    color: #4B4B4B;
+    color: #424959;
 }
 
 QListView {
-    border: none;
-    outline: none;
-    color: #2B2B2B;
-    background-color: #AAAAAA;
+    border-top: 1 solid #191D26;
+    border-left: 1 solid #191D26;
+    border-right: 1 solid #191D26;
+    border-bottom: 1 solid #191D26;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+    color: #424959;
+    background-color: #1F2430;
 }
 
 QListView::item {
-    height: 72;
+    height: ${height};
     border: 0px;
     padding-left: 20px;
 }
 
 QListView::item:selected:active {
-    color: #2B2B2B;
-    background-color: #C6C6C6;
+    color: #C6C6C6;
+    background-color: #2C3445;
 }
 
 QListView::item:selected:!active {
-    color: #2B2B2B;
-    background-color: #C6C6C6;
+    color: #C6C6C6;
+    background-color: #2C3445;
 }
 
 QListView::item:hover {
-    background-color: #BBBBBB;
+    background-color: #2C3445;
+}
+
+QListView::item:last {
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+    background-color: #2C3445;
 }
 
 QScrollBar:vertical {
-    background: #AAAAAA;
+    background: #1F2430;
     width: 6px;
     margin: 40px 0 40px 0;
 }
 
 QScrollBar::handle:vertical {
-    background: #2B2B2B;
+    background: #424959;
     min-height: 10px;
 }
 
 QScrollBar::add-line:vertical {
     border: 0;
-    background: #AAAAAA;
+    background: #1F2430;
     height: 40px;
     subcontrol-position: bottom;
     subcontrol-origin: margin;
@@ -102,7 +116,7 @@ QScrollBar::add-line:vertical {
 
 QScrollBar::sub-line:vertical {
     border: 0;
-    background: #AAAAAA;
+    background: #1F2430;
     height: 40px;
     subcontrol-position: top;
     subcontrol-origin: margin;
