@@ -1,20 +1,14 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import sys
-import traceback
-from hotline.Qt import QtWidgets
+from Qt import QtWidgets
 from hotline.command import Command
 from hotline.mode import Mode
+from hotline.constant import flags
 from hotline.contexts import best_context
 from hotline.widgets import Dialog
-from hotline.utils import execute_in_main_thread, redirect_stream
+from hotline.utils import execute_in_main_thread
 from hotline.history import History, ModeCommand
-
-
-class flags(object):
-    class DontHide: pass
-    class Hide: pass
-    _list = [DontHide, Hide]
 
 
 class HotlineMode(Mode):
