@@ -50,14 +50,6 @@ QLineEdit {
     padding-left: 20px;
 }
 
-QLineEdit[placeholder=false] {
-    color: #C6C6C6;
-}
-
-QLineEdit[placeholder=true] {
-    color: #424959;
-}
-
 QListView {
     border-top: 1 solid #191D26;
     border-left: 1 solid #191D26;

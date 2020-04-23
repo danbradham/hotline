@@ -176,86 +176,26 @@ class InputField(QtWidgets.QLineEdit):
     def __init__(self, placeholder=None, parent=None):
         super(InputField, self).__init__(parent=parent)
         self.parent = parent
-        self.setProperty('property', bool(placeholder))
-        self.refresh_style()
-        self._placeholder = placeholder
-        if self._placeholder:
-            self.setText(self._placeholder)
-            self.setCursorPosition(0)
-        self.cursorPositionChanged.connect(self.onCursorPositionChanged)
-        self.textEdited.connect(self.onTextEdited)
+        if placeholder:
+            self.setPlaceholderText(placeholder)
 
     def focusOutEvent(self, event):
         event.accept()
         self.focusOut.emit(event)
 
-    def refresh_style(self):
-        self.style().unpolish(self)
-        self.style().polish(self)
-
-    @property
-    def placeholder(self):
-        return self._placeholder
-
-    @placeholder.setter
-    def placeholder(self, value):
-        _old = self._placeholder
-        self._placeholder = value
-        if self._text() == _old and value:
-            self.setText(value)
-            self.setCursorPosition(0)
-
-    @property
-    def is_placeholder(self):
-        return self._text() == self._placeholder
-
-    def clear(self):
-        super(InputField, self).clear()
-
-        if self._placeholder:
-            self.setText(self.placeholder)
-            self.setCursorPosition(0)
-
-        self.setProperty('placeholder', bool(self.placeholder))
-        self.refresh_style()
-
-    def _text(self):
-        return super(InputField, self).text()
-
-    def text(self):
-        value = self._text()
-        if value == self._placeholder:
-            value = ''
-        return value
-
-    def setText(self, text):
-        super(InputField, self).setText(text)
-        self.setProperty('placeholder', text == self._placeholder)
-        self.refresh_style()
-
-    def onCursorPositionChanged(self, old_pos, new_pos):
-        if self.is_placeholder:
-            self.setCursorPosition(0)
-
     def keyPressEvent(self, event):
+        # sometimes focus is a little sticky
         if not self.isVisible():
             self.clearFocus()
             event.reject()
             return
 
         enter_pressed = event.key() == QtCore.Qt.Key_Enter
-        if enter_pressed and self.is_placeholder:
+        if enter_pressed and not self.text():
             event.accept()
             return
 
-        super(InputField, self).keyPressEvent(event)
-
-    def onTextEdited(self, text):
-        if self._placeholder and self._placeholder in text:
-            text = text.split(self.placeholder)[0]
-            self.setText(text)
-            self.setProperty('placeholder', False)
-            self.refresh_style()
+        return super(InputField, self).keyPressEvent(event)
 
 
 class Dialog(QtWidgets.QDialog):
@@ -299,6 +239,7 @@ class Dialog(QtWidgets.QDialog):
 
         self._wrapper = QtWidgets.QWidget(parent=self)
         self._wrapper.setObjectName('Hotline')
+
         self.layout = QtWidgets.QHBoxLayout(self._wrapper)
         self.layout.setAlignment(
             QtCore.Qt.AlignLeft |
@@ -312,6 +253,8 @@ class Dialog(QtWidgets.QDialog):
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(0)
         self._layout.addWidget(self._wrapper)
+
+        self._wrapper.setLayout(self.layout)
         self.setLayout(self._layout)
 
         self.console = Console(self)

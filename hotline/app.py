@@ -9,6 +9,7 @@ from hotline.contexts import best_context
 from hotline.widgets import Dialog
 from hotline.utils import execute_in_main_thread
 from hotline.history import History, ModeCommand
+from hotline import styles
 
 
 class HotlineMode(Mode):
@@ -53,8 +54,10 @@ class HotlineStream(object):
 
 class Hotline(object):
 
-    def __init__(self, context=None):
+    def __init__(self, context=None, style=None):
         context = context or best_context()
+        if style:
+            context.style = getattr(styles, style)
         self.context = context(self)
         self.stream = HotlineStream(self)
         self.history = History()
@@ -118,7 +121,7 @@ class Hotline(object):
 
     def refresh(self):
         mode = self.get_mode()
-        self.ui.input_field.placeholder = mode.prompt
+        self.ui.input_field.setPlaceholderText(mode.prompt)
         self.ui.input_field.clear()
         self.ui.mode_button.setText(mode.label)
         self.ui.commandlist.items = [c.name for c in mode.commands]
@@ -184,7 +187,7 @@ class Hotline(object):
         dialog = Dialog(self.context.parent)
         dialog.set_style(self.context.style)
         if prompt:
-            dialog.input_field.placeholder = prompt
+            dialog.input_field.setPlaceholderText(prompt)
             dialog.input_field.clear()
         if options:
             dialog.commandlist.items = options
