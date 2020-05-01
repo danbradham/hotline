@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function
 import sys
-from Qt import QtWidgets
 from hotline.command import Command
 from hotline.mode import Mode
 from hotline.constant import flags
@@ -10,6 +9,7 @@ from hotline.widgets import Dialog
 from hotline.utils import execute_in_main_thread
 from hotline.history import History, ModeCommand
 from hotline import styles
+from hotline.vendor.Qt import QtWidgets
 
 
 class HotlineMode(Mode):

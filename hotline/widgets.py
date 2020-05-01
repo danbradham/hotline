@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from collections import deque
-from Qt import QtWidgets, QtCore, QtGui
 from contextlib import contextmanager
+
 from hotline.utils import event_loop
 from hotline.anim import *
+from hotline.vendor.Qt import QtWidgets, QtCore, QtGui
 
 
 class ActiveScreen(object):

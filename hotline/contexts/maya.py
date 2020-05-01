@@ -3,12 +3,12 @@ from __future__ import absolute_import, print_function
 from collections import namedtuple
 import re
 import sys
-from Qt import QtWidgets, QtCore, QtGui
 from hotline.mode import Mode
 from hotline.command import Command
 from hotline.context import Context
 from hotline import styles
 from hotline.renamer import Renamer
+from hotline.vendor.Qt import QtWidgets, QtCore, QtGui
 
 MayaWidget = namedtuple('MayaWidget', 'path widget')
 

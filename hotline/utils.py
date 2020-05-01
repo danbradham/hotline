@@ -9,7 +9,8 @@ except ImportError:
 from timeit import default_timer
 import subprocess
 import sys
-from Qt import QtCore, QtGui, QtWidgets
+
+from hotline.vendor.Qt import QtCore, QtGui, QtWidgets
 
 
 __all__ = [
@@ -17,7 +18,6 @@ __all__ = [
     'execute_in_main_thread',
     'new_process',
     'redirect_stream',
-    'wait_for',
     'qt_sleep',
     'sleep_until',
 ]

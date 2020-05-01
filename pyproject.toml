@@ -1,13 +1,12 @@
 [tool.poetry]
 name = "hotline"
-version = "0.7.2"
+version = "0.7.3"
 description = "Sublime text like Qt Command Palette"
 authors = ["Dan Bradham <danielbradham@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "3.7"
-"Qt.py" = "^1.2.5"
+python = "^3.6"
 PySide2 = "^5.14.2"
 keyboard = "^0.13.5"
 
