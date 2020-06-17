@@ -16,7 +16,7 @@ MayaWidget = namedtuple('MayaWidget', 'path widget')
 def get_maya_window():
     '''Get Maya MainWindow as a QWidget.'''
 
-    for widget in QtWidgets.QApplication.instance().topLevelWidgets():
+    for widget in QtWidgets.QApplication.topLevelWidgets():
         if widget.objectName() == 'MayaWindow':
             return widget
     raise RuntimeError('Could not locate MayaWindow...')
@@ -25,7 +25,6 @@ def get_maya_window():
 def maya_widget_under_cursor():
     '''Get the MayaWidget under your mouse cursor'''
 
-    app = QtWidgets.QApplication.instance()
     cursor = QtGui.QCursor()
     return maya_widget_at(cursor.pos())
 
@@ -33,8 +32,7 @@ def maya_widget_under_cursor():
 def maya_widget_at(pos):
     '''Get a MayaWidget at QtCore.QPoint'''
 
-    app = QtWidgets.QApplication.instance()
-    widget = app.widgetAt(pos)
+    widget = QtWidgets.QApplication.widgetAt(pos)
     return maya_widget(widget)
 
 
