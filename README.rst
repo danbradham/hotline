@@ -9,13 +9,16 @@ Available Contexts
 
  - Autodesk Maya
 
-    - Rename - rename selected nodes using hotlines Renamer minilanguage
+    - Rename - rename selected nodes using hotline's Renamer. The following
+        tokens are available.
 
         - **Pre_+** - adds a prefix
         - **+_Suf** - adds a suffix
-        - **-rem** - removes a string
+        - **-rem** - removes a substring
         - **search replace** - search for a string a replace it
         - **full_name_##** - full name replacement with a padded index
+        - **full_name_##(10)** - full name replacement with padded index and
+            custom start value.
 
     - Select - select nodes using glob and regex patterns
     - Connect - connect attributes
@@ -50,7 +53,7 @@ Hotline will attempt to use the best available context. You can also specify one
 Hotline in Autodesk Maya
 ========================
 
-To allow for maximum flexibility hotline doesn't do anything sneaky like use singletons or a cache to maintain instances for you. In Maya this means you'll need to keep track of an instance of the Hotline ui. Here's how I'm doing that currently::
+To allow for maximum flexibility hotline doesn't do anything sneaky like use singletons or a cache to maintain instances for you. In Maya this means you'll need to keep track of an instance of the Hotline ui. Here's one way to do that::
 
     from hotline import Hotline
     import __main__
@@ -69,16 +72,3 @@ Install Hotline
 
     pip install hotline
 
-
-To Do List
-==========
-
- - Adjust Context API to make it easier to extend existing contexts
- - Add additional dialogs to make multi-stage commands more rich
- - Create settings dialog that can be used to adjust context settings
- - Persist history and settings
-
-completed
-=========
-
- - **Implement input history**
