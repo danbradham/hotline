@@ -24,17 +24,12 @@ class HotlineMode(Mode):
     def toggle_pin(self):
         self.app.ui.pinned = not self.app.ui.pinned
 
-    def gen_command(self):
-        result = self.app.get_user_input('User Input')
-        print(result)
-
     @property
     def commands(self):
         return [
             Command('Toggle Pin', self.toggle_pin),
             Command('Show Console', self.show_console),
             Command('Show Settings', self.show_console),
-            Command('Multi-Command', self.gen_command)
         ]
 
     def execute(self, command):

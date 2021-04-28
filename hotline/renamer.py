@@ -97,7 +97,8 @@ class AddPrefixToken(Token):
 
 
 def preprocess_string(rename_str):
-    '''Preprocesses rename_str'''
+    '''Preprocesses rename_str and extracts arguments for formatting.'''
+
     format_args = []
     matches = re.findall(r'(#+)(\((\d+)\))?', rename_str)
     for i, match in enumerate(matches):

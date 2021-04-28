@@ -1,14 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function
+
 from collections import namedtuple
 import re
 import sys
+from fnmatch import fnmatch
+
 from hotline.mode import Mode
 from hotline.command import Command
 from hotline.context import Context
 from hotline import styles
 from hotline.renamer import Renamer
 from hotline.vendor.Qt import QtWidgets, QtCore, QtGui
+
+# Py3 Compat
+if sys.version_info > (0, 3):
+    long = int
+
 
 MayaWidget = namedtuple('MayaWidget', 'path widget')
 
@@ -205,7 +213,6 @@ class Connect(Mode):
 
     name = 'Connect'
     label = 'CNCT'
-    commands = []
     prompt = 'source destination'
 
     def get_next_attr_index(self, attr):
@@ -371,9 +378,25 @@ def ls_regex(reg):
     return nodes
 
 
+def ls_regex_filter(reg):
+    from maya import cmds
+    p = re.compile(reg)
+    nodes = []
+    for node in cmds.ls(sl=True, long=True):
+        name = node.split('|')[-1]
+        if p.match(name):
+            nodes.append(node)
+    return nodes
+
+
 def ls(pattern):
     from maya import cmds
     return cmds.ls(pattern, long=True)
+
+
+def ls_filter(pattern):
+    from maya import cmds
+    return cmds.ls(pattern, sl=True, long=True)
 
 
 def select(nodes, add=False):
@@ -387,6 +410,18 @@ class Select(Mode):
     label = 'SEL'
     prompt = 'glob pattern'
 
+    def add(self):
+        pattern = self.app.get_user_input('glob pattern')
+        if pattern is None:
+            return
+        return select(ls(pattern), add=True)
+
+    def filter(self):
+        pattern = self.app.get_user_input('glob pattern')
+        if pattern is None:
+            return
+        return select(ls_filter(pattern))
+
     def regex_select(self):
         pattern = self.app.get_user_input('regex pattern')
         if pattern is None:
@@ -399,18 +434,55 @@ class Select(Mode):
             return
         return select(ls_regex(pattern), add=True)
 
-    def add(self):
-        pattern = self.app.get_user_input('glob pattern')
+    def regex_filter(self):
+        pattern = self.app.get_user_input('regex pattern')
         if pattern is None:
             return
-        return select(ls(pattern), add=True)
+        return select(ls_regex_filter(pattern))
+
+    def type_select(self):
+        from maya import cmds
+        pattern = self.app.get_user_input('node type')
+        if pattern is None:
+            return
+        return select(
+            [n for n in cmds.ls() if fnmatch(cmds.nodeType(n), pattern)],
+        )
+
+    def type_add(self):
+        from maya import cmds
+        pattern = self.app.get_user_input('node type')
+        if pattern is None:
+            return
+        return select(
+            [n for n in cmds.ls() if fnmatch(cmds.nodeType(n), pattern)],
+            add=True,
+        )
+
+    def type_filter(self):
+        from maya import cmds
+        pattern = self.app.get_user_input('node type')
+        if pattern is None:
+            return
+        return select(
+            [
+                n for n in cmds.ls(sl=True)
+                if fnmatch(cmds.nodeType(n), pattern)
+            ],
+        )
 
     @property
     def commands(self):
         return [
             Command('Add', self.add),
+            Command('Filter', self.filter),
             Command('Regex Select', self.regex_select),
-            Command('Regex Add', self.regex_add)
+            Command('Regex Add', self.regex_add),
+            Command('Regex Filter', self.regex_filter),
+            Command('Type Select', self.type_select),
+            Command('Type Add', self.type_add),
+            Command('Type Filter', self.type_filter),
+
         ]
 
     def execute(self, command):
