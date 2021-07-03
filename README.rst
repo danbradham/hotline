@@ -1,7 +1,7 @@
 =======
 Hotline
 =======
-Hotline is a pop-up input field written in Python with PyQt/PySide modeled after the command palette from Sublime Text. The API can be used to extend and customize Hotline by using the Context, Mode, and Command objects.
+Hotline is a pop-up input field written for Qt for Python modeled after the command palette from Sublime Text. The API can be used to extend and customize Hotline by using the Context, Mode, and Command objects.
 
 
 Available Contexts
