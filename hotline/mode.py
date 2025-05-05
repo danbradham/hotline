@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from abc import abstractmethod, abstractproperty
+from abc import abstractmethod
+
 from hotline.command import Command
 
 
 class Mode(object):
-
     prompt = None
 
     def __init__(self, app):
@@ -31,7 +29,6 @@ class Mode(object):
             result = None
             try:
                 while result is None:
-
                     if selection:
                         step = cmd_steps.send(selection)
                         selection = None
@@ -44,8 +41,10 @@ class Mode(object):
                         selection = self.app.get_user_input(options=step)
                     else:
                         raise Exception(
-                            'Generator yielded invalid type...'
-                            'must be Sequence, None or Command not {}'.format(type(step))
+                            "Generator yielded invalid type..."
+                            "must be Sequence, None or Command not {}".format(
+                                type(step)
+                            )
                         )
             finally:
                 cmd_steps.close()
@@ -56,19 +55,21 @@ class Mode(object):
 
         return self.execute(cmd.command)
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def name(self):
-        '''return name of mode'''
+        """return name of mode"""
         return
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def label(self):
-        '''Name of context'''
+        """Name of context"""
         return
 
     @property
     def icon(self):
-        '''[optional] return path to an icon'''
+        """[optional] return path to an icon"""
         return
 
     def get_command(self, name):
@@ -77,12 +78,13 @@ class Mode(object):
                 return command
         return
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def commands(self):
-        '''return a list of Command objects'''
+        """return a list of Command objects"""
         return
 
     @abstractmethod
     def execute(self, command):
-        '''Execute the user input command from hotline'''
+        """Execute the user input command from hotline"""
         return

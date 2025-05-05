@@ -1,36 +1,35 @@
-# -*- coding: utf-8 -*-
 import sys
-from hotline.mode import Mode
-from hotline.context import Context
+
 from hotline import styles
+from hotline.context import Context
+from hotline.mode import Mode
 
 
 class Python(Mode):
-
-    name = 'Python'
-    label = 'PY'
+    name = "Python"
+    label = "PY"
     commands = []
-    prompt = 'python command'
+    prompt = "python command"
 
     def execute(self, command):
-        main = sys.modules['__main__'].__dict__
+        main = sys.modules["__main__"].__dict__
         try:
-            code = compile(command, '<string>', 'eval')
+            code = compile(command, "<string>", "eval")
             return eval(code, main, main)
         except SyntaxError:
-            code = compile(command, '<string>', 'exec')
+            code = compile(command, "<string>", "exec")
             exec(code, main, main)
 
 
 class BareContext(Context):
-
-    name = 'BareContext'
+    name = "BareContext"
     modes = [Python]
     style = styles.dark
     parent = None
-    position = 'center'
-    animation = 'slide'
+    position = "center"
+    animation = "slide"
 
     def initialize(self, app):
         import keyboard
-        keyboard.add_hotkey('ctrl + space', app.show)
+
+        keyboard.add_hotkey("ctrl + space", app.show)

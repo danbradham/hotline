@@ -1,20 +1,21 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
 from collections import deque
 from contextlib import contextmanager
 
-from hotline.utils import event_loop
 from hotline.anim import *
-from hotline.vendor.Qt import QtWidgets, QtCore, QtGui
+from hotline.utils import event_loop
+from hotline.vendor.qtpy import QtCore, QtGui, QtWidgets
 
 
 class ActiveScreen(object):
-
     @staticmethod
     def active():
-        desktop = QtWidgets.QApplication.instance().desktop()
-        active = desktop.screenNumber(desktop.cursor().pos())
-        return desktop.screenGeometry(active)
+        try:
+            desktop = QtWidgets.QApplication.instance().desktop()
+            screen = desktop.screenNumber(desktop.cursor().pos())
+            return desktop.screenGeometry(screen)
+        except Exception:
+            screen = QtWidgets.QApplication.instance().primaryScreen()
+            return screen.geometry()
 
     @classmethod
     def top(cls):
@@ -31,16 +32,10 @@ class CommandList(QtWidgets.QListWidget):
 
     def __init__(self, items, lineedit, parent=None):
         super(CommandList, self).__init__(parent)
-        self.setWindowFlags(
-            QtCore.Qt.Window |
-            QtCore.Qt.FramelessWindowHint
-        )
+        self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint)
         self.setAttribute(QtCore.Qt.WA_ShowWithoutActivating)
         self.setMinimumSize(1, 1)
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.Ignored,
-            QtWidgets.QSizePolicy.Ignored
-        )
+        self.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         self.parent = parent
         self.lineedit = lineedit
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -89,7 +84,6 @@ class CommandList(QtWidgets.QListWidget):
             return
 
     def is_match(self, letters, item):
-
         letters = deque(letters.lower())
         l = letters.popleft()
         for char in item.lower():
@@ -101,8 +95,7 @@ class CommandList(QtWidgets.QListWidget):
         return False
 
     def filter(self, text):
-
-        text = text.strip(' ')
+        text = text.strip(" ")
         if not text:
             for item in self.items:
                 item.setHidden(False)
@@ -139,10 +132,9 @@ class CommandList(QtWidgets.QListWidget):
 
 
 class Console(QtWidgets.QDialog):
-
     def __init__(self, parent=None):
         super(Console, self).__init__(parent)
-        self.setWindowTitle('Hotline Console')
+        self.setWindowTitle("Hotline Console")
         self.setAttribute(QtCore.Qt.WA_ShowWithoutActivating)
         self.parent = parent
         self.output = QtWidgets.QTextEdit(self)
@@ -171,7 +163,6 @@ class Console(QtWidgets.QDialog):
 
 
 class InputField(QtWidgets.QLineEdit):
-
     focusOut = QtCore.Signal(object)
 
     def __init__(self, placeholder=None, parent=None):
@@ -200,22 +191,18 @@ class InputField(QtWidgets.QLineEdit):
 
 
 class Dialog(QtWidgets.QDialog):
-
     def __init__(self, parent=None):
         super(Dialog, self).__init__(parent)
 
         self.parent = parent
         self._set_sizes()
         self._alt_f4_pressed = False
-        self._animation = 'slide'
-        self._position = 'center'
+        self._animation = "slide"
+        self._position = "center"
         self.pinned = False
 
-        self.setWindowTitle('Hotline')
-        self.setWindowFlags(
-            QtCore.Qt.Window |
-            QtCore.Qt.FramelessWindowHint
-        )
+        self.setWindowTitle("Hotline")
+        self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint)
         self.setMinimumSize(1, 1)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
 
@@ -239,13 +226,10 @@ class Dialog(QtWidgets.QDialog):
         self.input_field.focusOut.connect(self.reject)
 
         self._wrapper = QtWidgets.QWidget(parent=self)
-        self._wrapper.setObjectName('Hotline')
+        self._wrapper.setObjectName("Hotline")
 
         self.layout = QtWidgets.QHBoxLayout(self._wrapper)
-        self.layout.setAlignment(
-            QtCore.Qt.AlignLeft |
-            QtCore.Qt.AlignVCenter
-        )
+        self.layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.layout.setContentsMargins(2, 2, 2, 2)
         self.layout.setSpacing(0)
         self.layout.addWidget(self.mode_button)
@@ -261,32 +245,32 @@ class Dialog(QtWidgets.QDialog):
         self.console = Console(self)
 
         self.hk_up = QtWidgets.QShortcut(self)
-        self.hk_up.setKey('Up')
+        self.hk_up.setKey("Up")
         self.hk_up.activated.connect(self.commandlist.select_prev)
         self.hk_dn = QtWidgets.QShortcut(self)
-        self.hk_dn.setKey('Down')
+        self.hk_dn.setKey("Down")
         self.hk_dn.activated.connect(self.commandlist.select_next)
         self.hk_return = QtWidgets.QShortcut(self)
-        self.hk_return.setKey('Return')
+        self.hk_return.setKey("Return")
         self.hk_return.activated.connect(self.accept)
         self.hk_esc = QtWidgets.QShortcut(self)
-        self.hk_esc.setKey('Esc')
+        self.hk_esc.setKey("Esc")
         self.hk_esc.activated.connect(self.reject)
         self.hk_ctrl_p = QtWidgets.QShortcut(self)
-        self.hk_ctrl_p.setKey('Ctrl+P')
+        self.hk_ctrl_p.setKey("Ctrl+P")
         self.hk_ctrl_p.activated.connect(self.toggle_pin)
         self.hk_ctrl_up = QtWidgets.QShortcut(self)
-        self.hk_ctrl_up.setKey('Ctrl+Up')
+        self.hk_ctrl_up.setKey("Ctrl+Up")
         self.hk_ctrl_dn = QtWidgets.QShortcut(self)
-        self.hk_ctrl_dn.setKey('Ctrl+Down')
+        self.hk_ctrl_dn.setKey("Ctrl+Down")
         self.hk_alt_f4 = QtWidgets.QShortcut(self)
         self.hk_tab = QtWidgets.QShortcut(self)
-        self.hk_tab.setKey('Tab')
+        self.hk_tab.setKey("Tab")
         self.hk_shift_tab = QtWidgets.QShortcut(self)
-        self.hk_shift_tab.setKey('Shift+Tab')
+        self.hk_shift_tab.setKey("Shift+Tab")
 
     def _get_font_unit(self):
-        label = QtWidgets.QLabel('UNIT')
+        label = QtWidgets.QLabel("UNIT")
         label.setStyleSheet(self.styleSheet())
         return label.sizeHint().height()
 
@@ -301,7 +285,7 @@ class Dialog(QtWidgets.QDialog):
 
     @contextmanager
     def pin(self):
-        '''Context manager used to suppress focus out events'''
+        """Context manager used to suppress focus out events"""
 
         if self.pinned:
             try:
@@ -322,7 +306,7 @@ class Dialog(QtWidgets.QDialog):
 
     @animation.setter
     def animation(self, value):
-        if value not in ('slide', 'fade'):
+        if value not in ("slide", "fade"):
             raise ValueError('animation must be "slide" or "fade" not ' + str(value))
 
     @property
@@ -331,7 +315,7 @@ class Dialog(QtWidgets.QDialog):
 
     @position.setter
     def position(self, value):
-        if value not in ('center', 'top'):
+        if value not in ("center", "top"):
             raise ValueError('position must be "center" or "top" not ' + str(value))
 
     def text(self):
@@ -376,7 +360,7 @@ class Dialog(QtWidgets.QDialog):
         super(Dialog, self).hide()
 
     def get_position(self):
-        if self.position == 'top':
+        if self.position == "top":
             pos = ActiveScreen.top()
             return pos[0] - self._width * 0.5, pos[1]
 
@@ -405,12 +389,7 @@ class Dialog(QtWidgets.QDialog):
 
         start = (crect.left(), start[1], crect.width(), 0)
         self.commandlist.setGeometry(*start)
-        end = (
-            crect.left(),
-            end[1] + end[3] - 2,
-            crect.width(),
-            crect.height()
-        )
+        end = (crect.left(), end[1] + end[3] - 2, crect.width(), crect.height())
         group.addAnimation(
             resize(
                 self.commandlist,
@@ -433,13 +412,12 @@ class Dialog(QtWidgets.QDialog):
         self.commandlist.setGeometry(self.commandlist._get_geometry())
 
     def set_style(self, style):
-
-        _style = style.replace('${height}', str(int(self._height)))
+        _style = style.replace("${height}", str(int(self._height)))
         self.setStyleSheet(_style)
 
         self._set_sizes()
         self.mode_button.setMinimumWidth(self._height)
-        style = style.replace('${height}', str(int(self._height)))
+        style = style.replace("${height}", str(int(self._height)))
         self.setStyleSheet(style)
         self.commandlist.setStyleSheet(style)
 
@@ -477,10 +455,10 @@ class Dialog(QtWidgets.QDialog):
         self._show()
         lefttop = lefttop or self.get_position()
         anim_type = anim_type or self.animation
-        group = getattr(self, anim_type + '_group', None)
+        group = getattr(self, anim_type + "_group", None)
         if group:
             group = group(lefttop)
             group.finished.connect(self.activate)
-            group.start(group.DeleteWhenStopped)
+            group.start(group.DeletionPolicy.DeleteWhenStopped)
         else:
             self.default_show()
