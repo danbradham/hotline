@@ -9,7 +9,7 @@
 """Provides widget classes and functions."""
 from functools import partialmethod
 
-from packaging.version import parse
+from ..packaging.version import parse
 
 from . import PYQT5, PYQT6, PYSIDE2, PYSIDE6
 from . import QT_VERSION as _qt_version
