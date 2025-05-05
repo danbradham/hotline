@@ -60,7 +60,7 @@ import platform
 import sys
 import warnings
 
-from packaging.version import parse
+from ..packaging.version import parse
 
 # Version of QtPy
 __version__ = "2.4.1"
