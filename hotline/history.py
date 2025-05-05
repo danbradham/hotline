@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
 from collections import namedtuple
 
-
-ModeCommand = namedtuple('ModeCommand', 'mode command')
+ModeCommand = namedtuple("ModeCommand", "mode command")
 
 
 class History(object):
-
     def __init__(self):
         self._list = [None]
         self.index = 0

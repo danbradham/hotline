@@ -1,21 +1,19 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function
 import sys
+
+from hotline import styles
 from hotline.command import Command
-from hotline.mode import Mode
 from hotline.constant import flags
 from hotline.contexts import best_context
-from hotline.widgets import Dialog
-from hotline.utils import execute_in_main_thread
 from hotline.history import History, ModeCommand
-from hotline import styles
-from hotline.vendor.Qt import QtWidgets
+from hotline.mode import Mode
+from hotline.utils import execute_in_main_thread
+from hotline.vendor.qtpy import QtWidgets
+from hotline.widgets import Dialog
 
 
 class HotlineMode(Mode):
-
-    name = 'HotlineMode'
-    label = 'HL'
+    name = "HotlineMode"
+    label = "HL"
 
     def show_console(self):
         self.app.ui.console.show()
@@ -27,9 +25,9 @@ class HotlineMode(Mode):
     @property
     def commands(self):
         return [
-            Command('Toggle Pin', self.toggle_pin),
-            Command('Show Console', self.show_console),
-            Command('Show Settings', self.show_console),
+            Command("Toggle Pin", self.toggle_pin),
+            Command("Show Console", self.show_console),
+            Command("Show Settings", self.show_console),
         ]
 
     def execute(self, command):
@@ -37,7 +35,6 @@ class HotlineMode(Mode):
 
 
 class HotlineStream(object):
-
     def __init__(self, app):
         self.app = app
 
@@ -48,7 +45,6 @@ class HotlineStream(object):
 
 
 class Hotline(object):
-
     def __init__(self, context=None, style=None):
         context = context or best_context()
         if style:
@@ -60,7 +56,7 @@ class Hotline(object):
 
     def init_ui(self):
         if self.ui:
-            raise Exception('UI has already initialized')
+            raise Exception("UI has already initialized")
 
         self.add_modes(HotlineMode)
         self.ui = Dialog(self.context.parent)
@@ -137,24 +133,21 @@ class Hotline(object):
     def on_history_next(self):
         item = self.history.next()
         if item is None:
-            self.ui.input_field.setText('')
+            self.ui.input_field.setText("")
             return
         self.set_mode(item.mode)
         self.refresh()
         self.ui.input_field.setText(item.command)
 
     def on_prev_mode(self):
-
         self.prev_mode()
         self.refresh()
 
     def on_next_mode(self):
-
         self.next_mode()
         self.refresh()
 
     def on_accept(self):
-
         result = self.execute(self.ui.text())
         success = not isinstance(result, Exception)
         hide = success and result is not flags.DontHide
@@ -165,17 +158,16 @@ class Hotline(object):
         if success:
             self.history.add(ModeCommand(self.get_mode(), self.ui.text()))
             self.ui.input_field.clear()
-            self.ui.commandlist.filter('')
+            self.ui.commandlist.filter("")
 
         if hide:
             self.ui.hide()
 
     def on_reject(self):
-
         self.ui.hide()
 
     def get_user_input(self, prompt=None, options=None):
-        '''Get input from user using a modeless Hotline Dialog'''
+        """Get input from user using a modeless Hotline Dialog"""
 
         self.ui.force_hide()
         pos = self.ui.pos()
@@ -192,14 +184,14 @@ class Hotline(object):
             return user_input
 
     def execute(self, command, mode=None):
-        '''Execute a command using the current mode'''
+        """Execute a command using the current mode"""
 
         mode = mode or self.get_mode()
         result = self.context.execute(mode=mode, command=command)
         return result
 
     def get_mode(self, name=None):
-        '''Get active mode'''
+        """Get active mode"""
 
         if not name:
             return self.context.modes[0]
@@ -208,10 +200,10 @@ class Hotline(object):
             if mode.name == name or mode.label == name:
                 return mode
 
-        raise NameError('Can not find mode named: ' + name)
+        raise NameError("Can not find mode named: " + name)
 
     def set_mode(self, mode):
-        '''Set active mode by name or Mode object'''
+        """Set active mode by name or Mode object"""
 
         start = self.context.modes[0]
         if mode == start:
@@ -224,25 +216,25 @@ class Hotline(object):
                 return
             self.context.modes.rotate(-1)
 
-        raise Exception('Could not find: {}'.format(mode))
+        raise Exception("Could not find: {}".format(mode))
 
     def set_modes(self, *modes):
-        '''Set available self.context.modes'''
+        """Set available self.context.modes"""
 
         self.context.modes.clear()
         self.add_modes(*modes)
 
     def add_modes(self, *modes):
-        '''Add mode'''
+        """Add mode"""
 
         self.context.modes.extend([m(self) for m in modes])
 
     def next_mode(self):
-        '''Rotate to the next mode'''
+        """Rotate to the next mode"""
 
         self.context.modes.rotate(-1)
 
     def prev_mode(self):
-        '''Rotate to the previous mode'''
+        """Rotate to the previous mode"""
 
         self.context.modes.rotate()

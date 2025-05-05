@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
 from inspect import isgeneratorfunction
 
 
 class Command(object):
-
     def __init__(self, name, command, icon=None):
         self.name = name
         self.command = command

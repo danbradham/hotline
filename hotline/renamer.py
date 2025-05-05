@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
 import re
 
 
@@ -12,7 +10,6 @@ class Token(object):
 
 
 class FullRenameToken(object):
-
     consumes = 1
 
     def __init__(self, rename_str):
@@ -23,14 +20,13 @@ class FullRenameToken(object):
 
     @staticmethod
     def match(part):
-        if part.startswith('-'):
+        if part.startswith("-"):
             return False
-        invalid_chars = '!@$%^&*()[]\\|;,<.?/+='
+        invalid_chars = "!@$%^&*()[]\\|;,<.?/+="
         return all(c not in part for c in invalid_chars)
 
 
 class SubstituteToken(Token):
-
     consumes = 2
 
     def __init__(self, search_str, replace_str):
@@ -42,91 +38,82 @@ class SubstituteToken(Token):
 
     @staticmethod
     def match(part, next_part):
-        if part.startswith('+') or next_part.startswith('+'):
+        if part.startswith("+") or next_part.startswith("+"):
             return False
-        if part.endswith('+') or next_part.endswith('+'):
+        if part.endswith("+") or next_part.endswith("+"):
             return False
-        if part.startswith('-') or next_part.startswith('-'):
+        if part.startswith("-") or next_part.startswith("-"):
             return False
         return True
 
 
 class RemoveToken(Token):
-
     consumes = 1
 
     def __init__(self, remove_str):
-        self.remove_str = remove_str.lstrip('-')
+        self.remove_str = remove_str.lstrip("-")
 
     def __call__(self, in_str):
-        return in_str.replace(self.remove_str, '')
+        return in_str.replace(self.remove_str, "")
 
     @staticmethod
     def match(part):
-        return part.startswith('-')
+        return part.startswith("-")
 
 
 class AddSuffixToken(Token):
-
     consumes = 1
 
     def __init__(self, add_str):
-        self.add_str = add_str.lstrip('+')
+        self.add_str = add_str.lstrip("+")
 
     def __call__(self, in_str):
         return in_str + self.add_str
 
     @staticmethod
     def match(part):
-        return part.startswith('+')
+        return part.startswith("+")
 
 
 class AddPrefixToken(Token):
-
     consumes = 1
 
     def __init__(self, add_str):
-        self.add_str = add_str.rstrip('+')
+        self.add_str = add_str.rstrip("+")
 
     def __call__(self, in_str):
         return self.add_str + in_str
 
     @staticmethod
     def match(part):
-        return part.endswith('+')
+        return part.endswith("+")
 
 
 def preprocess_string(rename_str):
-    '''Preprocesses rename_str and extracts arguments for formatting.'''
+    """Preprocesses rename_str and extracts arguments for formatting."""
 
     format_args = []
-    matches = re.findall(r'(#+)(\((\d+)\))?', rename_str)
+    matches = re.findall(r"(#+)(\((\d+)\))?", rename_str)
     for i, match in enumerate(matches):
         padding = len(match[0])
         start = 1
         if match[2]:
             start = int(match[2])
         rename_str = re.sub(
-            re.escape(match[0] + match[1]),
-            '{%d:0>%d}' % (i, padding),
-            rename_str,
-            1
+            re.escape(match[0] + match[1]), "{%d:0>%d}" % (i, padding), rename_str, 1
         )
         format_args.append(start)
     return rename_str, format_args
 
 
 class Renamer(object):
-
     def __init__(self, rename_str):
-
         self.original_str = rename_str
         self.rename_str, self.start_values = preprocess_string(rename_str)
         self.tokens = []
         self.tokenize()
 
     def tokenize(self):
-
         parts = self.rename_str.split()
 
         if len(parts) == 1 and FullRenameToken.match(parts[0]):
@@ -140,7 +127,7 @@ class Renamer(object):
                 if len(parts) < token.consumes:
                     continue
 
-                match_parts = parts[:token.consumes]
+                match_parts = parts[: token.consumes]
                 if token.match(*match_parts):
                     self.tokens.append(token(*match_parts))
                     for _ in range(token.consumes):
@@ -148,9 +135,7 @@ class Renamer(object):
 
             if num_parts == len(parts):
                 self.tokens = []
-                raise TokenError(
-                    parts[0] + ' is not a valid string'
-                )
+                raise TokenError(parts[0] + " is not a valid string")
 
     def rename(self, input_str, index=None):
         if not self.tokens:

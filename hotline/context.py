@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
 import traceback
-from abc import abstractmethod, abstractproperty
+from abc import abstractmethod
 from collections import deque
 
 from hotline import styles
@@ -9,9 +7,8 @@ from hotline.constant import flags
 
 
 class Context(object):
-
-    animation = 'slide'
-    position = 'center'
+    animation = "slide"
+    position = "center"
 
     def __init__(self, app):
         self.app = app
@@ -20,7 +17,7 @@ class Context(object):
         self.initialize(app)
 
     def before_execute(self, mode, command):
-        '''Called before every command is executed in this context.'''
+        """Called before every command is executed in this context."""
         return NotImplemented
 
     def execute(self, command, mode=None):
@@ -39,34 +36,37 @@ class Context(object):
         self.after_execute(mode, command, result)
 
     def after_execute(self, mode, command, result):
-        '''Called before every command is executed in this context.'''
+        """Called before every command is executed in this context."""
         return NotImplemented
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def name(self):
-        '''Name of context'''
+        """Name of context"""
         return
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def modes(self):
-        '''List of :class:`Mode` instances'''
+        """List of :class:`Mode` instances"""
         return
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def style(self):
-        '''CSS Stylesheet'''
+        """CSS Stylesheet"""
         return styles.light
 
     def get_position(self):
-        '''Override to provide a custom position for the UI.
+        """Override to provide a custom position for the UI.
 
-        Must return a tuple containing top left corner position'''
+        Must return a tuple containing top left corner position"""
 
         raise NotImplementedError
 
     @abstractmethod
     def initialize(self, app):
-        '''This function must set self.parent to a QWidget or QMainWindow
+        """This function must set self.parent to a QWidget or QMainWindow
         instance. If hotline is to be run within an existing QApplication then
         you can set self.parent to the QApplications top level QMainWindow
         instance. If hotline is to be the main application this method must
@@ -74,5 +74,5 @@ class Context(object):
         self.parent, then start the QApplications event loop. You will also
         want to bind a hotkey to app.show.
 
-        :param app: Hotline application instance'''
+        :param app: Hotline application instance"""
         return NotImplemented
