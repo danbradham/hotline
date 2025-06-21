@@ -4,7 +4,7 @@ __email__ = "danielbradham@gmail.com"
 __license__ = "MIT"
 __url__ = "https://github.com/danbradham/hotline.git"
 __description__ = "Popup command palette for Autodesk Maya. Create, rename, select, and connect nodes - FAST."
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 import os
 
