@@ -15,6 +15,12 @@ if sys.version_info > (0, 3):
     long = int
 
 
+try:
+    QRegExp = QtCore.QRegExp
+except AttributeError:
+    QRegExp = QtCore.QRegularExpression
+
+
 MayaWidget = namedtuple("MayaWidget", "path widget")
 
 
@@ -54,7 +60,7 @@ def maya_widget(widget):
 
 
 def find_child(widget, pattern):
-    children = widget.findChildren(QtWidgets.QWidget, QtCore.QRegExp(pattern))
+    children = widget.findChildren(QtWidgets.QWidget, QRegExp(pattern))
     if children:
         return [maya_widget(child) for child in children]
 
