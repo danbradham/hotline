@@ -6,6 +6,7 @@ from hotline.mode import Mode
 
 
 class Python(Mode):
+
     name = "Python"
     label = "PY"
     commands = []
@@ -22,6 +23,7 @@ class Python(Mode):
 
 
 class BareContext(Context):
+
     name = "BareContext"
     modes = [Python]
     style = styles.dark

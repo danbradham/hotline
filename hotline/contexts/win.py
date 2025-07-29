@@ -1,7 +1,11 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, print_function
+
 import os
 import shlex
 import sys
 
+from hotline import styles
 from hotline.command import Command
 from hotline.context import Context
 from hotline.mode import Mode
@@ -15,6 +19,7 @@ def elevated():
 
 
 class PowerShell(Mode):
+
     name = "PowerShell"
     label = "PS"
     prompt = "Powershell command"
@@ -39,6 +44,7 @@ class PowerShell(Mode):
 
 
 class Cmd(Mode):
+
     name = "Cmd"
     label = "CMD"
     commands = []
@@ -50,6 +56,7 @@ class Cmd(Mode):
 
 
 class Python(Mode):
+
     name = "Python"
     label = "PY"
     commands = []
@@ -66,6 +73,7 @@ class Python(Mode):
 
 
 class Run(Mode):
+
     name = "Run"
     label = "RUN"
 
@@ -116,6 +124,7 @@ class Run(Mode):
 
 
 class WindowsContext(Context):
+
     name = "WindowsContext"
     modes = [Run, Python, PowerShell, Cmd]
     parent = None

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from collections import namedtuple
 
 ModeCommand = namedtuple("ModeCommand", "mode command")

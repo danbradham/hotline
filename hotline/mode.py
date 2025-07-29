@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from abc import abstractmethod, abstractproperty
 
 from hotline.command import Command
 
@@ -55,14 +56,12 @@ class Mode(object):
 
         return self.execute(cmd.command)
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def name(self):
         """return name of mode"""
         return
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def label(self):
         """Name of context"""
         return
@@ -78,8 +77,7 @@ class Mode(object):
                 return command
         return
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def commands(self):
         """return a list of Command objects"""
         return

@@ -14,7 +14,6 @@ from hotline.vendor.qtpy import QtCore, QtGui, QtWidgets
 if sys.version_info > (0, 3):
     long = int
 
-
 try:
     QRegExp = QtCore.QRegExp
 except AttributeError:
@@ -51,7 +50,6 @@ def maya_widget(widget):
     """QWidget to MayaWidget"""
 
     from maya.OpenMayaUI import MQtUtil
-
     from hotline.vendor.qtpy.shiboken import getCppPointer
 
     pointer = long(getCppPointer(widget)[0])
@@ -60,6 +58,7 @@ def maya_widget(widget):
 
 
 def find_child(widget, pattern):
+
     children = widget.findChildren(QtWidgets.QWidget, QRegExp(pattern))
     if children:
         return [maya_widget(child) for child in children]
@@ -68,7 +67,6 @@ def find_child(widget, pattern):
 def active_panel_widget():
     from maya import cmds
     from maya.OpenMayaUI import MQtUtil
-
     from hotline.vendor.qtpy.shiboken import wrapInstance
 
     panel = cmds.getPanel(withFocus=True)
@@ -80,7 +78,6 @@ def active_m3dview_widget():
     """Get active m3dview"""
 
     from maya.OpenMayaUI import M3dView
-
     from hotline.vendor.qtpy.shiboken import wrapInstance
 
     active3dview = M3dView.active3dView()
@@ -99,6 +96,7 @@ def top_center(widget):
 
 
 class Python(Mode):
+
     name = "Python"
     label = "PY"
     commands = []
@@ -115,6 +113,7 @@ class Python(Mode):
 
 
 class Mel(Mode):
+
     name = "Mel"
     label = "MEL"
     commands = [
@@ -192,6 +191,7 @@ class Mel(Mode):
 
 
 class Rename(Mode):
+
     name = "Rename"
     label = "REN"
     commands = []
@@ -212,6 +212,7 @@ class Rename(Mode):
 
 
 class Connect(Mode):
+
     name = "Connect"
     label = "CNCT"
     prompt = "source destination"
@@ -327,6 +328,7 @@ class Connect(Mode):
 
 
 class Node(Mode):
+
     name = "Node"
     label = "NODE"
     prompt = "node type"
@@ -419,6 +421,7 @@ def select(nodes, add=False):
 
 
 class Select(Mode):
+
     name = "Select"
     label = "SEL"
     prompt = "glob pattern"
@@ -502,6 +505,7 @@ class Select(Mode):
 
 
 class MayaContext(Context):
+
     name = "MayaContext"
     modes = [Rename, Select, Node, Connect, Python, Mel]
     style = styles.maya

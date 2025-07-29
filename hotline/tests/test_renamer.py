@@ -45,6 +45,7 @@ class TestRenamer(unittest.TestCase):
         assert t("cat") == "bat"
 
     def test_preprocess_string(self):
+
         data = [
             ("a_##", ("a_{0:0>2}", [1])),
             ("a_##(10)", ("a_{0:0>2}", [10])),
